@@ -71,17 +71,22 @@ export default function PrivacyPage() {
           <section>
             <h2>5. Data Retention &amp; Deletion</h2>
             <p>
-              Your account and access grants remain active for lifetime preparation. You may request permanent deletion of your account and personal data at any time by emailing <a href="mailto:shibajyoti.maity06@gmail.com" className="text-[var(--accent)] font-mono font-bold">shibajyoti.maity06@gmail.com</a>.
+              Your account and access grants remain active for lifetime preparation. You may request permanent deletion of your account and personal data at any time via the{" "}
+              <a href="/contact" className="text-[var(--accent)] font-mono font-bold underline">
+                Support Desk
+              </a>
+              .
             </p>
           </section>
 
           <section>
             <h2>6. Contact the Privacy Officer</h2>
             <p>
-              If you have any questions or data requests, contact us at:{" "}
-              <a href="mailto:shibajyoti.maity06@gmail.com" className="text-[var(--accent)] font-mono font-bold">
-                shibajyoti.maity06@gmail.com
+              If you have any questions or data requests, reach out via our{" "}
+              <a href="/contact" className="text-[var(--accent)] font-mono font-bold underline">
+                Contact Desk
               </a>
+              .
             </p>
           </section>
         </div>

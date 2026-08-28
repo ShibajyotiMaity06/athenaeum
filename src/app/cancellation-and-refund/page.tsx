@@ -55,7 +55,7 @@ export default function RefundPolicyPage() {
           <section>
             <h2>4. Duplicate Payment Resolution Only</h2>
             <p>
-              The only exception processed is an accidental duplicate transaction caused by a network glitch where your bank account was debited multiple times for a single order. In such cases, contact <a href="mailto:shibajyoti.maity06@gmail.com" className="text-[var(--accent)] font-mono font-bold">shibajyoti.maity06@gmail.com</a> with the duplicate transaction IDs to reverse the extra charge.
+              The only exception processed is an accidental duplicate transaction caused by a network glitch where your bank account was debited multiple times for a single order. In such cases, visit our <a href="/contact" className="text-[var(--accent)] font-mono font-bold underline">Contact Desk</a> with the duplicate transaction IDs to reverse the extra charge.
             </p>
           </section>
         </div>

@@ -10,7 +10,6 @@ export const SITE = {
     "3,600+ curated technical interview questions across React, JavaScript, Node.js, TypeScript, SQL, DBMS, OS, Docker, System Design & 20+ technologies. Organized Easy to Hard. ₹399 lifetime access.",
   shortDescription:
     "Systematic technical interview prep platform with 3,600+ questions across 27+ technologies.",
-  email: "shibajyoti.maity06@gmail.com",
   totalQuestions: "3,600+",
   totalTechnologies: "27+",
   levelsCount: 3

@@ -86,10 +86,11 @@ export default function TermsPage() {
           <section>
             <h2>7. Contact Information</h2>
             <p>
-              For legal inquiries or questions regarding these terms, contact us at:{" "}
-              <a href="mailto:shibajyoti.maity06@gmail.com" className="text-[var(--accent)] font-mono font-bold">
-                shibajyoti.maity06@gmail.com
-              </a>
+              For legal inquiries or questions regarding these terms, visit our{" "}
+              <Link href="/contact" className="text-[var(--accent)] font-mono font-bold underline">
+                Customer &amp; Support Desk
+              </Link>
+              .
             </p>
           </section>
         </div>

@@ -50,7 +50,7 @@ const FAQS = [
   },
   {
     q: "What if I experience issues with my payment?",
-    a: "Your access is bound to your account automatically upon payment verification. If any network timeout occurs, sign in and your order status can be re-verified instantly, or contact shibajyoti.maity06@gmail.com for immediate assistance."
+    a: "Your access is bound to your account automatically upon payment verification. If any network timeout occurs, sign in and your order status can be re-verified instantly in your Account Desk, or reach out via our Contact Desk for assistance."
   },
   {
     q: "What is the refund and cancellation policy?",

@@ -101,6 +101,11 @@ export default function SiteFooter() {
                     Contact Us
                   </Link>
                 </li>
+                <li>
+                  <Link href="/contact#report" className="hover:text-[var(--accent)] transition-colors text-[var(--accent)] font-semibold">
+                    Report an Error
+                  </Link>
+                </li>
               </ul>
             </div>
           </div>

@@ -83,6 +83,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" suppressHydrationWarning className={`${sansFont.variable} ${monoFont.variable}`}>
       <head>
         <script
+          defer
+          src="https://cloud.umami.is/script.js"
+          data-website-id="a1a36f62-0f7e-44ea-a50b-38856c35112d"
+        />
+        <script
           dangerouslySetInnerHTML={{
             __html: `
               (function() {
