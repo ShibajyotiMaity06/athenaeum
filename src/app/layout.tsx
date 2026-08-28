@@ -1,10 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
-import { Suspense } from "react";
 import "./globals.css";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
-import NavigationProgress from "@/components/NavigationProgress";
 import { SITE } from "@/lib/site";
 
 const sansFont = Inter({
@@ -107,9 +105,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body className="min-h-screen bg-[var(--bg-chassis)] font-sans text-[var(--text-primary)] antialiased flex flex-col justify-between transition-colors duration-200">
-        <Suspense fallback={null}>
-          <NavigationProgress />
-        </Suspense>
         <div className="chassis-noise" aria-hidden="true" />
         <SiteHeader />
         <main id="main" className="flex-1 w-full">{children}</main>
