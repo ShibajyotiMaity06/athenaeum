@@ -18,6 +18,36 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: lastMod,
       changeFrequency: "monthly",
       priority: 0.9
+    },
+    {
+      url: `${baseUrl}/terms`,
+      lastModified: lastMod,
+      changeFrequency: "monthly",
+      priority: 0.5
+    },
+    {
+      url: `${baseUrl}/privacy`,
+      lastModified: lastMod,
+      changeFrequency: "monthly",
+      priority: 0.5
+    },
+    {
+      url: `${baseUrl}/shipping`,
+      lastModified: lastMod,
+      changeFrequency: "monthly",
+      priority: 0.5
+    },
+    {
+      url: `${baseUrl}/cancellation-and-refund`,
+      lastModified: lastMod,
+      changeFrequency: "monthly",
+      priority: 0.5
+    },
+    {
+      url: `${baseUrl}/contact`,
+      lastModified: lastMod,
+      changeFrequency: "monthly",
+      priority: 0.5
     }
   ];
 

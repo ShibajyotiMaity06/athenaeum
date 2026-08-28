@@ -4,55 +4,108 @@ import { newId, type AccessGrant, type OrderRecord, type UserRecord } from "./ty
 
 /**
  * Primary data layer — MongoDB via the official driver.
- * Enabled automatically when MONGODB_URI is present in the environment.
+ * Uses a global singleton promise to avoid TLS exhaustion during Next.js hot-reloads.
  */
 
-function uri(): string {
+declare global {
+  // eslint-disable-next-line no-var
+  var _mongoClientPromise: Promise<MongoClient> | undefined;
+}
+
+function getMongoUri(): string {
   return process.env.MONGODB_URI?.trim() || "";
 }
 
 export function mongoEnabled(): boolean {
-  return Boolean(uri());
+  return Boolean(getMongoUri());
 }
 
-let clientPromise: Promise<Db> | null = null;
+function getMongoClientPromise(): Promise<MongoClient> {
+  const uri = getMongoUri();
+  if (!uri) {
+    throw new Error("MONGODB_URI is not set");
+  }
+
+  if (process.env.NODE_ENV === "development") {
+    if (!globalThis._mongoClientPromise) {
+      const client = new MongoClient(uri, {
+        tls: true,
+        connectTimeoutMS: 10_000,
+        serverSelectionTimeoutMS: 10_000,
+        socketTimeoutMS: 45_000,
+        maxPoolSize: 10,
+        minPoolSize: 1
+      });
+      globalThis._mongoClientPromise = client.connect().catch((err) => {
+        globalThis._mongoClientPromise = undefined;
+        throw err;
+      });
+    }
+    return globalThis._mongoClientPromise;
+  }
+
+  const client = new MongoClient(uri, {
+    tls: true,
+    connectTimeoutMS: 10_000,
+    serverSelectionTimeoutMS: 10_000,
+    socketTimeoutMS: 45_000,
+    maxPoolSize: 10,
+    minPoolSize: 1
+  });
+  return client.connect();
+}
+
+let indexesInitialized = false;
 
 async function getDb(): Promise<Db> {
-  if (!clientPromise) {
-    const client = new MongoClient(uri(), {
-      serverSelectionTimeoutMS: 10_000,
-      maxPoolSize: 10
-    });
-    clientPromise = client.connect().then(async (connected) => {
-      const db = connected.db(process.env.MONGODB_DB || "athenaeum");
-      await db.collection("users").createIndex({ email: 1 }, { unique: true });
-      await db.collection("orders").createIndex({ id: 1 }, { unique: true });
-      await seedAdmin(db);
-      console.log("[athenaeum] Data layer: MongoDB connected");
-      return db;
-    });
-    clientPromise.catch(() => {
-      clientPromise = null;
-    });
+  const client = await getMongoClientPromise();
+  const db = client.db(process.env.MONGODB_DB || "devprep");
+
+  if (!indexesInitialized) {
+    indexesInitialized = true;
+    Promise.all([
+      db.collection("users").createIndex({ email: 1 }, { unique: true }).catch(() => undefined),
+      db.collection("orders").createIndex({ id: 1 }, { unique: true }).catch(() => undefined),
+      seedAccounts(db).catch(() => undefined)
+    ]).catch(() => undefined);
   }
-  return clientPromise;
+
+  return db;
 }
 
-async function seedAdmin(db: Db): Promise<void> {
+async function seedAccounts(db: Db): Promise<void> {
   const users = db.collection<UserRecord>("users");
-  if (await users.findOne({ role: "admin" })) return;
-  const email = (process.env.ADMIN_EMAIL || "admin@devprep.online").toLowerCase();
-  const password = process.env.ADMIN_PASSWORD || "DevPrep#2026";
-  await users.insertOne({
-    id: newId(),
-    name: "DevPrep Admin",
-    email,
-    passwordHash: bcrypt.hashSync(password, 10),
-    role: "admin",
-    createdAt: new Date().toISOString(),
-    access: { granted: true, provider: "admin", grantedAt: new Date().toISOString() }
-  });
-  console.log(`[devprep] Administrator seeded → ${email}`);
+  
+  // 1. Seed Admin
+  if (!(await users.findOne({ role: "admin" }))) {
+    const email = (process.env.ADMIN_EMAIL || "admin@devprep.online").toLowerCase();
+    const password = process.env.ADMIN_PASSWORD || "DevPrep#2026Admin";
+    await users.insertOne({
+      id: newId(),
+      name: "DevPrep Admin",
+      email,
+      passwordHash: bcrypt.hashSync(password, 10),
+      role: "admin",
+      createdAt: new Date().toISOString(),
+      access: { granted: true, provider: "admin", grantedAt: new Date().toISOString() }
+    });
+    console.log(`[devprep] Administrator seeded → ${email}`);
+  }
+
+  // 2. Seed Razorpay Reviewer test account
+  const testEmail = "reviewer@devprep.online";
+  if (!(await users.findOne({ email: testEmail }))) {
+    await users.insertOne({
+      id: newId(),
+      name: "Razorpay Reviewer",
+      email: testEmail,
+      passwordHash: bcrypt.hashSync("DevPrep#Tester2026", 10),
+      role: "scholar",
+      createdAt: new Date().toISOString(),
+      access: { granted: false, provider: null }
+    });
+    console.log(`[devprep] Razorpay Reviewer test account seeded → ${testEmail}`);
+  }
 }
 
 const usersCol = async () => (await getDb()).collection<UserRecord>("users");
@@ -62,7 +115,10 @@ const ordersCol = async () => (await getDb()).collection<OrderRecord>("orders");
 
 export async function getUserByEmail(email: string): Promise<UserRecord | null> {
   const col = await usersCol();
-  return col.findOne({ email: email.trim().toLowerCase() }, { projection: { _id: 0 } });
+  return col.findOne(
+    { email: email.trim().toLowerCase() },
+    { projection: { _id: 0 } }
+  );
 }
 
 export async function getUserById(id: string): Promise<UserRecord | null> {
@@ -72,7 +128,8 @@ export async function getUserById(id: string): Promise<UserRecord | null> {
 
 export async function getOrdersByUser(userId: string): Promise<OrderRecord[]> {
   const col = await ordersCol();
-  return col.find({ userId }, { projection: { _id: 0 } })
+  return col
+    .find({ userId }, { projection: { _id: 0 } })
     .sort({ createdAt: -1 })
     .toArray();
 }

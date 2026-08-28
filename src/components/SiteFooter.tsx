@@ -6,13 +6,13 @@ export default function SiteFooter() {
   const allStacks = listStacks();
 
   return (
-    <footer className="border-t border-[rgba(186,190,204,0.6)] bg-[var(--bg-chassis)] pt-16 pb-12 text-sm text-[var(--text-muted)]">
+    <footer className="border-t border-[var(--border-recessed)] bg-[var(--bg-chassis)] pt-16 pb-12 text-sm text-[var(--text-muted)] transition-colors duration-200">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         {/* Brand & Overview */}
-        <div className="grid gap-10 lg:grid-cols-[1.2fr_2fr] pb-12 border-b border-[rgba(186,190,204,0.4)]">
+        <div className="grid gap-10 lg:grid-cols-[1.2fr_2fr] pb-12 border-b border-[var(--border-recessed)]">
           <div>
             <div className="flex items-center gap-3">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--accent)] text-white font-mono font-black text-sm">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--accent)] text-white font-mono font-black text-sm shadow-[var(--shadow-btn-primary)]">
                 D
               </div>
               <span className="font-sans font-black text-xl text-[var(--text-primary)] tracking-tight">
@@ -28,7 +28,7 @@ export default function SiteFooter() {
             </div>
           </div>
 
-          {/* Role Pillars & Quick Links */}
+          {/* Role Pillars, Platform & Compliance Links */}
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-8">
             <div>
               <span className="stamped-label mb-4 block">CAREER PILLARS</span>
@@ -73,19 +73,40 @@ export default function SiteFooter() {
             </div>
 
             <div>
-              <span className="stamped-label mb-4 block">SECURITY &amp; LEGAL</span>
+              <span className="stamped-label mb-4 block">POLICIES &amp; COMPLIANCE</span>
               <ul className="space-y-2.5 text-xs font-mono">
-                <li>Razorpay 256-bit SSL</li>
-                <li>Instant License Binding</li>
-                <li>Lifetime Access Guarantee</li>
-                <li>support@devprep.online</li>
+                <li>
+                  <Link href="/terms" className="hover:text-[var(--accent)] transition-colors">
+                    Terms &amp; Conditions
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/privacy" className="hover:text-[var(--accent)] transition-colors">
+                    Privacy Policy
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/shipping" className="hover:text-[var(--accent)] transition-colors">
+                    Shipping Policy
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/cancellation-and-refund" className="hover:text-[var(--accent)] transition-colors">
+                    Cancellation &amp; Refund
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/contact" className="hover:text-[var(--accent)] transition-colors">
+                    Contact Us
+                  </Link>
+                </li>
               </ul>
             </div>
           </div>
         </div>
 
         {/* ── Full Sitemap-Style Category Grid (Crawlable <a> tags for SEO) ── */}
-        <div className="py-12 border-b border-[rgba(186,190,204,0.4)]">
+        <div className="py-12 border-b border-[var(--border-recessed)]">
           <span className="stamped-label mb-6 block text-[var(--accent)]">
             COMPLETE DIRECTORY OF ALL 27+ TECHNOLOGY CODICES
           </span>
@@ -119,9 +140,17 @@ export default function SiteFooter() {
         {/* Bottom copyright */}
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-mono text-[var(--text-muted)]">
           <p>© 2026 DevPrep (devprep.online) · All rights reserved.</p>
-          <p className="text-[11px] uppercase tracking-widest text-[var(--accent)] font-bold">
-            Stop preparing randomly. Prepare systematically.
-          </p>
+          <div className="flex items-center gap-4 text-[11px]">
+            <Link href="/terms" className="hover:underline">Terms</Link>
+            <span>·</span>
+            <Link href="/privacy" className="hover:underline">Privacy</Link>
+            <span>·</span>
+            <Link href="/shipping" className="hover:underline">Shipping</Link>
+            <span>·</span>
+            <Link href="/cancellation-and-refund" className="hover:underline">Refunds</Link>
+            <span>·</span>
+            <Link href="/contact" className="hover:underline">Contact</Link>
+          </div>
         </div>
       </div>
     </footer>

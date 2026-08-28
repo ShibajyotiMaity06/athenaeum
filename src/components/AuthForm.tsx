@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
+import { KeyRound, ShieldCheck } from "lucide-react";
 
 interface Props {
   mode: "login" | "register";
@@ -27,6 +28,12 @@ export default function AuthForm({ mode, nextPath = "/#technologies" }: Props) {
       setError(decodeURIComponent(urlError));
     }
   }, [searchParams]);
+
+  function fillReviewerCredentials() {
+    setEmail("reviewer@devprep.online");
+    setPassword("DevPrep#Tester2026");
+    setError(null);
+  }
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -185,6 +192,31 @@ export default function AuthForm({ mode, nextPath = "/#technologies" }: Props) {
           )}
         </p>
       </form>
+
+      {/* Reviewer / Razorpay Testing Credentials Helper */}
+      {!isRegister && (
+        <div className="pt-4 border-t border-[var(--border-recessed)]">
+          <div className="industrial-recessed p-4 text-xs font-mono">
+            <div className="flex items-center justify-between mb-2">
+              <span className="font-bold text-[var(--accent)] flex items-center gap-1.5">
+                <KeyRound className="w-3.5 h-3.5" />
+                <span>Razorpay / Test Account</span>
+              </span>
+              <button
+                type="button"
+                onClick={fillReviewerCredentials}
+                className="px-2 py-0.5 rounded bg-[var(--bg-chassis)] border border-[var(--border-card)] text-[10px] font-bold text-[var(--text-primary)] hover:text-[var(--accent)] shadow-sm"
+              >
+                Auto Fill
+              </button>
+            </div>
+            <div className="space-y-1 text-[11px] text-[var(--text-muted)]">
+              <div>Email: <strong className="text-[var(--text-primary)]">reviewer@devprep.online</strong></div>
+              <div>Password: <strong className="text-[var(--text-primary)]">DevPrep#Tester2026</strong></div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
