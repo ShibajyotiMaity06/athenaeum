@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import AuthForm from "@/components/AuthForm";
 
 export const metadata: Metadata = {
-  title: "Create Account — DevPrep",
-  description: "Enrol in DevPrep to unlock technical interview preparation.",
+  title: "Create an Account — DevPrep",
+  description: "Create a free account to track your interview prep progress.",
   robots: { index: false }
 };
 
@@ -19,16 +20,18 @@ export default async function RegisterPage({
     <div className="mx-auto max-w-md px-4 sm:px-6 py-20">
       <div className="industrial-card p-8 sm:p-10 corner-screws">
         <header className="text-center mb-8">
-          <span className="stamped-label-accent">JOIN DEVPREP</span>
+          <span className="stamped-label-accent">ACCOUNT INITIALIZATION</span>
           <h1 className="text-3xl font-black tracking-tight text-[var(--text-primary)] mt-2">
-            Create Account
+            Create account
           </h1>
           <p className="text-xs font-mono text-[var(--text-muted)] mt-1">
-            Free forever account · Bind your lifetime license.
+            Free preview across 27+ technologies. One key unlocks all.
           </p>
         </header>
         <div>
-          <AuthForm mode="register" nextPath={next} />
+          <Suspense fallback={<div className="h-64 flex items-center justify-center font-mono text-xs text-[var(--text-muted)]">Loading interface…</div>}>
+            <AuthForm mode="register" nextPath={next} />
+          </Suspense>
         </div>
       </div>
     </div>

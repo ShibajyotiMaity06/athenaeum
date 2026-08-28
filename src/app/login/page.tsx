@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import AuthForm from "@/components/AuthForm";
 
 export const metadata: Metadata = {
@@ -28,7 +29,9 @@ export default async function LoginPage({
           </p>
         </header>
         <div>
-          <AuthForm mode="login" nextPath={next} />
+          <Suspense fallback={<div className="h-64 flex items-center justify-center font-mono text-xs text-[var(--text-muted)]">Loading interface…</div>}>
+            <AuthForm mode="login" nextPath={next} />
+          </Suspense>
         </div>
       </div>
     </div>
