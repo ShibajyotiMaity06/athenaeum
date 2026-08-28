@@ -22,7 +22,7 @@ export default function TermsPage() {
             Terms &amp; Conditions
           </h1>
           <p className="mt-2 text-xs font-mono text-[var(--text-muted)]">
-            Last Updated: August 28, 2026 · Effective Immediately
+            Terms of Service &amp; Platform Usage Agreement · Effective Immediately
           </p>
         </header>
 

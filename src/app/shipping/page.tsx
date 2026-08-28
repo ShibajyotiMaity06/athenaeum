@@ -21,7 +21,7 @@ export default function ShippingPage() {
             Shipping &amp; Delivery Policy
           </h1>
           <p className="mt-2 text-xs font-mono text-[var(--text-muted)]">
-            Last Updated: August 28, 2026 · Digital Goods Delivery Notice
+            Instant Digital Fulfillment · Electronic Goods Delivery Notice
           </p>
         </header>
 

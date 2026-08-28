@@ -21,7 +21,7 @@ export default function PrivacyPage() {
             Privacy Policy
           </h1>
           <p className="mt-2 text-xs font-mono text-[var(--text-muted)]">
-            Last Updated: August 28, 2026 · Compliant with Digital Personal Data Protection Norms
+            Data Protection Notice · Compliant with Digital Personal Data Protection Norms
           </p>
         </header>
 
