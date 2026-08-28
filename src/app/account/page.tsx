@@ -1,9 +1,9 @@
-﻿import type { Metadata } from "next";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { BadgeCheck, BookOpen, ReceiptText } from "lucide-react";
+import { BadgeCheck, BookOpen, CheckCircle2, ReceiptText, Shield, User } from "lucide-react";
 import LogoutButton from "@/components/LogoutButton";
-import OrnateDivider from "@/components/OrnateDivider";
+import GeoPrice from "@/components/GeoPrice";
 import { getCurrentUser } from "@/lib/auth";
 import { getOrdersByUser } from "@/lib/db";
 import { PRICING, type CurrencyCode } from "@/lib/site";
@@ -11,12 +11,12 @@ import { PRICING, type CurrencyCode } from "@/lib/site";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Your Desk",
+  title: "Account Desk — DevPrep",
   robots: { index: false }
 };
 
 function money(amountMinor: number, currency: string): string {
-  if (currency === "INR") return `â‚¹${(amountMinor / 100).toFixed(0)}`;
+  if (currency === "INR") return `₹${(amountMinor / 100).toFixed(0)}`;
   return `$${(amountMinor / 100).toFixed(2)}`;
 }
 
@@ -26,128 +26,113 @@ export default async function AccountPage() {
 
   const orders = await getOrdersByUser(user.id);
   const isAdmin = user.role === "admin";
-  const sealed = Boolean(user.access.granted);
+  const hasAccess = Boolean(user.access.granted || isAdmin);
 
   return (
-    <div className="mx-auto max-w-4xl px-6 py-16">
-      <header className="mb-14">
-        <p className="kicker">Your Desk</p>
-        <h1 className="font-heading mt-4 text-5xl">{user.name}</h1>
-        <p className="mt-3 font-body italic text-faded">
+    <div className="mx-auto max-w-4xl px-4 sm:px-6 py-16">
+      <header className="mb-10 industrial-card p-6 sm:p-8 corner-screws">
+        <div className="flex items-center gap-2 mb-2">
+          <span className="led-indicator led-green" />
+          <span className="stamped-label-accent">DEVPREP USER TERMINAL</span>
+        </div>
+        <h1 className="text-3xl sm:text-4xl font-black text-[var(--text-primary)]">
+          {user.name}
+        </h1>
+        <p className="mt-1 text-xs sm:text-sm font-mono text-[var(--text-muted)]">
           {user.email}
           {isAdmin && (
-            <span className="ml-3 rounded border border-brass/60 px-2 py-0.5 font-display text-[9px] uppercase not-italic tracking-[0.25em] text-brass">
-              Warden · unrestricted
+            <span className="ml-3 px-2 py-0.5 rounded bg-[var(--accent)] text-white text-[10px] font-bold uppercase">
+              ADMIN
             </span>
           )}
         </p>
-        <OrnateDivider className="mt-8 w-full max-w-md" />
       </header>
 
-      <div className="grid gap-8 md:grid-cols-[1fr_320px]">
-        {/* Seal status */}
-        <section aria-labelledby="seal-heading" className="rounded border border-grain bg-oak p-8">
-          <h2 id="seal-heading" className="kicker">State of your seal</h2>
+      <div className="grid gap-8 md:grid-cols-[1.2fr_1fr]">
+        {/* Access Status Panel */}
+        <section className="industrial-card p-6 sm:p-8">
+          <span className="stamped-label mb-4 block">LICENSE STATUS</span>
 
-          {sealed ? (
-            <div className="mt-6 flex items-start gap-5">
-              <span
-                className={`${isAdmin && user.access.provider === "admin" ? "" : "wax-seal"} flex h-16 w-16 shrink-0 items-center justify-center rounded-full border ${
-                  isAdmin && user.access.provider === "admin"
-                    ? "border-brass/60"
-                    : ""
-                }`}
-              >
-                <BadgeCheck className={`h-7 w-7 ${isAdmin && user.access.provider === "admin" ? "text-brass" : "text-parchment"}`} strokeWidth={1.25} />
-              </span>
-              <div>
-                <p className="font-heading text-2xl">Open shelves</p>
-                <p className="mt-2 leading-relaxed text-faded">
-                  {isAdmin
-                    ? "Warden's privilege — every volume answers to you."
-                    : `Scholar access sealed via ${user.access.provider === "razorpay" ? "Razorpay" : "the sandbox ledger"} on ${
-                        user.access.grantedAt ? new Date(user.access.grantedAt).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" }) : "an earlier date"
-                      }.`}
-                </p>
-                {!isAdmin && (
-                  <p className="mt-2 font-body text-sm italic text-faded">
-                    Lifetime rights incl. future additions · receipt below
+          {hasAccess ? (
+            <div className="space-y-4">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+                  <CheckCircle2 className="w-6 h-6" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-[var(--text-primary)]">
+                    Lifetime Access Unlocked
+                  </h2>
+                  <p className="text-xs text-[var(--text-muted)] mt-1 leading-relaxed">
+                    {isAdmin
+                      ? "Admin privileges active — unrestricted access to all codices."
+                      : `Scholar access verified via ${
+                          user.access.provider === "razorpay" ? "Razorpay" : "the sandbox ledger"
+                        }. All 3,600+ questions and future updates are unlocked.`}
                   </p>
-                )}
+                </div>
+              </div>
+
+              <div className="pt-4 border-t border-[rgba(186,190,204,0.4)] flex flex-wrap gap-3">
+                <Link href="/#technologies" className="btn-industrial btn-industrial-primary py-2.5 px-5 text-xs">
+                  <span>Browse Questions</span>
+                </Link>
+                <LogoutButton />
               </div>
             </div>
           ) : (
-            <div className="mt-6">
-              <p className="font-heading text-2xl">Awaiting your seal</p>
-              <p className="mt-2 leading-relaxed text-faded">
-                The corridors are walkable, but the codices remain closed until a single
-                contribution of â‚¹500 / $10 is recorded.
-              </p>
-              <Link href="/pricing" className="btn btn-primary mt-6 h-12 px-8">
-                Visit the ledger
-              </Link>
+            <div className="space-y-4">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center shrink-0">
+                  <Shield className="w-6 h-6" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-[var(--text-primary)]">
+                    Free Preview Active
+                  </h2>
+                  <p className="text-xs text-[var(--text-muted)] mt-1 leading-relaxed">
+                    You can read 5 questions per level across every technology. Unlock all 3,600+ questions for ₹399 / $9 lifetime.
+                  </p>
+                </div>
+              </div>
+
+              <div className="pt-4 border-t border-[rgba(186,190,204,0.4)] flex flex-wrap gap-3">
+                <Link href="/pricing" className="btn-industrial btn-industrial-primary py-3 px-6 text-xs">
+                  <span>Upgrade to Lifetime Access — <GeoPrice className="ml-1" /></span>
+                </Link>
+                <LogoutButton />
+              </div>
             </div>
           )}
-
-          <div className="ornate-divider my-8" aria-hidden="true" />
-
-          <div className="flex flex-wrap gap-4">
-            <Link href="/library" className="btn btn-secondary h-11 px-6">
-              <BookOpen className="h-4 w-4" strokeWidth={1.5} />
-              Reading Room
-            </Link>
-            <LogoutButton />
-          </div>
         </section>
 
-        {/* Ledger */}
-        <section aria-labelledby="ledger-heading" className="rounded border border-grain bg-oak p-8">
-          <h2 id="ledger-heading" className="kicker flex items-center gap-2">
-            <ReceiptText className="h-4 w-4 text-brass" strokeWidth={1.5} />
-            The ledger
-          </h2>
+        {/* Order History */}
+        <section className="industrial-recessed p-6">
+          <span className="stamped-label mb-4 block flex items-center gap-2">
+            <ReceiptText className="w-4 h-4 text-[var(--accent)]" />
+            <span>TRANSACTION HISTORY</span>
+          </span>
 
           {orders.length === 0 ? (
-            <p className="mt-6 italic leading-relaxed text-faded">
-              No entries yet. When you settle at the desk, receipts are kept here forever.
+            <p className="text-xs font-mono text-[var(--text-muted)] py-4">
+              No orders on file yet. Upgrades will be recorded here permanently.
             </p>
           ) : (
-            <ul className="mt-6 grid gap-5">
+            <ul className="space-y-3 font-mono text-xs">
               {orders.map((o) => {
                 const cur = (o.currency in PRICING ? o.currency : "INR") as CurrencyCode;
                 return (
-                  <li key={o.id} className="rounded border border-grain bg-background p-4">
-                    <div className="flex items-center justify-between">
-                      <span className="font-display tracking-[0.15em] text-brass">
-                        {money(o.amount, cur)}{" "}
-                        <span className="text-faded">{cur}</span>
-                      </span>
-                      <span
-                        className={`rounded px-2 py-0.5 font-display text-[9px] uppercase tracking-[0.2em] ${
-                          o.status === "paid"
-                            ? "bg-crimson/25 text-parchment"
-                            : "border border-grain text-faded"
-                        }`}
-                      >
+                  <li key={o.id} className="p-3 bg-[var(--bg-chassis)] rounded-lg border border-[var(--border-card)]">
+                    <div className="flex items-center justify-between font-bold text-[var(--text-primary)]">
+                      <span>{money(o.amount, cur)} {cur}</span>
+                      <span className="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[10px] uppercase">
                         {o.status}
                       </span>
                     </div>
-                    <dl className="mt-3 space-y-1 font-body text-[13px] text-faded">
-                      <div className="flex justify-between gap-4">
-                        <dt>Reference</dt>
-                        <dd className="truncate font-mono text-[11px]" title={o.paymentId || o.id}>
-                          {(o.paymentId || o.id).slice(0, 22)}…
-                        </dd>
-                      </div>
-                      <div className="flex justify-between">
-                        <dt>Via</dt>
-                        <dd className="capitalize">{o.provider}</dd>
-                      </div>
-                      <div className="flex justify-between">
-                        <dt>Date</dt>
-                        <dd>{new Date(o.createdAt).toLocaleDateString("en-IN")}</dd>
-                      </div>
-                    </dl>
+                    <div className="mt-2 text-[11px] text-[var(--text-muted)] flex justify-between">
+                      <span>{new Date(o.createdAt).toLocaleDateString("en-IN")}</span>
+                      <span>{o.provider}</span>
+                    </div>
                   </li>
                 );
               })}

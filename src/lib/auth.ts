@@ -1,4 +1,4 @@
-﻿import bcrypt from "bcryptjs";
+import bcrypt from "bcryptjs";
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 import { getUserById, type UserRecord } from "@/lib/db";
@@ -59,7 +59,7 @@ export async function verifySession(token: string): Promise<SessionClaims | null
 /** Read + verify the session from the incoming request (server components). */
 export async function getSession(): Promise<SessionClaims | null> {
   const store = await cookies();
-  const token = store.get(SESSION_COOKIE)?.value;
+  const token = store.get(SESSION_COOKIE)?.value || store.get("athenaeum_session")?.value;
   if (!token) return null;
   return verifySession(token);
 }

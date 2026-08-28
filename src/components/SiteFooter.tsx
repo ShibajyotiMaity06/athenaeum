@@ -1,63 +1,126 @@
 import Link from "next/link";
-import { SITE } from "@/lib/site";
+import { SITE, TECH_CATEGORIES, ROLE_PILLARS } from "@/lib/site";
 import { listStacks } from "@/lib/content";
 
 export default function SiteFooter() {
-  const stacks = listStacks().slice(0, 6);
+  const allStacks = listStacks();
+
   return (
-    <footer className="border-t border-grain bg-oak/40">
-      <div className="mx-auto max-w-6xl px-6 py-16">
-        <div className="grid gap-12 md:grid-cols-4">
-          <div className="md:col-span-2">
+    <footer className="border-t border-[rgba(186,190,204,0.6)] bg-[var(--bg-chassis)] pt-16 pb-12 text-sm text-[var(--text-muted)]">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+        {/* Brand & Overview */}
+        <div className="grid gap-10 lg:grid-cols-[1.2fr_2fr] pb-12 border-b border-[rgba(186,190,204,0.4)]">
+          <div>
             <div className="flex items-center gap-3">
-              <span className="flex h-9 w-9 items-center justify-center rounded border border-brass/60 text-lg text-brass">
-                ✶
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--accent)] text-white font-mono font-black text-sm">
+                D
+              </div>
+              <span className="font-sans font-black text-xl text-[var(--text-primary)] tracking-tight">
+                DevPrep
               </span>
-              <span className="font-display text-sm uppercase tracking-[0.28em]">Athenaeum</span>
             </div>
-            <p className="mt-5 max-w-md leading-relaxed text-faded">
-              A gated reading room of engineering codices — curated questions,
-              disciplined levels and implementation folios, kept under one brass key.
+            <p className="mt-4 text-xs sm:text-sm leading-relaxed text-[var(--text-muted)] max-w-sm">
+              The systematic technical interview preparation platform. 3,600+ curated questions graded across Easy, Medium, and Hard across 27+ technologies. One-time ₹399 / $9 lifetime access.
             </p>
+            <div className="mt-6 flex items-center gap-2 font-mono text-xs text-[var(--text-primary)]">
+              <span className="led-indicator led-green" />
+              <span>SYSTEM OPERATIONAL // ALL CODICES ONLINE</span>
+            </div>
           </div>
 
-          <nav aria-label="Collections">
-            <p className="kicker mb-5">Collections</p>
-            <ul className="grid gap-3">
-              {stacks.map((s) => (
-                <li key={s.slug}>
-                  <Link href={`/library/${s.slug}`} className="link-brass font-body text-[15px]">
-                    {s.name}
+          {/* Role Pillars & Quick Links */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-8">
+            <div>
+              <span className="stamped-label mb-4 block">CAREER PILLARS</span>
+              <ul className="space-y-2.5 text-xs font-mono">
+                {Object.values(ROLE_PILLARS).map((rp) => (
+                  <li key={rp.slug}>
+                    <Link
+                      href={`/${rp.slug}`}
+                      className="hover:text-[var(--accent)] transition-colors"
+                    >
+                      {rp.roleName}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div>
+              <span className="stamped-label mb-4 block">PLATFORM</span>
+              <ul className="space-y-2.5 text-xs font-mono">
+                <li>
+                  <Link href="/#technologies" className="hover:text-[var(--accent)] transition-colors">
+                    All Technologies
                   </Link>
                 </li>
-              ))}
-              <li>
-                <Link href="/library" className="link-brass font-body text-[15px] italic">
-                  All volumes →
-                </Link>
-              </li>
-            </ul>
-          </nav>
+                <li>
+                  <Link href="/pricing" className="hover:text-[var(--accent)] transition-colors">
+                    Lifetime Pricing
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/#faq" className="hover:text-[var(--accent)] transition-colors">
+                    FAQ
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/account" className="hover:text-[var(--accent)] transition-colors">
+                    Account Portal
+                  </Link>
+                </li>
+              </ul>
+            </div>
 
-          <nav aria-label="The Society">
-            <p className="kicker mb-5">The Society</p>
-            <ul className="grid gap-3 text-[15px]">
-              <li><Link href="/pricing" className="link-brass">Terms of Access</Link></li>
-              <li><Link href="/#proclamation" className="link-brass">Proclamation</Link></li>
-              <li><Link href="/#faq" className="link-brass">Questions Posed</Link></li>
-              <li><Link href="/account" className="link-brass">Your Desk</Link></li>
-            </ul>
-          </nav>
+            <div>
+              <span className="stamped-label mb-4 block">SECURITY &amp; LEGAL</span>
+              <ul className="space-y-2.5 text-xs font-mono">
+                <li>Razorpay 256-bit SSL</li>
+                <li>Instant License Binding</li>
+                <li>Lifetime Access Guarantee</li>
+                <li>support@devprep.online</li>
+              </ul>
+            </div>
+          </div>
         </div>
 
-        <div className="ornate-divider my-12" aria-hidden="true" />
+        {/* ── Full Sitemap-Style Category Grid (Crawlable <a> tags for SEO) ── */}
+        <div className="py-12 border-b border-[rgba(186,190,204,0.4)]">
+          <span className="stamped-label mb-6 block text-[var(--accent)]">
+            COMPLETE DIRECTORY OF ALL 27+ TECHNOLOGY CODICES
+          </span>
 
-        <div className="flex flex-col items-center justify-between gap-4 text-center md:flex-row md:text-left">
-          <p className="text-sm text-faded">
-            © {SITE.established} · {SITE.name}. Set in Cormorant Garamond &amp; Crimson Pro.
-          </p>
-          <p className="text-xs tracking-[0.2em] text-faded uppercase font-display">
-            Knowledge wants a careful reader
+          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-5 text-xs">
+            {TECH_CATEGORIES.map((cat) => {
+              const catStacks = allStacks.filter((s) => cat.slugs.includes(s.slug));
+              return (
+                <div key={cat.name}>
+                  <h4 className="font-bold text-[var(--text-primary)] mb-3 font-mono text-[11px] uppercase tracking-wider">
+                    {cat.name}
+                  </h4>
+                  <ul className="space-y-2">
+                    {catStacks.map((s) => (
+                      <li key={s.slug}>
+                        <Link
+                          href={`/${s.hubSlug}`}
+                          className="hover:text-[var(--accent)] transition-colors block text-[var(--text-muted)] hover:underline"
+                        >
+                          {s.name} Questions
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Bottom copyright */}
+        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-mono text-[var(--text-muted)]">
+          <p>© 2026 DevPrep (devprep.online) · All rights reserved.</p>
+          <p className="text-[11px] uppercase tracking-widest text-[var(--accent)] font-bold">
+            Stop preparing randomly. Prepare systematically.
           </p>
         </div>
       </div>

@@ -1,12 +1,56 @@
 import type { MetadataRoute } from "next";
-import { SITE } from "@/lib/site";
+import { listStacks } from "@/lib/content";
+import { LEVELS, ROLE_PILLARS, SITE } from "@/lib/site";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const now = new Date();
-  return [
-    { url: `${SITE.url}/`, lastModified: now, changeFrequency: "weekly", priority: 1 },
-    { url: `${SITE.url}/pricing`, lastModified: now, changeFrequency: "monthly", priority: 0.9 },
-    { url: `${SITE.url}/login`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
-    { url: `${SITE.url}/register`, lastModified: now, changeFrequency: "yearly", priority: 0.3 }
+  const baseUrl = SITE.url;
+  const lastMod = new Date("2026-08-28T00:00:00Z");
+
+  const staticRoutes: MetadataRoute.Sitemap = [
+    {
+      url: `${baseUrl}/`,
+      lastModified: lastMod,
+      changeFrequency: "weekly",
+      priority: 1.0
+    },
+    {
+      url: `${baseUrl}/pricing`,
+      lastModified: lastMod,
+      changeFrequency: "monthly",
+      priority: 0.9
+    }
   ];
+
+  // Role Pillar Pages
+  const roleRoutes: MetadataRoute.Sitemap = Object.keys(ROLE_PILLARS).map((slug) => ({
+    url: `${baseUrl}/${slug}`,
+    lastModified: lastMod,
+    changeFrequency: "weekly",
+    priority: 0.9
+  }));
+
+  // Technology Hub Pages & Level Pages
+  const stacks = listStacks();
+  const techHubRoutes: MetadataRoute.Sitemap = [];
+  const levelRoutes: MetadataRoute.Sitemap = [];
+
+  for (const stack of stacks) {
+    techHubRoutes.push({
+      url: `${baseUrl}/${stack.hubSlug}`,
+      lastModified: lastMod,
+      changeFrequency: "weekly",
+      priority: 0.85
+    });
+
+    for (const level of LEVELS) {
+      levelRoutes.push({
+        url: `${baseUrl}/${stack.hubSlug}/${level.slug}`,
+        lastModified: lastMod,
+        changeFrequency: "monthly",
+        priority: 0.75
+      });
+    }
+  }
+
+  return [...staticRoutes, ...roleRoutes, ...techHubRoutes, ...levelRoutes];
 }

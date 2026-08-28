@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
 import AuthForm from "@/components/AuthForm";
-import OrnateDivider from "@/components/OrnateDivider";
 
 export const metadata: Metadata = {
-  title: "Enrol",
-  description: "Inscribe yourself into the Athenaeum register.",
+  title: "Create Account — DevPrep",
+  description: "Enrol in DevPrep to unlock technical interview preparation.",
   robots: { index: false }
 };
 
@@ -14,21 +13,21 @@ export default async function RegisterPage({
   searchParams: Promise<{ next?: string }>;
 }) {
   const params = await searchParams;
-  const next =
-    typeof params.next === "string" && params.next.startsWith("/") ? params.next : "/pricing";
+  const next = typeof params.next === "string" && params.next.startsWith("/") ? params.next : "/#technologies";
 
   return (
-    <div className="mx-auto max-w-md px-6 py-24">
-      <div className="ornate-frame rounded border border-grain bg-oak p-10 sm:p-12">
-        <header className="text-center">
-          <p className="kicker">The Register of Scholars</p>
-          <h1 className="font-heading mt-4 text-4xl">Take a seat</h1>
-          <p className="mt-3 font-body italic text-faded">
-            An account is free — the library asks its toll once.
+    <div className="mx-auto max-w-md px-4 sm:px-6 py-20">
+      <div className="industrial-card p-8 sm:p-10 corner-screws">
+        <header className="text-center mb-8">
+          <span className="stamped-label-accent">JOIN DEVPREP</span>
+          <h1 className="text-3xl font-black tracking-tight text-[var(--text-primary)] mt-2">
+            Create Account
+          </h1>
+          <p className="text-xs font-mono text-[var(--text-muted)] mt-1">
+            Free forever account · Bind your lifetime license.
           </p>
-          <OrnateDivider className="mx-auto mt-7 w-48" />
         </header>
-        <div className="mt-10">
+        <div>
           <AuthForm mode="register" nextPath={next} />
         </div>
       </div>

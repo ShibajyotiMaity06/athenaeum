@@ -25,11 +25,11 @@ function freshDb(): Database {
 
 function seedAdmin(db: Database): void {
   if (db.users.some((u) => u.role === "admin")) return;
-  const email = (process.env.ADMIN_EMAIL || "admin@athenaeum.dev").toLowerCase();
-  const password = process.env.ADMIN_PASSWORD || "Athenaeum#1876";
+  const email = (process.env.ADMIN_EMAIL || "admin@devprep.online").toLowerCase();
+  const password = process.env.ADMIN_PASSWORD || "DevPrep#2026";
   db.users.push({
     id: newId(),
-    name: "The Warden",
+    name: "DevPrep Admin",
     email,
     passwordHash: bcrypt.hashSync(password, 10),
     role: "admin",
@@ -37,7 +37,7 @@ function seedAdmin(db: Database): void {
     access: { granted: true, provider: "admin", grantedAt: new Date().toISOString() }
   });
   persist();
-  console.log(`[athenaeum] Administrator seeded → ${email}`);
+  console.log(`[devprep] Administrator seeded → ${email}`);
 }
 
 function load(): Database {

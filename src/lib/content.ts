@@ -3,8 +3,14 @@ import { join } from "node:path";
 import { Marked } from "marked";
 import { markedHighlight } from "marked-highlight";
 import hljs from "highlight.js/lib/common";
-import { toRoman } from "@/lib/roman";
-import { ANNEX_SLUGS } from "@/lib/site";
+import {
+  LEVELS,
+  RELATED_TECH_MAP,
+  ROLE_PILLARS,
+  toContentLevel,
+  toSeoLevel,
+  type SeoLevelSlug
+} from "@/lib/site";
 
 /* ── Markdown rendering (server-only) ─────────────────────────────────────── */
 
@@ -28,7 +34,7 @@ export function renderMarkdown(md: string): string {
 
 const CONTENT_DIR = join(process.cwd(), "content");
 
-const PRETTY_NAMES: Record<string, string> = {
+export const PRETTY_NAMES: Record<string, string> = {
   "computer-networks": "Computer Networks",
   "context-api": "Context API",
   css: "CSS",
@@ -58,7 +64,7 @@ const PRETTY_NAMES: Record<string, string> = {
   zustand: "Zustand"
 };
 
-function prettify(slug: string): string {
+export function prettify(slug: string): string {
   return (
     PRETTY_NAMES[slug] ||
     slug
@@ -73,28 +79,35 @@ export interface Question {
   num: number;
   label: string;
   title: string;
+  plainTextPreview?: string;
   html: string;
 }
 
 export interface LevelStat {
-  slug: string;
+  slug: string; // "basic" | "medium" | "hard"
+  seoSlug: "easy" | "medium" | "hard";
   theoryCount: number;
   challengeCount: number;
 }
 
 export interface StackSummary {
-  slug: string;
+  slug: string; // e.g. "react"
+  hubSlug: string; // e.g. "react-interview-questions"
   name: string;
-  numeral: string;
   index: number;
   levels: LevelStat[];
   questionCount: number;
+  theoryCount: number;
+  challengeCount: number;
+  relatedSlugs: string[];
+  roleSlugs: string[];
 }
 
 export interface ParsedDocument {
   stackSlug: string;
   stackName: string;
-  level: string;
+  level: string; // "basic" | "medium" | "hard"
+  seoLevel: "easy" | "medium" | "hard";
   levelLabel: string;
   theory: Question[];
   challenges: Question[];
@@ -107,6 +120,16 @@ function readRaw(stack: string, level: string): string | null {
   const file = join(CONTENT_DIR, stack, `${level}.md`);
   if (!existsSync(file)) return null;
   return readFileSync(file, "utf-8").replace(/\r\n/g, "\n");
+}
+
+function stripMarkdown(md: string): string {
+  return md
+    .replace(/```[\s\S]*?```/g, "")
+    .replace(/`([^`]+)`/g, "$1")
+    .replace(/\[([^\]]+)\]\([^\)]+\)/g, "$1")
+    .replace(/[#*_~>]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 /** Split a section of markdown into ###-level entries with rendered bodies. */
@@ -125,11 +148,14 @@ function parseEntries(sectionMd: string): Question[] {
     const body = lines.slice(heading.line + 1, end).join("\n").trim();
     const numMatch = /^(?:Q)?(\d+)\b/.exec(heading.title);
     const num = numMatch ? parseInt(numMatch[1], 10) : idx + 1;
+    const cleanTitle = heading.title.replace(/^(?:Q)?\d+[.:)]?\s*/, "").replace(/^\d+\.\s*/, "");
+    
     entries.push({
       id: `entry-${num}-${idx}`,
       num,
       label: heading.title,
-      title: heading.title.replace(/^(?:Q)?\d+[.:)]?\s*/, "").replace(/^\d+\.\s*/, ""),
+      title: cleanTitle,
+      plainTextPreview: stripMarkdown(body).slice(0, 200),
       html: renderMarkdown(body || "_Answer forthcoming._")
     });
   });
@@ -151,12 +177,16 @@ function splitTheoryAndChallenges(raw: string): { theory: string; challenges: st
   };
 }
 
+function countEntries(sectionMd: string): number {
+  const matches = sectionMd.match(/^###\s+/gm);
+  return matches ? matches.length : 0;
+}
+
 const summaryCache = new Map<string, StackSummary>();
 let orderedCache: StackSummary[] | null = null;
 
 /**
- * All stacks, core collection first (alphabetical, numbered I…XIX),
- * then the Annex wing (numbered onward from XX).
+ * All stacks sorted alphabetically.
  */
 export function listStacks(): StackSummary[] {
   if (orderedCache) return orderedCache;
@@ -184,36 +214,39 @@ export function listStacks(): StackSummary[] {
       const { theory, challenges } = splitTheoryAndChallenges(raw);
       levels.push({
         slug: level,
+        seoSlug: toSeoLevel(level),
         theoryCount: countEntries(theory),
         challengeCount: countEntries(challenges)
       });
     }
+
+    const rel = RELATED_TECH_MAP[slug] || { related: [], roles: [] };
+
+    const totalTheory = levels.reduce((sum, l) => sum + l.theoryCount, 0);
+    const totalChallenge = levels.reduce((sum, l) => sum + l.challengeCount, 0);
+
     const summary: StackSummary = {
       slug,
+      hubSlug: `${slug}-interview-questions`,
       name: prettify(slug),
-      numeral: "",
       index: 0,
       levels,
-      questionCount: levels.reduce((sum, l) => sum + l.theoryCount + l.challengeCount, 0)
+      questionCount: totalTheory + totalChallenge,
+      theoryCount: totalTheory,
+      challengeCount: totalChallenge,
+      relatedSlugs: rel.related,
+      roleSlugs: rel.roles
     };
     summaryCache.set(slug, summary);
     return summary;
   });
 
   summaries.sort((a, b) => a.name.localeCompare(b.name));
-
-  const core = summaries.filter((s) => !ANNEX_SLUGS.has(s.slug));
-  const annex = summaries.filter((s) => ANNEX_SLUGS.has(s.slug));
-  core.forEach((s, i) => {
+  summaries.forEach((s, i) => {
     s.index = i + 1;
-    s.numeral = toRoman(i + 1);
-  });
-  annex.forEach((s, i) => {
-    s.index = core.length + i + 1;
-    s.numeral = toRoman(core.length + i + 1);
   });
 
-  orderedCache = [...core, ...annex];
+  orderedCache = summaries;
   return orderedCache;
 }
 
@@ -221,38 +254,40 @@ export function listStacks(): StackSummary[] {
 export function listStacksSplit(): { core: StackSummary[]; annex: StackSummary[] } {
   const all = listStacks();
   return {
-    core: all.filter((s) => !ANNEX_SLUGS.has(s.slug)),
-    annex: all.filter((s) => ANNEX_SLUGS.has(s.slug))
+    core: all.slice(0, 18),
+    annex: all.slice(18)
   };
 }
 
-function countEntries(sectionMd: string): number {
-  const matches = sectionMd.match(/^###\s+/gm);
-  return matches ? matches.length : 0;
-}
-
-export function getStack(slug: string): StackSummary | null {
-  return listStacks().find((s) => s.slug === slug) ?? null;
+export function getStack(rawSlug: string): StackSummary | null {
+  const techSlug = slugToTech(rawSlug);
+  return listStacks().find((s) => s.slug === techSlug) ?? null;
 }
 
 const docCache = new Map<string, ParsedDocument>();
 
-export function getDocument(stackSlug: string, level: string): ParsedDocument | null {
-  const key = `${stackSlug}/${level}`;
+export function getDocument(rawStackSlug: string, rawLevel: string): ParsedDocument | null {
+  const stackSlug = slugToTech(rawStackSlug);
+  const contentLevel = toContentLevel(rawLevel);
+  const seoLevel = toSeoLevel(contentLevel);
+  const key = `${stackSlug}/${contentLevel}`;
+
   if (docCache.has(key)) return docCache.get(key)!;
 
-  const raw = readRaw(stackSlug, level);
+  const raw = readRaw(stackSlug, contentLevel);
   if (!raw) return null;
 
   const stack = getStack(stackSlug);
   const { theory, challenges } = splitTheoryAndChallenges(raw);
 
+  const levelMeta = LEVELS.find((l) => l.slug === seoLevel);
+
   const doc: ParsedDocument = {
     stackSlug,
     stackName: stack?.name ?? prettify(stackSlug),
-    level,
-    levelLabel:
-      level === "basic" ? "Foundations" : level === "medium" ? "Intermediate" : "Advanced",
+    level: contentLevel,
+    seoLevel,
+    levelLabel: levelMeta ? levelMeta.label : prettify(contentLevel),
     theory: parseEntries(theory),
     challenges: parseEntries(challenges),
     total: 0
@@ -265,15 +300,80 @@ export function getDocument(stackSlug: string, level: string): ParsedDocument | 
 export function getLibraryStats() {
   const stacks = listStacks();
   return {
+    technologies: stacks.length,
     volumes: stacks.length,
     codices: stacks.reduce((n, s) => n + s.levels.length, 0),
-    questions: stacks.reduce(
-      (n, s) => n + s.levels.reduce((m, l) => m + l.theoryCount, 0),
-      0
-    ),
-    challenges: stacks.reduce(
-      (n, s) => n + s.levels.reduce((m, l) => m + l.challengeCount, 0),
-      0
-    )
+    questions: stacks.reduce((n, s) => n + s.theoryCount, 0),
+    challenges: stacks.reduce((n, s) => n + s.challengeCount, 0),
+    total: stacks.reduce((n, s) => n + s.questionCount, 0)
   };
+}
+
+/* ── SEO Route Mapping Helpers ────────────────────────────────────────────── */
+
+/**
+ * Converts a URL slug or raw tech slug (e.g. "react-interview-questions" or "react")
+ * into canonical technology key ("react").
+ */
+export function slugToTech(slug: string): string {
+  if (slug.endsWith("-interview-questions")) {
+    return slug.replace(/-interview-questions$/, "");
+  }
+  return slug;
+}
+
+/**
+ * Converts a tech key (e.g. "react") to URL slug ("react-interview-questions").
+ */
+export function techToHubSlug(techSlug: string): string {
+  return `${techSlug}-interview-questions`;
+}
+
+/**
+ * Checks if a route slug is a role pillar page.
+ */
+export function isRolePillarSlug(slug: string): boolean {
+  return slug in ROLE_PILLARS;
+}
+
+/**
+ * Checks if a route slug is a valid tech hub.
+ */
+export function isTechHubSlug(slug: string): boolean {
+  const tech = slugToTech(slug);
+  return listStacks().some((s) => s.slug === tech);
+}
+
+/**
+ * Returns all static params for hub pages and role pages.
+ * Used in generateStaticParams for `app/[slug]/page.tsx`.
+ */
+export function getAllHubParams(): { slug: string }[] {
+  const techParams = listStacks().map((s) => ({
+    slug: s.hubSlug
+  }));
+  const roleParams = Object.keys(ROLE_PILLARS).map((slug) => ({
+    slug
+  }));
+  return [...techParams, ...roleParams];
+}
+
+/**
+ * Returns all static params for level pages.
+ * Used in generateStaticParams for `app/[slug]/[level]/page.tsx`.
+ */
+export function getAllLevelParams(): { slug: string; level: string }[] {
+  const params: { slug: string; level: string }[] = [];
+  const stacks = listStacks();
+
+  for (const stack of stacks) {
+    for (const level of ["easy", "medium", "hard"] as const) {
+      params.push({
+        slug: stack.hubSlug,
+        level
+      });
+    }
+  }
+
+  return params;
 }

@@ -41,18 +41,18 @@ async function getDb(): Promise<Db> {
 async function seedAdmin(db: Db): Promise<void> {
   const users = db.collection<UserRecord>("users");
   if (await users.findOne({ role: "admin" })) return;
-  const email = (process.env.ADMIN_EMAIL || "admin@athenaeum.dev").toLowerCase();
-  const password = process.env.ADMIN_PASSWORD || "Athenaeum#1876";
+  const email = (process.env.ADMIN_EMAIL || "admin@devprep.online").toLowerCase();
+  const password = process.env.ADMIN_PASSWORD || "DevPrep#2026";
   await users.insertOne({
     id: newId(),
-    name: "The Warden",
+    name: "DevPrep Admin",
     email,
     passwordHash: bcrypt.hashSync(password, 10),
     role: "admin",
     createdAt: new Date().toISOString(),
     access: { granted: true, provider: "admin", grantedAt: new Date().toISOString() }
   });
-  console.log(`[athenaeum] Administrator seeded → ${email}`);
+  console.log(`[devprep] Administrator seeded → ${email}`);
 }
 
 const usersCol = async () => (await getDb()).collection<UserRecord>("users");

@@ -2,6 +2,25 @@
 const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  async redirects() {
+    return [
+      {
+        source: "/library",
+        destination: "/#technologies",
+        permanent: true
+      },
+      {
+        source: "/library/:stack",
+        destination: "/:stack-interview-questions",
+        permanent: true
+      },
+      {
+        source: "/library/:stack/:level",
+        destination: "/:stack-interview-questions/:level",
+        permanent: true
+      }
+    ];
+  },
   async headers() {
     return [
       {
