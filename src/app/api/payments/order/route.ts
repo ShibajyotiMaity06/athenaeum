@@ -36,8 +36,8 @@ export async function POST(req: NextRequest) {
     const order = await createRazorpayOrder({
       amount: price.amount,
       currency: code,
-      receipt: `ath_${Date.now().toString(36)}`,
-      notes: { userId: user.id, email: user.email }
+      receipt: `devprep_${Date.now().toString(36)}`,
+      notes: { platform: "DevPrep", userId: user.id, email: user.email }
     });
 
     recordOrder({

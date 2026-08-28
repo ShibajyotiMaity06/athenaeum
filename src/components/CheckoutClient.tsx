@@ -95,10 +95,15 @@ export default function CheckoutClient({
         order_id: orderData.orderId,
         amount: orderData.amount,
         currency: orderData.currency,
-        name: SITE.name,
-        description: "Lifetime Scholar Access — DevPrep",
+        name: "DevPrep",
+        description: "DevPrep Lifetime Scholar Access — 3,600+ Questions",
+        image: `${SITE.url}/icon.svg`,
         prefill: { name: userName, email: userEmail },
-        theme: { color: "#ff4757" },
+        theme: { color: "#ff4757", backdrop_color: "#16191d" },
+        notes: {
+          platform: "DevPrep",
+          email: userEmail
+        },
         handler: async (response: {
           razorpay_order_id: string;
           razorpay_payment_id: string;
