@@ -227,7 +227,7 @@ export default function CheckoutClient({
       )}
 
       {error && (
-        <div className="mt-6 p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-mono">
+        <div className="mt-6 p-4 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-500 text-xs font-mono">
           {error}
         </div>
       )}
@@ -236,10 +236,13 @@ export default function CheckoutClient({
         type="button"
         disabled={phase === "busy" || !price}
         onClick={completePurchase}
-        className="btn-industrial btn-industrial-primary py-4 px-8 text-sm w-full mt-6 shadow-[var(--shadow-btn-primary)]"
+        className="btn-industrial btn-industrial-primary py-4 px-8 text-sm w-full mt-6 shadow-[var(--shadow-btn-primary)] flex items-center justify-center gap-2.5 disabled:opacity-60"
       >
         {phase === "busy" ? (
-          <span>Verifying with Gateway…</span>
+          <>
+            <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            <span>Connecting Gateway…</span>
+          </>
         ) : (
           <span>Pay {price ? price.display : ""} · Unlock Lifetime Access</span>
         )}
