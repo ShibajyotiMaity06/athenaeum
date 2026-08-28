@@ -93,7 +93,7 @@ export default function SiteFooter() {
                 </li>
                 <li>
                   <Link href="/cancellation-and-refund" className="hover:text-[var(--accent)] transition-colors">
-                    Cancellation &amp; Refund
+                    No-Refund Policy
                   </Link>
                 </li>
                 <li>
@@ -148,7 +148,7 @@ export default function SiteFooter() {
             <span>·</span>
             <Link href="/shipping" className="hover:underline">Shipping</Link>
             <span>·</span>
-            <Link href="/cancellation-and-refund" className="hover:underline">Refunds</Link>
+            <Link href="/cancellation-and-refund" className="hover:underline">No-Refunds</Link>
             <span>·</span>
             <Link href="/contact" className="hover:underline">Contact</Link>
           </div>

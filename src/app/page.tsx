@@ -50,7 +50,11 @@ const FAQS = [
   },
   {
     q: "What if I experience issues with my payment?",
-    a: "Your access is bound to your account automatically upon payment verification. If any network timeout occurs, sign in and your order status can be re-verified instantly, or contact support@devprep.online for immediate assistance."
+    a: "Your access is bound to your account automatically upon payment verification. If any network timeout occurs, sign in and your order status can be re-verified instantly, or contact shibajyoti.maity06@gmail.com for immediate assistance."
+  },
+  {
+    q: "What is the refund and cancellation policy?",
+    a: "Because all 27+ technologies include 400+ free unlocked questions to review before purchasing, and full lifetime access is permanently provisioned immediately upon payment, all sales are final with a strict no-refund policy. Since this is a one-time purchase, there are no ongoing subscriptions to cancel."
   }
 ];
 

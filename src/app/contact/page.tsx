@@ -39,10 +39,10 @@ export default function ContactPage() {
             </div>
             <div className="mt-6 pt-4 border-t border-[var(--border-recessed)]">
               <a
-                href="mailto:support@devprep.online"
+                href="mailto:shibajyoti.maity06@gmail.com"
                 className="font-mono text-xs font-bold text-[var(--accent)] hover:underline"
               >
-                support@devprep.online
+                shibajyoti.maity06@gmail.com
               </a>
             </div>
           </div>

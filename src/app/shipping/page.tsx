@@ -60,7 +60,7 @@ export default function ShippingPage() {
             <ol>
               <li>Log out and log back in to refresh your active session token.</li>
               <li>Check your <a href="/account" className="text-[var(--accent)] font-bold underline">Account Desk</a> to verify order status.</li>
-              <li>Email our technical team at <a href="mailto:support@devprep.online" className="text-[var(--accent)] font-mono font-bold">support@devprep.online</a> with your Razorpay Payment ID. We resolve and activate licenses within 2 to 4 business hours.</li>
+              <li>Email our technical team at <a href="mailto:shibajyoti.maity06@gmail.com" className="text-[var(--accent)] font-mono font-bold">shibajyoti.maity06@gmail.com</a> with your Razorpay Payment ID. We resolve and activate licenses within 2 to 4 business hours.</li>
             </ol>
           </section>
         </div>

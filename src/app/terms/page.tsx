@@ -87,8 +87,8 @@ export default function TermsPage() {
             <h2>7. Contact Information</h2>
             <p>
               For legal inquiries or questions regarding these terms, contact us at:{" "}
-              <a href="mailto:support@devprep.online" className="text-[var(--accent)] font-mono font-bold">
-                support@devprep.online
+              <a href="mailto:shibajyoti.maity06@gmail.com" className="text-[var(--accent)] font-mono font-bold">
+                shibajyoti.maity06@gmail.com
               </a>
             </p>
           </section>

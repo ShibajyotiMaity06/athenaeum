@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { RefreshCcw, ShieldCheck } from "lucide-react";
+import { ShieldAlert, Ban } from "lucide-react";
 import { SITE } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: "Cancellation & Refund Policy | DevPrep",
-  description: "Cancellation and refund guidelines for DevPrep purchases.",
+  title: "No Refund & Cancellation Policy | DevPrep",
+  description: "DevPrep strict no-refund and no-cancellation policy for lifetime digital access.",
   alternates: { canonical: `${SITE.url}/cancellation-and-refund` }
 };
 
@@ -14,70 +14,49 @@ export default function RefundPolicyPage() {
     <div className="mx-auto max-w-4xl px-4 sm:px-6 py-16 sm:py-20">
       <div className="industrial-card p-8 sm:p-12 corner-screws">
         <header className="mb-10 pb-6 border-b border-[var(--border-recessed)]">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--bg-recessed)] text-[var(--accent)] font-mono text-xs font-bold uppercase tracking-wider mb-3">
-            <RefreshCcw className="w-3.5 h-3.5" />
-            <span>SETTLEMENT POLICY</span>
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-500/10 text-rose-500 font-mono text-xs font-bold uppercase tracking-wider mb-3 border border-rose-500/20">
+            <Ban className="w-3.5 h-3.5" />
+            <span>STRICT NO-REFUND POLICY</span>
           </div>
           <h1 className="text-3xl sm:text-4xl font-black text-[var(--text-primary)] tracking-tight">
-            Cancellation &amp; Refund Policy
+            No Refund &amp; Cancellation Policy
           </h1>
-          <p className="mt-2 text-xs font-mono text-[var(--text-muted)]">
-            Last Updated: August 28, 2026 · Transparent Customer Assurance
-          </p>
+
         </header>
 
         <div className="manuscript text-[var(--text-primary)] space-y-8">
           <section>
-            <h2>1. Free Preview Before You Pay</h2>
+            <h2>1. Strict No-Refund Policy</h2>
             <p>
-              To ensure complete transparency and prevent buyer remorse, DevPrep provides <strong>400+ free unlocked model answers</strong> (5 complete questions per difficulty level across all 27+ technologies) before requiring any payment.
+              <strong>DevPrep does not offer refunds under any circumstances once a purchase is completed. All sales are final.</strong>
             </p>
             <p>
-              We strongly encourage all users to review the quality, depth, and structure of these free preview codices prior to purchasing the Lifetime Access Key.
-            </p>
-          </section>
-
-          <section>
-            <h2>2. Cancellation Policy</h2>
-            <p>
-              Because DevPrep is a <strong>one-time lifetime payment model with no recurring subscriptions</strong>, there are no ongoing monthly or annual renewals to cancel. Once enrolled, you will never be charged recurring fees.
+              Because our product is a 100% digital educational codex providing immediate, unrestricted, and permanent access to 3,600+ questions and verified model answers, digital access cannot be returned or refunded once provisioned.
             </p>
           </section>
 
           <section>
-            <h2>3. Refund Eligibility &amp; Cases</h2>
+            <h2>2. No Cancellation Needed (Zero Subscriptions)</h2>
             <p>
-              Refund requests are honored under the following specific circumstances:
+              DevPrep is a <strong>one-time lifetime fee</strong>. We do not charge recurring monthly, quarterly, or yearly subscriptions. Because there are no recurring billing cycles, <strong>no cancellation is required</strong>. You will never be billed again after your initial payment.
             </p>
-            <ul>
-              <li><strong>Duplicate Transaction:</strong> If your account was charged twice for the same purchase due to a network glitch.</li>
-              <li><strong>Payment Debited Without Access:</strong> If your money was deducted but our automated system failed to provision access within 24 hours of reporting the issue.</li>
-              <li><strong>Technical Non-Delivery:</strong> If a proven platform failure prevented you from accessing the question codices and our technical support could not resolve it.</li>
-            </ul>
           </section>
 
           <section>
-            <h2>4. Refund Processing Timeline</h2>
+            <h2>3. Try 400+ Free Questions Before Purchasing</h2>
             <p>
-              Upon receiving and approving your refund request, the refund will be initiated immediately through <strong>Razorpay</strong> to your original payment method (Bank Account / UPI / Card).
+              To ensure buyers are completely confident in their decision, DevPrep provides <strong>400+ free unlocked questions and model answers</strong> (5 questions per difficulty tier across all 27+ technologies) accessible to every visitor before payment.
             </p>
-            <ul>
-              <li><strong>Processing Time:</strong> 5 to 7 business days depending on your issuing bank&apos;s settlement cycle.</li>
-              <li><strong>Refund Fees:</strong> Zero deduction from our end — 100% of the approved amount is credited back.</li>
-            </ul>
+            <p>
+              Please review these free questions to evaluate the quality, depth, and structure of the codices before buying.
+            </p>
           </section>
 
           <section>
-            <h2>5. How to Initiate a Refund Request</h2>
+            <h2>4. Duplicate Payment Resolution Only</h2>
             <p>
-              To submit a claim, email <a href="mailto:support@devprep.online" className="text-[var(--accent)] font-mono font-bold">support@devprep.online</a> with:
+              The only exception processed is an accidental duplicate transaction caused by a network glitch where your bank account was debited multiple times for a single order. In such cases, contact <a href="mailto:shibajyoti.maity06@gmail.com" className="text-[var(--accent)] font-mono font-bold">shibajyoti.maity06@gmail.com</a> with the duplicate transaction IDs to reverse the extra charge.
             </p>
-            <ol>
-              <li>Your registered account email address.</li>
-              <li>Razorpay Payment ID (e.g., <code>pay_...</code>).</li>
-              <li>A brief description of the issue.</li>
-            </ol>
-            <p>Our support team reviews and responds to all claims within 24 business hours.</p>
           </section>
         </div>
       </div>

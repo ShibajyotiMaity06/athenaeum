@@ -71,7 +71,7 @@ export default function PrivacyPage() {
           <section>
             <h2>5. Data Retention &amp; Deletion</h2>
             <p>
-              Your account and access grants remain active for lifetime preparation. You may request permanent deletion of your account and personal data at any time by emailing <a href="mailto:support@devprep.online" className="text-[var(--accent)] font-mono font-bold">support@devprep.online</a>.
+              Your account and access grants remain active for lifetime preparation. You may request permanent deletion of your account and personal data at any time by emailing <a href="mailto:shibajyoti.maity06@gmail.com" className="text-[var(--accent)] font-mono font-bold">shibajyoti.maity06@gmail.com</a>.
             </p>
           </section>
 
@@ -79,8 +79,8 @@ export default function PrivacyPage() {
             <h2>6. Contact the Privacy Officer</h2>
             <p>
               If you have any questions or data requests, contact us at:{" "}
-              <a href="mailto:support@devprep.online" className="text-[var(--accent)] font-mono font-bold">
-                support@devprep.online
+              <a href="mailto:shibajyoti.maity06@gmail.com" className="text-[var(--accent)] font-mono font-bold">
+                shibajyoti.maity06@gmail.com
               </a>
             </p>
           </section>
