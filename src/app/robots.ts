@@ -10,6 +10,6 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ["/api/", "/account", "/login", "/register"]
       }
     ],
-    sitemap: `${SITE.url}/sitemap.xml`
+    sitemap: "https://www.devprep.online/sitemap.xml"
   };
 }

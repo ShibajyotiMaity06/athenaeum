@@ -2,7 +2,10 @@ export const SITE = {
   name: "DevPrep",
   tagline: "Systematic Technical Interview Preparation",
   headline: "Stop preparing randomly. Prepare systematically.",
-  url: "https://devprep.online",
+  url:
+    process.env.VITE_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
+    process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
+    "https://www.devprep.online",
   description:
     "3,600+ curated technical interview questions across React, JavaScript, Node.js, TypeScript, SQL, DBMS, OS, Docker, System Design & 20+ technologies. Organized Easy to Hard. ₹399 lifetime access.",
   shortDescription:
