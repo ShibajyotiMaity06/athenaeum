@@ -12,9 +12,9 @@ import { SITE } from "@/lib/site";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Lifetime Pricing — ₹399 / $9 Lifetime Access | DevPrep",
+  title: "Lifetime Pricing — Lifetime Access Desk | DevPrep",
   description:
-    "One-time payment of ₹399 in India or $9 internationally for complete, unrestricted lifetime access to 3,600+ technical interview questions across 27+ technologies.",
+    "One-time localized payment for complete, unrestricted lifetime access to 3,600+ technical interview questions across 27+ technologies.",
   alternates: { canonical: `${SITE.url}/pricing` }
 };
 
@@ -32,7 +32,7 @@ export default async function PricingPage() {
           Lifetime Access Desk
         </h1>
         <p className="mt-3 text-sm sm:text-base text-[var(--text-muted)] leading-relaxed">
-          Pay once, prepare forever. Unlock every question, model answer, and future tech track for ₹399 / $9.
+          Pay once, prepare forever. Unlock every question, model answer, and future tech track with a single contribution.
         </p>
       </header>
 
@@ -54,7 +54,13 @@ export default async function PricingPage() {
               href="/api/auth/google?next=%2Fpricing"
               className="btn-industrial btn-industrial-secondary py-3.5 px-6 text-xs w-full flex items-center justify-center gap-3 border border-[var(--border-card)] shadow-[var(--shadow-card)] font-semibold"
             >
-              <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
+              <svg
+                className="w-4 h-4 shrink-0"
+                width={16}
+                height={16}
+                style={{ width: "16px", height: "16px", minWidth: "16px", minHeight: "16px" }}
+                viewBox="0 0 24 24"
+              >
                 <path
                   fill="#4285F4"
                   d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"

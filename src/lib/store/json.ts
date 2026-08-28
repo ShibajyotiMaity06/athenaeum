@@ -113,6 +113,11 @@ export async function getOrdersByUser(userId: string): Promise<OrderRecord[]> {
     .sort((a, b) => (b.createdAt > a.createdAt ? 1 : -1));
 }
 
+export async function getUserCount(): Promise<number> {
+  const db = load();
+  return db.users.length;
+}
+
 export async function getOrderByProviderId(providerOrderId: string): Promise<OrderRecord | null> {
   const db = load();
   return db.orders.find((o) => o.id === providerOrderId) ?? null;

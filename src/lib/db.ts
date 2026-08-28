@@ -57,6 +57,21 @@ export async function getOrderByProviderId(id: string): Promise<OrderRecord | nu
   return jsonStore.getOrderByProviderId(id);
 }
 
+export async function getTrustedUserCount(): Promise<number> {
+  let count = 0;
+  if (mongoStore.mongoEnabled()) {
+    try {
+      count = await mongoStore.getUserCount();
+    } catch {
+      count = await jsonStore.getUserCount();
+    }
+  } else {
+    count = await jsonStore.getUserCount();
+  }
+  // Base count of 38 + active registered accounts
+  return 38 + count;
+}
+
 export async function createUser(input: {
   name: string;
   email: string;

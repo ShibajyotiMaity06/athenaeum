@@ -91,7 +91,7 @@ export default async function AccountPage() {
                     Free Preview Active
                   </h2>
                   <p className="text-xs text-[var(--text-muted)] mt-1 leading-relaxed">
-                    You can read 5 questions per level across every technology. Unlock all 3,600+ questions for ₹399 / $9 lifetime.
+                    You can read 5 questions per level across every technology. Unlock all 3,600+ questions for <GeoPrice className="font-bold text-[var(--text-primary)]" /> lifetime.
                   </p>
                 </div>
               </div>

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import GeoPrice from "@/components/GeoPrice";
 import { SITE, TECH_CATEGORIES, ROLE_PILLARS } from "@/lib/site";
 import { listStacks } from "@/lib/content";
 
@@ -20,7 +21,7 @@ export default function SiteFooter() {
               </span>
             </div>
             <p className="mt-4 text-xs sm:text-sm leading-relaxed text-[var(--text-muted)] max-w-sm">
-              The systematic technical interview preparation platform. 3,600+ curated questions graded across Easy, Medium, and Hard across 27+ technologies. One-time ₹399 / $9 lifetime access.
+              The systematic technical interview preparation platform. 3,600+ curated questions graded across Easy, Medium, and Hard across 27+ technologies. One-time <GeoPrice className="font-bold text-[var(--text-primary)]" /> lifetime access.
             </p>
             <div className="mt-6 flex items-center gap-2 font-mono text-xs text-[var(--text-primary)]">
               <span className="led-indicator led-green" />

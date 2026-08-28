@@ -134,6 +134,11 @@ export async function getOrdersByUser(userId: string): Promise<OrderRecord[]> {
     .toArray();
 }
 
+export async function getUserCount(): Promise<number> {
+  const col = await usersCol();
+  return col.countDocuments();
+}
+
 export async function getOrderByProviderId(providerOrderId: string): Promise<OrderRecord | null> {
   const col = await ordersCol();
   return col.findOne({ id: providerOrderId }, { projection: { _id: 0 } });

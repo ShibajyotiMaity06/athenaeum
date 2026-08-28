@@ -146,7 +146,7 @@ const FAQS = [
   },
   {
     q: "How much does it cost?",
-    a: "Scholar admission is localized to your region (one single payment, never a subscription). India sees ₹399; international readers see $9.",
+    a: "Scholar admission is localized to your region (one single payment, never a subscription). Complete, permanent lifetime access.",
     isCost: true
   },
   {

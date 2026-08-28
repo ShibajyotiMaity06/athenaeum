@@ -299,7 +299,7 @@ export default async function LevelPage({ params }: PageProps) {
                 </Link>
               </div>
               <p className="mt-4 text-xs font-mono text-[#a8b2d1]">
-                ₹399 India / $9 International · One-time settlement · Zero subscription
+                One-time settlement (<GeoPrice />) · Lifetime access · Zero subscription
               </p>
             </div>
           )}

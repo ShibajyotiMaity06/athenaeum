@@ -181,26 +181,12 @@ export default function CheckoutClient({
       {price && active && (
         <div className="industrial-card p-8 text-center corner-screws border-2 border-[var(--accent)]/30">
           <span className="stamped-label-accent">
-            {active === "INR" ? "INDIA · DOMESTIC REGION" : "INTERNATIONAL REGION"}
+            {active === "INR" ? "INDIA · DOMESTIC ACCESS" : "INTERNATIONAL ACCESS"}
           </span>
           <p className="font-mono text-5xl sm:text-6xl font-black text-[var(--text-primary)] mt-3">
             {price.display}
           </p>
           <p className="mt-2 text-xs text-[var(--text-muted)] font-mono">{price.note}</p>
-
-          <div className="mt-4">
-            <button
-              type="button"
-              onClick={() => {
-                const nextCode = active === "INR" ? "USD" : "INR";
-                setCurrency(nextCode);
-                setManualChoice(true);
-              }}
-              className="text-xs font-mono text-[var(--accent)] underline underline-offset-4 hover:opacity-80 transition-opacity"
-            >
-              Switch currency to {active === "INR" ? "USD ($9)" : "INR (₹399)"}
-            </button>
-          </div>
         </div>
       )}
 

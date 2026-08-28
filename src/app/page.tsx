@@ -18,17 +18,19 @@ import {
 } from "lucide-react";
 import JsonLd from "@/components/JsonLd";
 import GeoPrice from "@/components/GeoPrice";
+import TrustedUsersBadge from "@/components/TrustedUsersBadge";
 import { getLibraryStats, listStacks } from "@/lib/content";
 import { ROLE_PILLARS, SITE, TECH_CATEGORIES } from "@/lib/site";
+import { getTrustedUserCount } from "@/lib/db";
 
 const FAQS = [
   {
     q: "What is included with free access vs lifetime access?",
-    a: "Every visitor can read the first 5 questions of every single difficulty level across all 27+ technologies for free — that is over 400+ complete model answers with no account or card required. The ₹399 / $9 lifetime key unlocks all 3,600+ questions, full implementation code folios, and all future technology additions forever."
+    a: "Every visitor can read the first 5 questions of every single difficulty level across all 27+ technologies for free — that is over 400+ complete model answers with no account or card required. The one-time lifetime key unlocks all 3,600+ questions, full implementation code folios, and all future technology additions forever."
   },
   {
     q: "Is it really a one-time payment with no subscription?",
-    a: "Yes. Exactly ₹399 in India (inclusive of taxes) or $9 internationally. There are no recurring charges, no monthly renewals, and no hidden fees. Once enrolled, your account has permanent lifetime access."
+    a: "Yes. Exactly one single payment localized to your country. There are no recurring charges, no monthly renewals, and no hidden fees. Once enrolled, your account has permanent lifetime access."
   },
   {
     q: "How are the questions organized?",
@@ -52,9 +54,10 @@ const FAQS = [
   }
 ];
 
-export default function HomePage() {
+export default async function HomePage() {
   const stats = getLibraryStats();
   const allStacks = listStacks();
+  const initialUserCount = await getTrustedUserCount();
 
   const websiteJsonLd = {
     "@context": "https://schema.org",
@@ -64,50 +67,39 @@ export default function HomePage() {
     description: SITE.description,
     potentialAction: {
       "@type": "SearchAction",
-      target: `${SITE.url}/?q={search_term_string}`,
+      target: `${SITE.url}/#technologies`,
       "query-input": "required name=search_term_string"
     }
-  };
-
-  const organizationJsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Organization",
-    name: SITE.name,
-    url: SITE.url,
-    logo: `${SITE.url}/icon.svg`,
-    sameAs: ["https://twitter.com/devprep"]
   };
 
   const faqJsonLd = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
-    mainEntity: FAQS.map((f) => ({
+    mainEntity: FAQS.map((faq) => ({
       "@type": "Question",
-      name: f.q,
+      name: faq.q,
       acceptedAnswer: {
         "@type": "Answer",
-        text: f.a
+        text: faq.a
       }
     }))
   };
 
   return (
-    <div className="w-full bg-[var(--bg-chassis)] transition-colors duration-200">
-      <JsonLd data={[websiteJsonLd, organizationJsonLd, faqJsonLd]} />
+    <div className="flex flex-col bg-[var(--bg-chassis)]">
+      <JsonLd data={websiteJsonLd} />
+      <JsonLd data={faqJsonLd} />
 
       {/* ─────────────────────────────────────────────────────────────────────
-          1. HERO SECTION (Systematic Positioning + 3D CSS Hardware Mockup)
+          1. HERO SECTION WITH HARDWARE ACCENTS & LIVE USER BADGE
          ───────────────────────────────────────────────────────────────────── */}
       <section className="relative overflow-hidden pt-12 pb-20 sm:pt-20 sm:pb-28 border-b border-[var(--border-recessed)]">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <div className="grid gap-12 lg:grid-cols-[1.1fr_0.9fr] items-center">
             <div>
-              {/* Hardware Status LED */}
-              <div className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-[var(--bg-recessed)] border border-[var(--border-card)] shadow-[var(--shadow-recessed)] mb-6">
-                <span className="led-indicator led-green animate-pulse" />
-                <span className="font-mono text-xs font-bold uppercase tracking-wider text-[var(--text-primary)]">
-                  3,600+ Questions · 27+ Technologies · 3 Levels
-                </span>
+              {/* Live Trusted Users Counter Badge */}
+              <div className="mb-6">
+                <TrustedUsersBadge initialCount={initialUserCount} />
               </div>
 
               <h1 className="text-4xl sm:text-6xl font-black tracking-tight text-[var(--text-primary)] leading-[1.08]">
@@ -119,7 +111,7 @@ export default function HomePage() {
 
               <p className="mt-6 text-base sm:text-lg text-[var(--text-muted)] leading-relaxed max-w-xl">
                 One unified platform for Web Development, Backend, Core CS, System Design &amp; DevOps.
-                Graded strictly from Foundations to Internals. <strong className="text-[var(--text-primary)]">₹399 / $9 lifetime</strong>, no subscription.
+                Graded strictly from Foundations to Internals. <strong className="text-[var(--text-primary)]"><GeoPrice /> lifetime</strong>, no subscription.
               </p>
 
               {/* Action Buttons */}
@@ -178,22 +170,35 @@ export default function HomePage() {
 
                 <div className="space-y-2">
                   <div className="p-2.5 rounded bg-[#15191d] border border-[#232930] flex items-center justify-between">
-                    <span className="text-[#74b9ff] font-bold">MODULE 01: REACT</span>
-                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#2d3436] text-[#fdcb6e]">120 Qs · EASY/MED/HARD</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-emerald-400 font-bold">● EASY</span>
+                      <span className="text-zinc-200">React Reconciliation &amp; Fiber</span>
+                    </div>
+                    <span className="text-[10px] text-emerald-400 font-bold px-1.5 py-0.5 rounded bg-emerald-950/60 border border-emerald-800/40">OPEN</span>
                   </div>
+
                   <div className="p-2.5 rounded bg-[#15191d] border border-[#232930] flex items-center justify-between">
-                    <span className="text-[#55efc4] font-bold">MODULE 02: SYSTEM DESIGN (HLD)</span>
-                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#2d3436] text-[#fdcb6e]">95 Qs · ARCHITECTURE</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-amber-400 font-bold">▲ MEDIUM</span>
+                      <span className="text-zinc-200">PostgreSQL MVCC &amp; WAL</span>
+                    </div>
+                    <span className="text-[10px] text-emerald-400 font-bold px-1.5 py-0.5 rounded bg-emerald-950/60 border border-emerald-800/40">OPEN</span>
                   </div>
+
                   <div className="p-2.5 rounded bg-[#15191d] border border-[#232930] flex items-center justify-between">
-                    <span className="text-[#ff7675] font-bold">MODULE 03: NODE.JS RUNTIME</span>
-                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#2d3436] text-[#fdcb6e]">110 Qs · LIBUV &amp; I/O</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-rose-400 font-bold">■ HARD</span>
+                      <span className="text-zinc-200">Distributed Consensus (Raft)</span>
+                    </div>
+                    <span className="text-[10px] text-zinc-400 px-1.5 py-0.5 rounded bg-zinc-900 border border-zinc-800">LOCKED</span>
                   </div>
                 </div>
 
-                <div className="pt-2 border-t border-[#1e272e] flex items-center justify-between text-[11px]">
-                  <span className="text-[#a8b2d1]">UNRESTRICTED ACCESS:</span>
-                  <span className="text-[#ff4757] font-bold">LIFETIME ADMISSION</span>
+                <div className="p-3 rounded-lg bg-[#111417] border border-[#2d3436] font-mono text-[11px] text-[#74b9ff] space-y-1">
+                  <div className="text-zinc-400">// Model Answer Preview:</div>
+                  <div className="text-[#a8b2d1]">
+                    &quot;Fiber breaks synchronous recursive rendering into prioritized incremental units of work...&quot;
+                  </div>
                 </div>
               </div>
             </div>
@@ -202,198 +207,186 @@ export default function HomePage() {
       </section>
 
       {/* ─────────────────────────────────────────────────────────────────────
-          2. PROBLEM FRAMING (Systematic vs Random) - Uniform Chassis BG
+          2. ROLE PILLARS (Career Track Portals)
          ───────────────────────────────────────────────────────────────────── */}
       <section className="py-20 border-b border-[var(--border-recessed)] bg-[var(--bg-chassis)]">
-        <div className="mx-auto max-w-5xl px-4 sm:px-6">
-          <div className="text-center max-w-2xl mx-auto mb-12">
-            <span className="stamped-label-accent">THE PREPARATION PARADOX</span>
-            <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-[var(--text-primary)] mt-2">
-              Why most technical interview prep fails
-            </h2>
-            <p className="mt-3 text-sm sm:text-base text-[var(--text-muted)]">
-              Engineers waste 100+ hours jumping between outdated blogs, chaotic YouTube playlists, and DSA-only platforms without mastering core engineering mechanics.
-            </p>
-          </div>
-
-          <div className="grid gap-6 md:grid-cols-2">
-            {/* The Random Way */}
-            <div className="industrial-recessed p-8 border border-rose-500/25">
-              <div className="flex items-center gap-2 mb-4 text-rose-500 font-mono text-xs font-bold uppercase tracking-wider">
-                <X className="w-4 h-4" />
-                <span>The Random Preparation Approach</span>
-              </div>
-              <ul className="space-y-3.5 text-sm text-[var(--text-muted)]">
-                <li className="flex items-start gap-2.5">
-                  <span className="text-rose-500 font-bold">✕</span>
-                  <span>Scattered across 20+ blog tabs and uncurated GFG articles.</span>
-                </li>
-                <li className="flex items-start gap-2.5">
-                  <span className="text-rose-500 font-bold">✕</span>
-                  <span>Zero progression — basic syntax mixed unpredictably with complex internals.</span>
-                </li>
-                <li className="flex items-start gap-2.5">
-                  <span className="text-rose-500 font-bold">✕</span>
-                  <span>Surface-level trivia without deep architectural explanation.</span>
-                </li>
-                <li className="flex items-start gap-2.5">
-                  <span className="text-rose-500 font-bold">✕</span>
-                  <span>Expensive monthly subscriptions that lock you into recurring charges.</span>
-                </li>
-              </ul>
-            </div>
-
-            {/* The DevPrep Systematic Way */}
-            <div className="industrial-card p-8 border-2 border-[var(--accent)]/40 corner-screws">
-              <div className="flex items-center gap-2 mb-4 text-[var(--accent)] font-mono text-xs font-bold uppercase tracking-wider">
-                <Check className="w-4 h-4" />
-                <span>The Systematic DevPrep Method</span>
-              </div>
-              <ul className="space-y-3.5 text-sm text-[var(--text-primary)] font-medium">
-                <li className="flex items-start gap-2.5">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                  <span>One unified, standardized codex across 27+ modern technologies.</span>
-                </li>
-                <li className="flex items-start gap-2.5">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                  <span>Strict 3-degree progression: Foundations → Practical → Internals.</span>
-                </li>
-                <li className="flex items-start gap-2.5">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                  <span>Full model answers, edge case analyses, and implementation folios.</span>
-                </li>
-                <li className="flex items-start gap-2.5">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                  <span>₹399 / $9 one-time payment for permanent lifetime access.</span>
-                </li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ─────────────────────────────────────────────────────────────────────
-          3. HOW IT WORKS / STRUCTURE EXPLAINER (Progression & Columns)
-         ───────────────────────────────────────────────────────────────────── */}
-      <section className="py-20 border-b border-[var(--border-recessed)] bg-[var(--bg-chassis)]">
-        <div className="mx-auto max-w-5xl px-4 sm:px-6">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <div className="text-center max-w-2xl mx-auto mb-14">
-            <span className="stamped-label-accent">CURRICULUM ARCHITECTURE</span>
+            <span className="stamped-label-accent">CAREER-TARGETED CODICES</span>
             <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-[var(--text-primary)] mt-2">
-              Three Disciplined Degrees of Mastery
+              Select Your Target Engineering Role
             </h2>
-            <p className="mt-3 text-sm sm:text-base text-[var(--text-muted)]">
-              Every single technology follows identical rigorous grading so you always know where you stand.
+            <p className="mt-3 text-sm text-[var(--text-muted)]">
+              Curated, complete interview syllabus specifically designed for role-specific interview loops.
             </p>
           </div>
 
-          <div className="relative grid gap-6 md:grid-cols-3">
-            {/* Step 1 */}
-            <div className="industrial-card p-6 flex flex-col justify-between">
-              <div>
-                <span className="px-2.5 py-1 rounded-md font-mono text-xs font-bold bg-emerald-500/15 border border-emerald-500/30 text-emerald-500">
-                  DEGREE 01
-                </span>
-                <h3 className="text-xl font-bold text-[var(--text-primary)] mt-4">
-                  Easy · Foundations
-                </h3>
-                <p className="mt-2 text-xs sm:text-sm text-[var(--text-muted)] leading-relaxed">
-                  First principles, core terminology, basic syntax, and standard screening questions expected in round 1 technical rounds.
-                </p>
-              </div>
-              <div className="mt-6 pt-3 border-t border-[var(--border-recessed)] font-mono text-[11px] text-[var(--text-muted)]">
-                TARGET: SCREENING ROUNDS
-              </div>
-            </div>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+            {Object.values(ROLE_PILLARS).map((role) => (
+              <Link
+                key={role.slug}
+                href={`/${role.slug}`}
+                className="industrial-card group p-6 flex flex-col justify-between hover:scale-[1.02] transition-transform duration-200"
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <span className="font-mono text-xs font-bold text-[var(--accent)]">
+                      {role.techSlugs.length} TECHNOLOGIES
+                    </span>
+                    <span className="w-2 h-2 rounded-full bg-[var(--accent)] group-hover:animate-ping" />
+                  </div>
+                  <h3 className="font-bold text-lg text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors">
+                    {role.roleName}
+                  </h3>
+                  <p className="text-xs text-[var(--text-muted)] mt-2 leading-relaxed">
+                    {role.metaDescription.slice(0, 110)}…
+                  </p>
+                </div>
 
-            {/* Step 2 */}
-            <div className="industrial-card p-6 flex flex-col justify-between">
-              <div>
-                <span className="px-2.5 py-1 rounded-md font-mono text-xs font-bold bg-amber-500/15 border border-amber-500/30 text-amber-500">
-                  DEGREE 02
-                </span>
-                <h3 className="text-xl font-bold text-[var(--text-primary)] mt-4">
-                  Medium · Practical
-                </h3>
-                <p className="mt-2 text-xs sm:text-sm text-[var(--text-muted)] leading-relaxed">
-                  Real-world mechanisms, edge cases, performance trade-offs, state management, and practical code implementations.
-                </p>
-              </div>
-              <div className="mt-6 pt-3 border-t border-[var(--border-recessed)] font-mono text-[11px] text-[var(--text-muted)]">
-                TARGET: CORE TECHNICAL INTERVIEW
-              </div>
-            </div>
+                <div className="mt-6 pt-4 border-t border-[var(--border-recessed)] flex items-center justify-between text-xs font-mono text-[var(--text-primary)]">
+                  <span>View Role Track</span>
+                  <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
 
-            {/* Step 3 */}
-            <div className="industrial-card p-6 flex flex-col justify-between">
-              <div>
-                <span className="px-2.5 py-1 rounded-md font-mono text-xs font-bold bg-rose-500/15 border border-rose-500/30 text-rose-500">
-                  DEGREE 03
-                </span>
-                <h3 className="text-xl font-bold text-[var(--text-primary)] mt-4">
-                  Hard · Architecture
-                </h3>
-                <p className="mt-2 text-xs sm:text-sm text-[var(--text-muted)] leading-relaxed">
-                  Runtime internals, memory models, distributed design, concurrency failure modes, and architectural decisions.
-                </p>
-              </div>
-              <div className="mt-6 pt-3 border-t border-[var(--border-recessed)] font-mono text-[11px] text-[var(--text-muted)]">
-                TARGET: SENIOR / STAFF SDE BARS
-              </div>
-            </div>
+      {/* ─────────────────────────────────────────────────────────────────────
+          3. THREE DEGREES OF DIFFICULTY (Industrial Progression)
+         ───────────────────────────────────────────────────────────────────── */}
+      <section className="py-20 border-b border-[var(--border-recessed)] bg-[var(--bg-chassis)]">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6">
+          <div className="text-center max-w-2xl mx-auto mb-14">
+            <span className="stamped-label-accent">CURATED METHODOLOGY</span>
+            <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-[var(--text-primary)] mt-2">
+              Three Degrees of Calibration
+            </h2>
+            <p className="mt-3 text-sm text-[var(--text-muted)]">
+              No generic question dumps. Every question is calibrated against actual interview stages.
+            </p>
           </div>
 
-          {/* Role Pillars Navigation Strip */}
-          <div className="mt-12 p-6 rounded-xl bg-[var(--bg-recessed)] border border-[var(--border-recessed)]">
-            <span className="stamped-label mb-3 block">EXPLORE BY CAREER PILLAR</span>
-            <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-4">
-              {Object.values(ROLE_PILLARS).map((rp) => (
-                <Link
-                  key={rp.slug}
-                  href={`/${rp.slug}`}
-                  className="p-3 bg-[var(--bg-chassis)] rounded-lg border border-[var(--border-card)] hover:border-[var(--accent)] text-xs font-bold text-[var(--text-primary)] hover:text-[var(--accent)] transition-all flex items-center justify-between group shadow-sm"
-                >
-                  <span>{rp.roleName}</span>
-                  <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
-                </Link>
-              ))}
+          <div className="grid gap-6 md:grid-cols-3">
+            {/* Easy Degree */}
+            <div className="industrial-card p-8 flex flex-col justify-between corner-screws">
+              <div>
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-500 font-mono text-xs font-bold mb-4 border border-emerald-500/20">
+                  <span>DEGREE 01 · EASY</span>
+                </div>
+                <h3 className="text-xl font-bold text-[var(--text-primary)]">
+                  Foundations &amp; Screening
+                </h3>
+                <p className="mt-3 text-xs sm:text-sm text-[var(--text-muted)] leading-relaxed">
+                  First-round phone screens, core terminology, execution model, fundamentals, and syntax precision.
+                </p>
+                <div className="mt-6 space-y-2.5 font-mono text-xs text-[var(--text-primary)]">
+                  <div className="flex items-center gap-2">
+                    <Check className="w-3.5 h-3.5 text-emerald-500" />
+                    <span>Exact definitions &amp; mental models</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Check className="w-3.5 h-3.5 text-emerald-500" />
+                    <span>Common trap questions</span>
+                  </div>
+                </div>
+              </div>
+              <div className="mt-8 pt-4 border-t border-[var(--border-recessed)] font-mono text-xs text-emerald-500 font-bold">
+                ✓ 5 Free Questions in every technology
+              </div>
+            </div>
+
+            {/* Medium Degree */}
+            <div className="industrial-card p-8 flex flex-col justify-between corner-screws">
+              <div>
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 text-amber-500 font-mono text-xs font-bold mb-4 border border-amber-500/20">
+                  <span>DEGREE 02 · MEDIUM</span>
+                </div>
+                <h3 className="text-xl font-bold text-[var(--text-primary)]">
+                  Mechanisms &amp; Real-World
+                </h3>
+                <p className="mt-3 text-xs sm:text-sm text-[var(--text-muted)] leading-relaxed">
+                  Production patterns, state synchronization, caching layers, error recovery, and framework nuances.
+                </p>
+                <div className="mt-6 space-y-2.5 font-mono text-xs text-[var(--text-primary)]">
+                  <div className="flex items-center gap-2">
+                    <Check className="w-3.5 h-3.5 text-amber-500" />
+                    <span>Concurrency &amp; race conditions</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Check className="w-3.5 h-3.5 text-amber-500" />
+                    <span>Memory leak diagnoses</span>
+                  </div>
+                </div>
+              </div>
+              <div className="mt-8 pt-4 border-t border-[var(--border-recessed)] font-mono text-xs text-amber-500 font-bold">
+                ✓ 5 Free Questions in every technology
+              </div>
+            </div>
+
+            {/* Hard Degree */}
+            <div className="industrial-card p-8 flex flex-col justify-between corner-screws border-2 border-[var(--accent)]/30">
+              <div>
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-500/10 text-rose-500 font-mono text-xs font-bold mb-4 border border-rose-500/20">
+                  <span>DEGREE 03 · HARD</span>
+                </div>
+                <h3 className="text-xl font-bold text-[var(--text-primary)]">
+                  Internals &amp; Architecture
+                </h3>
+                <p className="mt-3 text-xs sm:text-sm text-[var(--text-muted)] leading-relaxed">
+                  Engine internals, memory layout, lock contention, distributed consensus, low-level OS primitives.
+                </p>
+                <div className="mt-6 space-y-2.5 font-mono text-xs text-[var(--text-primary)]">
+                  <div className="flex items-center gap-2">
+                    <Check className="w-3.5 h-3.5 text-rose-500" />
+                    <span>V8, JVM, libuv internals</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Check className="w-3.5 h-3.5 text-rose-500" />
+                    <span>Distributed trade-offs (CAP, ACID)</span>
+                  </div>
+                </div>
+              </div>
+              <div className="mt-8 pt-4 border-t border-[var(--border-recessed)] font-mono text-xs text-rose-500 font-bold">
+                ✓ 5 Free Questions in every technology
+              </div>
             </div>
           </div>
         </div>
       </section>
 
       {/* ─────────────────────────────────────────────────────────────────────
-          4. TECHNOLOGY GRID (Clickable Grid of All 27 Technologies)
+          4. ALL 27+ TECHNOLOGY HUBS (Organized by Engineering Discipline)
          ───────────────────────────────────────────────────────────────────── */}
       <section id="technologies" className="py-20 border-b border-[var(--border-recessed)] bg-[var(--bg-chassis)]">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
-            <div>
-              <span className="stamped-label-accent">THE FULL CATALOGUE</span>
-              <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-[var(--text-primary)] mt-2">
-                Explore All 27+ Technologies
-              </h2>
-              <p className="mt-2 text-sm text-[var(--text-muted)] max-w-xl">
-                Every technology is fully catalogued with Easy, Medium, and Hard difficulty levels.
-              </p>
-            </div>
-            <div className="font-mono text-xs font-bold text-[var(--text-muted)]">
-              {stats.total}+ QUESTIONS TOTAL
-            </div>
+          <div className="text-center max-w-2xl mx-auto mb-14">
+            <span className="stamped-label-accent">THE COMPLETE CODEX</span>
+            <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-[var(--text-primary)] mt-2">
+              Explore All 27+ Technology Codices
+            </h2>
+            <p className="mt-3 text-sm text-[var(--text-muted)]">
+              Direct access to every technology curriculum with 5 free unlocked questions per difficulty level.
+            </p>
           </div>
 
           <div className="space-y-12">
             {TECH_CATEGORIES.map((cat) => {
               const catStacks = allStacks.filter((s) => cat.slugs.includes(s.slug));
+              if (catStacks.length === 0) return null;
+
               return (
-                <div key={cat.name} className="industrial-recessed p-6 sm:p-8">
-                  <div className="flex items-center justify-between mb-6">
-                    <div>
-                      <h3 className="text-lg font-bold text-[var(--text-primary)]">{cat.name}</h3>
-                      <p className="text-xs text-[var(--text-muted)] mt-0.5">{cat.description}</p>
+                <div key={cat.name} className="industrial-card p-6 sm:p-8 corner-screws">
+                  <div className="flex items-center justify-between pb-4 mb-6 border-b border-[var(--border-recessed)]">
+                    <div className="flex items-center gap-3">
+                      <span className="w-2.5 h-2.5 rounded-full bg-[var(--accent)]" />
+                      <h3 className="font-sans font-bold text-lg text-[var(--text-primary)]">
+                        {cat.name}
+                      </h3>
                     </div>
-                    <span className="text-xs font-mono font-bold text-[var(--accent)]">
-                      {catStacks.length} Codices
+                    <span className="font-mono text-xs text-[var(--text-muted)]">
+                      {catStacks.length} CODICES AVAILABLE
                     </span>
                   </div>
 
@@ -402,28 +395,25 @@ export default function HomePage() {
                       <Link
                         key={s.slug}
                         href={`/${s.hubSlug}`}
-                        className="industrial-card p-4 hover:shadow-[var(--shadow-floating)] transition-all flex flex-col justify-between group"
+                        className="industrial-recessed group p-4 flex flex-col justify-between hover:border-[var(--accent)] transition-colors"
                       >
-                        <div>
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="font-mono text-[10px] font-bold text-[var(--accent)]">
-                              #{s.index.toString().padStart(2, "0")}
-                            </span>
-                            <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[var(--bg-recessed)] text-[var(--text-muted)]">
-                              {s.questionCount} Qs
-                            </span>
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <h4 className="font-bold text-sm text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors">
+                              {s.name}
+                            </h4>
+                            <p className="font-mono text-[11px] text-[var(--text-muted)] mt-1">
+                              {s.questionCount} Total Questions
+                            </p>
                           </div>
-                          <h4 className="font-bold text-base text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors">
-                            {s.name}
-                          </h4>
-                          <p className="text-xs text-[var(--text-muted)] mt-1">
-                            Easy · Medium · Hard
-                          </p>
+                          <span className="text-[10px] font-mono font-bold text-emerald-500 px-2 py-0.5 rounded bg-emerald-500/10">
+                            5 FREE / LEVEL
+                          </span>
                         </div>
 
-                        <div className="mt-4 pt-2.5 border-t border-[var(--border-recessed)] flex items-center justify-between text-xs font-mono text-[var(--text-muted)] group-hover:text-[var(--accent)]">
-                          <span>OPEN HUB</span>
-                          <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
+                        <div className="mt-4 pt-3 border-t border-[var(--border-recessed)] flex items-center justify-between font-mono text-[11px] text-[var(--text-muted)]">
+                          <span>Easy · Medium · Hard</span>
+                          <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform text-[var(--accent)]" />
                         </div>
                       </Link>
                     ))}
@@ -436,47 +426,31 @@ export default function HomePage() {
       </section>
 
       {/* ─────────────────────────────────────────────────────────────────────
-          5. FREEMIUM EXPLAINER (Uniform Background + High Contrast Typography)
+          5. FREEMIUM DEMO BANNER (Interactive Preview)
          ───────────────────────────────────────────────────────────────────── */}
       <section className="py-20 border-b border-[var(--border-recessed)] bg-[var(--bg-chassis)]">
         <div className="mx-auto max-w-5xl px-4 sm:px-6">
-          <div className="grid gap-10 lg:grid-cols-[1fr_1fr] items-center">
-            <div>
-              <span className="stamped-label-accent">TRANSPARENT FREEMIUM</span>
-              <h2 className="text-3xl font-black tracking-tight text-[var(--text-primary)] mt-2">
-                Inspect 5 Free Questions in Every Single Codex
-              </h2>
-              <p className="mt-4 text-sm text-[var(--text-muted)] leading-relaxed">
-                We believe you should see the exact quality and depth before spending a single rupee. Read 5 complete questions and model answers in Easy, Medium, and Hard across all technologies with zero signup required.
-              </p>
-              <div className="mt-6 space-y-3">
-                <div className="flex items-center gap-3 text-xs font-mono text-[var(--text-primary)] font-semibold">
-                  <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]" />
-                  <span>400+ FREE UNLOCKED MODEL ANSWERS</span>
-                </div>
-                <div className="flex items-center gap-3 text-xs font-mono text-[var(--text-primary)] font-semibold">
-                  <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]" />
-                  <span>NO CREDIT CARD OR REGISTRATION REQUIRED</span>
-                </div>
-                <div className="flex items-center gap-3 text-xs font-mono text-[var(--text-primary)] font-semibold">
-                  <div className="w-2 h-2 rounded-full bg-[var(--accent)] shadow-[0_0_8px_#ff4757]" />
-                  <span>ONE-CLICK INSTANT UNLOCK FOR THE REST</span>
-                </div>
-              </div>
+          <div className="industrial-card p-8 sm:p-12 text-center corner-screws">
+            <span className="stamped-label-accent">ZERO-RISK VERIFICATION</span>
+            <h2 className="text-2xl sm:text-4xl font-black text-[var(--text-primary)] tracking-tight mt-2">
+              400+ Complete Model Answers Free Forever
+            </h2>
+            <p className="mt-4 text-xs sm:text-sm text-[var(--text-muted)] max-w-xl mx-auto leading-relaxed">
+              We never ask for payment upfront. Read 5 full questions per difficulty across React, Node.js, SQL, System Design, and 23 other technologies before deciding.
+            </p>
 
-              <div className="mt-8">
-                <Link href="/pricing" className="btn-industrial btn-industrial-primary py-3.5 px-8 text-xs">
-                  <span>Unlock Everything — <GeoPrice className="ml-1" /></span>
-                </Link>
-              </div>
-            </div>
-
-            {/* Mini Visual Preview Card */}
-            <div className="industrial-card p-6 corner-screws space-y-3">
-              {["Q1", "Q2", "Q3", "Q4", "Q5"].map((q) => (
+            {/* Visual Question Unlock Simulator */}
+            <div className="mt-8 max-w-lg mx-auto space-y-2.5 text-left font-mono">
+              {[
+                "Q1. How does React Fiber work under the hood?",
+                "Q2. Explain PostgreSQL MVCC isolation levels.",
+                "Q3. How does Node.js libuv event loop handle threadpool tasks?",
+                "Q4. Difference between optimistic vs pessimistic locking?",
+                "Q5. How does Raft algorithm ensure leader election consistency?"
+              ].map((q, idx) => (
                 <div
-                  key={q}
-                  className="p-3 bg-[var(--bg-recessed)] rounded-lg flex items-center justify-between border border-[var(--border-recessed)]"
+                  key={idx}
+                  className="p-3 rounded-lg bg-[var(--bg-chassis)] border border-[var(--border-card)] flex items-center justify-between text-xs"
                 >
                   <span className="font-mono text-xs font-bold text-emerald-500 flex items-center gap-2">
                     <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
@@ -492,7 +466,7 @@ export default function HomePage() {
                   <span>Q6 to Q120 · Unlocked with Lifetime Key</span>
                 </div>
                 <span className="text-xs font-mono font-black text-[var(--text-primary)] px-2 py-0.5 rounded bg-[var(--bg-recessed)] border border-[var(--border-card)]">
-                  ₹399 / $9
+                  <GeoPrice />
                 </span>
               </div>
             </div>
@@ -501,7 +475,7 @@ export default function HomePage() {
       </section>
 
       {/* ─────────────────────────────────────────────────────────────────────
-          6. PRICING SECTION (₹399 / $9 Lifetime Punched Metal Style)
+          6. PRICING SECTION (Lifetime Punched Metal Style)
          ───────────────────────────────────────────────────────────────────── */}
       <section id="pricing" className="py-20 border-b border-[var(--border-recessed)] bg-[var(--bg-chassis)]">
         <div className="mx-auto max-w-4xl px-4 sm:px-6 text-center">
@@ -559,63 +533,67 @@ export default function HomePage() {
             </Link>
 
             <p className="mt-4 text-xs font-mono text-[var(--text-muted)]">
-              Settled securely through Razorpay · UPI, Cards, Net Banking
+              Processed securely through Razorpay · 256-bit SSL encryption
             </p>
           </div>
         </div>
       </section>
 
       {/* ─────────────────────────────────────────────────────────────────────
-          7. COMPARISON SECTION (Uniform Background & High Contrast Table)
+          7. COMPARISON MATRIX (DevPrep vs LeetCode vs GFG)
          ───────────────────────────────────────────────────────────────────── */}
       <section className="py-20 border-b border-[var(--border-recessed)] bg-[var(--bg-chassis)]">
         <div className="mx-auto max-w-5xl px-4 sm:px-6">
-          <div className="text-center max-w-2xl mx-auto mb-12">
-            <span className="stamped-label-accent">FEATURE BREAKDOWN</span>
-            <h2 className="text-3xl font-black tracking-tight text-[var(--text-primary)] mt-2">
-              Why DevPrep is Built Differently
+          <div className="text-center max-w-2xl mx-auto mb-14">
+            <span className="stamped-label-accent">OBJECTIVE COMPARISON</span>
+            <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-[var(--text-primary)] mt-2">
+              Why Engineers Choose DevPrep
             </h2>
           </div>
 
-          <div className="industrial-card overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse text-sm">
-                <thead>
-                  <tr className="border-b border-[var(--border-recessed)] bg-[var(--bg-recessed)] font-mono text-xs text-[var(--text-muted)]">
-                    <th className="p-4">DIMENSION</th>
-                    <th className="p-4 text-[var(--accent)] font-bold">DEVPREP</th>
-                    <th className="p-4">GENERAL CONTENT SITES</th>
-                    <th className="p-4">DSA-ONLY PLATFORMS</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[var(--border-recessed)]">
-                  <tr>
-                    <td className="p-4 font-bold text-[var(--text-primary)]">Curriculum Organization</td>
-                    <td className="p-4 text-emerald-500 font-bold">Strict 3-Level Graded Path</td>
-                    <td className="p-4 text-[var(--text-muted)]">Unorganized &amp; Random</td>
-                    <td className="p-4 text-[var(--text-muted)]">Algorithm Tagged Only</td>
-                  </tr>
-                  <tr>
-                    <td className="p-4 font-bold text-[var(--text-primary)]">Framework &amp; Internals</td>
-                    <td className="p-4 text-emerald-500 font-bold">Deep (Fiber, JVM, libuv, etc.)</td>
-                    <td className="p-4 text-[var(--text-muted)]">Superficial Syntax</td>
-                    <td className="p-4 text-[var(--text-muted)]">None (Algorithms only)</td>
-                  </tr>
-                  <tr>
-                    <td className="p-4 font-bold text-[var(--text-primary)]">System Design (HLD &amp; LLD)</td>
-                    <td className="p-4 text-emerald-500 font-bold">Included in Core Access</td>
-                    <td className="p-4 text-[var(--text-muted)]">Fragmented Articles</td>
-                    <td className="p-4 text-[var(--text-muted)]">Separate Paid Upsell</td>
-                  </tr>
-                  <tr>
-                    <td className="p-4 font-bold text-[var(--text-primary)]">Pricing Model</td>
-                    <td className="p-4 text-emerald-500 font-bold">₹399 / $9 One-Time Lifetime</td>
-                    <td className="p-4 text-[var(--text-muted)]">Ad-heavy or Free/Messy</td>
-                    <td className="p-4 text-[var(--text-muted)]">$35+/mo Recurring</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+          <div className="industrial-card p-6 sm:p-8 corner-screws overflow-x-auto">
+            <table className="w-full text-left font-mono text-xs border-collapse">
+              <thead>
+                <tr className="border-b border-[var(--border-recessed)] text-[var(--text-muted)]">
+                  <th className="p-4">DIMENSION</th>
+                  <th className="p-4 text-[var(--accent)] font-bold">DEVPREP</th>
+                  <th className="p-4">GENERAL ARTICLES (GFG)</th>
+                  <th className="p-4">ALGO SITES (LeetCode)</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[var(--border-recessed)]">
+                <tr>
+                  <td className="p-4 font-bold text-[var(--text-primary)]">Curated Model Answers</td>
+                  <td className="p-4 text-emerald-500 font-bold">✓ Production-Grade Code</td>
+                  <td className="p-4 text-[var(--text-muted)]">Crowd-sourced / Inconsistent</td>
+                  <td className="p-4 text-[var(--text-muted)]">User Forum Submissions</td>
+                </tr>
+                <tr>
+                  <td className="p-4 font-bold text-[var(--text-primary)]">Calibration Levels</td>
+                  <td className="p-4 text-emerald-500 font-bold">3 Rigorous Degrees (E/M/H)</td>
+                  <td className="p-4 text-[var(--text-muted)]">Uncalibrated Lists</td>
+                  <td className="p-4 text-[var(--text-muted)]">Algorithmic Only</td>
+                </tr>
+                <tr>
+                  <td className="p-4 font-bold text-[var(--text-primary)]">Framework Internals</td>
+                  <td className="p-4 text-emerald-500 font-bold">Deep (Fiber, JVM, libuv, etc.)</td>
+                  <td className="p-4 text-[var(--text-muted)]">Superficial Syntax</td>
+                  <td className="p-4 text-[var(--text-muted)]">None (Algorithms only)</td>
+                </tr>
+                <tr>
+                  <td className="p-4 font-bold text-[var(--text-primary)]">System Design (HLD &amp; LLD)</td>
+                  <td className="p-4 text-emerald-500 font-bold">Included in Core Access</td>
+                  <td className="p-4 text-[var(--text-muted)]">Fragmented Articles</td>
+                  <td className="p-4 text-[var(--text-muted)]">Separate Paid Upsell</td>
+                </tr>
+                <tr>
+                  <td className="p-4 font-bold text-[var(--text-primary)]">Pricing Model</td>
+                  <td className="p-4 text-emerald-500 font-bold"><GeoPrice /> One-Time Lifetime</td>
+                  <td className="p-4 text-[var(--text-muted)]">Ad-heavy or Free/Messy</td>
+                  <td className="p-4 text-[var(--text-muted)]">$35+/mo Recurring</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </section>
@@ -639,7 +617,9 @@ export default function HomePage() {
               <p className="stamped-label text-[10px] mt-2">MODEL ANSWERS</p>
             </div>
             <div className="industrial-recessed p-6">
-              <span className="font-mono text-3xl sm:text-4xl font-black text-emerald-500">₹399</span>
+              <span className="font-mono text-3xl sm:text-4xl font-black text-emerald-500">
+                <GeoPrice />
+              </span>
               <p className="stamped-label text-[10px] mt-2">LIFETIME ACCESS</p>
             </div>
           </div>
@@ -689,7 +669,7 @@ export default function HomePage() {
             Stop preparing randomly. Prepare systematically.
           </h2>
           <p className="mt-4 text-base text-[#a8b2d1] max-w-xl mx-auto">
-            Get lifetime access to 3,600+ interview questions across 27+ technologies for ₹399 / $9.
+            Get lifetime access to 3,600+ interview questions across 27+ technologies with one single contribution.
           </p>
 
           <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
