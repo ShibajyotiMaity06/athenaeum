@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { exchangeGoogleCode, getGoogleUserInfo } from "@/lib/google";
+import { exchangeGoogleCode, getGoogleRedirectUri, getGoogleUserInfo } from "@/lib/google";
 import { createUser, getUserByEmail } from "@/lib/db";
 import { SESSION_COOKIE, sessionCookieOptions, signSession } from "@/lib/auth";
 
@@ -37,9 +37,7 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const host = req.headers.get("host") || "localhost:3000";
-    const protocol = req.headers.get("x-forwarded-proto") || (host.includes("localhost") ? "http" : "https");
-    const redirectUri = `${protocol}://${host}/api/auth/google/callback`;
+    const redirectUri = getGoogleRedirectUri(req);
 
     // 1. Exchange authorization code for access token
     const tokenResponse = await exchangeGoogleCode(code, redirectUri);

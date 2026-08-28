@@ -1,3 +1,5 @@
+import { NextRequest } from "next/server";
+
 export interface GoogleUserInfo {
   sub: string;
   email: string;
@@ -10,6 +12,12 @@ export interface GoogleUserInfo {
 
 export function isGoogleAuthEnabled(): boolean {
   return Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET);
+}
+
+export function getGoogleRedirectUri(req: NextRequest): string {
+  const host = req.headers.get("x-forwarded-host") || req.headers.get("host") || "localhost:3000";
+  const protocol = req.headers.get("x-forwarded-proto") || (host.includes("localhost") ? "http" : "https");
+  return `${protocol}://${host}/api/auth/google/callback`;
 }
 
 export function getGoogleOAuthUrl(redirectUri: string, state: string): string {

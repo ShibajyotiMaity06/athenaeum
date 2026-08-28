@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getGoogleOAuthUrl, isGoogleAuthEnabled } from "@/lib/google";
-import { SITE } from "@/lib/site";
+import { getGoogleOAuthUrl, getGoogleRedirectUri, isGoogleAuthEnabled } from "@/lib/google";
 
 export const dynamic = "force-dynamic";
 
@@ -17,10 +16,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.redirect(errorUrl);
   }
 
-  // Derive redirect URI dynamically based on the incoming request host
-  const host = req.headers.get("host") || "localhost:3000";
-  const protocol = req.headers.get("x-forwarded-proto") || (host.includes("localhost") ? "http" : "https");
-  const redirectUri = `${protocol}://${host}/api/auth/google/callback`;
+  const redirectUri = getGoogleRedirectUri(req);
 
   // Encode the state parameter with random salt and next destination
   const stateData = JSON.stringify({
