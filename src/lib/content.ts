@@ -24,6 +24,23 @@ const marked = new Marked(
     }
   })
 );
+
+marked.use({
+  renderer: {
+    link(token) {
+      const href = token.href || "#";
+      const title = token.title ? ` title="${token.title}"` : "";
+      const text = token.text || token.raw || href;
+      const isExternal = href.startsWith("http://") || href.startsWith("https://");
+      
+      if (isExternal) {
+        return `<a href="${href}" target="_blank" rel="noopener noreferrer"${title}>${text}</a>`;
+      }
+      return `<a href="${href}"${title}>${text}</a>`;
+    }
+  }
+});
+
 marked.setOptions({ gfm: true, breaks: false });
 
 export function renderMarkdown(md: string): string {
@@ -61,7 +78,8 @@ export const PRETTY_NAMES: Record<string, string> = {
   sql: "SQL",
   typescript: "TypeScript",
   redux: "Redux",
-  zustand: "Zustand"
+  zustand: "Zustand",
+  "frontend-system-design": "Frontend System Design"
 };
 
 export function prettify(slug: string): string {

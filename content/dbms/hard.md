@@ -19,9 +19,7 @@
 
 ### Q3: Explain Write-Ahead Logging (WAL) rules mathematically.
 * **WAL Theorem**: A page modification cannot be written to disk before the log record describing the modification is flushed to non-volatile disk storage.
-* **Mathematical rule**: Let $PageLSN$ be the LSN of the most recent modification of page $P$, and let $FlushedLSN$ be the highest LSN flushed to disk. The storage engine must guarantee:
-  $$\text{PageLSN} \le \text{FlushedLSN}$$
-  before writing page $P$ to disk.
+* **Mathematical rule**: Let `PageLSN` be the LSN of the most recent modification of page $P$, and let `FlushedLSN` be the highest LSN flushed to disk. The storage engine must guarantee: `PageLSN <= FlushedLSN` before writing page $P$ to disk.
 
 ### Q4: Detail the differences between strict 2PL, rigorous 2PL, and conservative 2PL.
 * **Strict 2PL**: Follows 2PL, but forces transactions to hold all **Exclusive (write) locks** until commit/abort. Prevents cascading rollbacks.

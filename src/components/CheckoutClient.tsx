@@ -109,19 +109,40 @@ export default function CheckoutClient({
           razorpay_payment_id: string;
           razorpay_signature: string;
         }) => {
-          const verifyRes = await fetch("/api/payments/verify", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(response)
-          });
-          const verifyData = await verifyRes.json().catch(() => null);
-          if (!verifyRes.ok || !verifyData?.ok) {
-            setError(verifyData?.error || "Payment verification failed.");
+          try {
+            const verifyRes = await fetch("/api/payments/verify", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(response)
+            });
+            const verifyData = await verifyRes.json().catch(() => null);
+            if (!verifyRes.ok || !verifyData?.ok) {
+              // Fallback to sync endpoint
+              const syncRes = await fetch("/api/payments/sync", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  paymentId: response.razorpay_payment_id,
+                  orderId: response.razorpay_order_id
+                })
+              });
+              const syncData = await syncRes.json().catch(() => null);
+              if (syncRes.ok && syncData?.ok) {
+                setPhase("done");
+                router.refresh();
+                return;
+              }
+
+              setError(verifyData?.error || "Payment verification failed. Please check your Account Desk to re-verify.");
+              setPhase("idle");
+              return;
+            }
+            setPhase("done");
+            router.refresh();
+          } catch {
+            setError("Network issue during verification. Please visit your Account Desk to verify.");
             setPhase("idle");
-            return;
           }
-          setPhase("done");
-          router.refresh();
         },
         modal: {
           ondismiss: () => {

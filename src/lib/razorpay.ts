@@ -54,6 +54,42 @@ export async function createRazorpayOrder(input: {
   return data;
 }
 
+export async function fetchRazorpayOrder(orderId: string): Promise<RazorpayOrderResponse & { notes?: Record<string, string> } | null> {
+  const keyId = process.env.RAZORPAY_KEY_ID;
+  const keySecret = process.env.RAZORPAY_KEY_SECRET;
+  if (!keyId || !keySecret || !orderId) return null;
+
+  try {
+    const response = await fetch(`https://api.razorpay.com/v1/orders/${orderId}`, {
+      headers: {
+        Authorization: `Basic ${Buffer.from(`${keyId}:${keySecret}`).toString("base64")}`
+      }
+    });
+    if (!response.ok) return null;
+    return (await response.json()) as RazorpayOrderResponse & { notes?: Record<string, string> };
+  } catch {
+    return null;
+  }
+}
+
+export async function fetchRazorpayPayment(paymentId: string): Promise<Record<string, unknown> | null> {
+  const keyId = process.env.RAZORPAY_KEY_ID;
+  const keySecret = process.env.RAZORPAY_KEY_SECRET;
+  if (!keyId || !keySecret || !paymentId) return null;
+
+  try {
+    const response = await fetch(`https://api.razorpay.com/v1/payments/${paymentId}`, {
+      headers: {
+        Authorization: `Basic ${Buffer.from(`${keyId}:${keySecret}`).toString("base64")}`
+      }
+    });
+    if (!response.ok) return null;
+    return (await response.json()) as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+}
+
 export function verifyRazorpaySignature(input: {
   orderId: string;
   paymentId: string;
@@ -67,6 +103,19 @@ export function verifyRazorpaySignature(input: {
     .digest("hex");
   const a = Buffer.from(expected, "utf-8");
   const b = Buffer.from(input.signature || "", "utf-8");
+  if (a.length !== b.length) return false;
+  return crypto.timingSafeEqual(a, b);
+}
+
+export function verifyRazorpayWebhookSignature(
+  rawBody: string,
+  signature: string,
+  secret = process.env.RAZORPAY_WEBHOOK_SECRET || process.env.RAZORPAY_KEY_SECRET
+): boolean {
+  if (!secret || !signature) return false;
+  const expected = crypto.createHmac("sha256", secret).update(rawBody).digest("hex");
+  const a = Buffer.from(expected, "utf-8");
+  const b = Buffer.from(signature, "utf-8");
   if (a.length !== b.length) return false;
   return crypto.timingSafeEqual(a, b);
 }

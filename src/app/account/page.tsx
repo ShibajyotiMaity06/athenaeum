@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { BadgeCheck, BookOpen, CheckCircle2, ReceiptText, Shield, User } from "lucide-react";
 import LogoutButton from "@/components/LogoutButton";
+import SyncPaymentButton from "@/components/SyncPaymentButton";
 import GeoPrice from "@/components/GeoPrice";
 import { getCurrentUser } from "@/lib/auth";
 import { getOrdersByUser } from "@/lib/db";
@@ -96,12 +97,13 @@ export default async function AccountPage() {
                 </div>
               </div>
 
-              <div className="pt-4 border-t border-[rgba(186,190,204,0.4)] flex flex-wrap gap-3">
+              <div className="pt-4 border-t border-[rgba(186,190,204,0.4)] flex flex-wrap gap-3 items-center">
                 <Link href="/pricing" className="btn-industrial btn-industrial-primary py-3 px-6 text-xs">
                   <span>Upgrade to Lifetime Access — <GeoPrice className="ml-1" /></span>
                 </Link>
                 <LogoutButton />
               </div>
+              <SyncPaymentButton />
             </div>
           )}
         </section>

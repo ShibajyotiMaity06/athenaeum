@@ -403,6 +403,18 @@ body {
   font-size: 15.5px;
   line-height: 1.72;
   color: var(--text-primary);
+  max-width: 100%;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+.manuscript p,
+.manuscript li,
+.manuscript div,
+.manuscript blockquote {
+  max-width: 100%;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .manuscript > * + * {
@@ -418,6 +430,7 @@ body {
   margin-top: 1.8em;
   margin-bottom: 0.5em;
   letter-spacing: -0.02em;
+  overflow-wrap: break-word;
 }
 
 .manuscript h3 {
@@ -426,6 +439,7 @@ body {
   font-weight: 600;
   color: var(--text-primary);
   margin-top: 1.5em;
+  overflow-wrap: break-word;
 }
 
 .manuscript strong {
@@ -442,6 +456,8 @@ body {
   color: var(--accent);
   text-decoration: underline;
   text-underline-offset: 3px;
+  overflow-wrap: break-word;
+  word-break: break-all;
 }
 
 .manuscript ul,
@@ -449,6 +465,7 @@ body {
   padding-left: 1.4rem;
   display: grid;
   gap: 0.4em;
+  max-width: 100%;
 }
 
 .manuscript ul {
@@ -476,16 +493,23 @@ body {
   color: var(--accent);
   font-weight: 600;
   box-shadow: inset 1px 1px 2px rgba(0, 0, 0, 0.1);
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .manuscript table {
+  display: block;
   width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-card) transparent;
   border-collapse: collapse;
   font-size: 0.9em;
   margin-block: 1.2em;
   background: var(--bg-panel);
   border-radius: 8px;
-  overflow: hidden;
   box-shadow: var(--shadow-recessed);
 }
 
@@ -513,14 +537,30 @@ body {
   border-radius: 10px;
   padding: 1.15rem 1.25rem;
   overflow-x: auto;
+  max-width: 100%;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
   font-size: 13.5px;
   line-height: 1.65;
   box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.6);
 }
 
+.manuscript pre::-webkit-scrollbar,
+.manuscript table::-webkit-scrollbar {
+  height: 6px;
+}
+
+.manuscript pre::-webkit-scrollbar-thumb,
+.manuscript table::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
+
 .manuscript pre code {
   font-family: var(--font-mono);
   color: #f0f2f5;
+  white-space: pre;
 }
 
 /* Dark Highlight.js theme */

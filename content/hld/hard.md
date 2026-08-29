@@ -1,752 +1,238 @@
-# HLD - Hard Interview Questions
+# High-Level Design (HLD) - Large-Scale System Design Problems (Part 2)
 
-Welcome to the advanced High-Level Design (HLD) Prep Guide. This document explores massive-scale distributed architectures, financial safety patterns, consensus protocols, low-level database internals, and real-time geospatial system design.
+Welcome to the High-Level Design (HLD) Large-Scale System Problems Guide (Part 2). This codex covers detailed architectural breakdowns, capacity estimations, data models, and canonical walkthrough links for real-world planetary-scale systems (Problems 19 to 35) and deep-dive case studies.
 
 ---
 
 ## Theory Questions & Answers
 
-### Q1: Explain Geospatial Indexing. Compare Geohashes, Quadtrees, and Google S2. How does a ride-sharing system (like Uber) track and query moving drivers in real time?
+### Q19: Design a Distributed File System like Google File System (GFS) / HDFS
 
 **Answer:**
-A ride-sharing system must track latitude/longitude updates for millions of active drivers and allow riders to search nearby regions instantly. Executing standard relational queries using `WHERE lat BETWEEN x AND y` results in full table scans ($O(N)$), crashing database processing under heavy traffic.
+Design a distributed file system managing petabytes of data across thousands of commodity storage servers with high sequential read/write throughput.
 
-To solve this, we use **Geospatial Indexing** to map a 2D physical point into a 1D indexable sequence.
-
-```mermaid
-graph TD
-    Geo[Geospatial Indexing] --> Geohash[Geohash: Base32 String]
-    Geo --> Quadtree[Quadtree: Recursive 4-Quadrant Division]
-    Geo --> S2[Google S2: Hilbert Curve Grid Cells]
-```
-
-*   **Geohashes:**
-    *   *Mechanism:* Divides the Earth into grid zones, recursively splitting them into smaller regions. Each cell is encoded as a Base32 string (e.g., `9q8yy`). Longer prefixes represent tighter boxes.
-    *   *Edge/Boundary Problem:* Two points right next to each other on a grid border can have completely different Geohash prefixes (e.g., one starts with `9` and the other with `d`), making prefix queries fail to capture immediate neighbors.
-*   **Quadtrees:**
-    *   *Mechanism:* A tree structure where each node has exactly four children (NW, NE, SW, SE). Nodes split recursively *only* when a quadrant exceeds capacity bounds (e.g., $\ge 100$ drivers).
-    *   *Pros:* Dynamically sizes cells (deep trees in New York, shallow in deserts).
-    *   *Cons:* Very complex to update, balance, and synchronize in real-time memory across a distributed cluster when drivers are moving fast.
-*   **Google S2:**
-    *   *Mechanism:* Projects the Earth's sphere onto a cube, mapping it to a 1D index using a mathematical **Hilbert Curve**. Divides the Earth into 31 hierarchical levels of cells.
-    *   *Pros:* Solves the boundary problem cleanly. Preserves spatial locality: points physically close in 2D space are highly likely to be adjacent on the 1D Hilbert index. The industry standard.
+*   **Original Research Paper:** [https://static.googleusercontent.com/media/research.google.com/en//archive/gfs-sosp2003.pdf](https://static.googleusercontent.com/media/research.google.com/en//archive/gfs-sosp2003.pdf)
+*   **Key Design Decisions:**
+    1.  *Architecture Topology:* Single Master / NameNode managing metadata in memory, paired with thousands of ChunkServers / DataNodes storing raw data chunks.
+    2.  *Large Chunk Size (64MB):* Reduces metadata overhead and eliminates frequent master communication.
+    3.  *Replication & Durability:* Chunks replicated $3\times$ across different racks with background heartbeat rebalancing.
 
 ---
 
-### Q2: Explain the PACELC Theorem. How does it expand on the CAP Theorem, and how does it apply to modern distributed databases?
+### Q20: Design Dropbox / Google Drive (File Sync & Chunk Deduplication)
 
 **Answer:**
-The **CAP Theorem** states that in the event of a network Partition ($P$), a system must choose between Consistency ($C$) and Availability ($A$).
+Design a cloud storage and file synchronization platform supporting desktop/mobile sync, conflict resolution, bandwidth-efficient delta syncing, and offline edits.
 
-#### Expansion to PACELC:
-Partitions are rare in physical datacenters. **PACELC** models the system trade-offs during **normal operations** (when there is no partition).
-
-$$\text{If Partition (P)} \longrightarrow \text{choose Availability (A) or Consistency (C)}$$
-$$\text{Else (E)} \longrightarrow \text{choose Latency (L) or Consistency (C)}$$
-
-```mermaid
-graph TD
-    PACELC{PACELC Theorem} --> P[If Partition: P]
-    PACELC --> E[Else Normal: E]
-    P --> P_A[Availability: PA]
-    P --> P_C[Consistency: PC]
-    E --> E_L[Latency: EL]
-    E --> E_C[Consistency: EC]
-```
-
-*   **PA/EL System (e.g., MongoDB, DynamoDB):** During partitions, prioritizes availability. During normal operations, prioritizes low latency by writing/reading locally and updating replicas asynchronously.
-*   **PC/EC System (e.g., Google Spanner, standard RDBMS):** Prioritizes consistency at all times. During normal operations, it blocks writes until synchronous replication across all nodes completes, increasing latency but preventing stale reads.
+*   **Solution Guide (Text):** [https://www.geeksforgeeks.org/system-design/design-dropbox-a-system-design-interview-question/](https://www.geeksforgeeks.org/system-design/design-dropbox-a-system-design-interview-question/)
+*   **Deep-Dive Walkthrough (Video):** [https://www.youtube.com/watch?v=U0xTu6E2CT8](https://www.youtube.com/watch?v=U0xTu6E2CT8)
+*   **Key Design Decisions:**
+    1.  *Chunking & Content-Addressable Storage (CAS):* Split files into 4MB chunks and hash each chunk (SHA-256). Store chunks by their hash in S3 to achieve cross-user deduplication.
+    2.  *Delta Sync:* When a 500MB file changes, calculate the binary delta (rsync algorithm) and upload only the modified 4MB chunks rather than re-uploading the entire file.
+    3.  *Sync Engine:* Desktop client watches file system changes, maintains a local SQLite database, and pushes metadata events via WebSockets.
 
 ---
 
-### Q3: Detail Paxos and Raft Consensus Protocols. How do they resolve leader election, log replication, and split-brain in fault-tolerant clusters?
+### Q21: Design a Distributed Web Crawler
 
 **Answer:**
-Consensus protocols guarantee that a cluster of nodes can agree on a sequence of state values, even if some nodes fail.
+Design a distributed web crawler fetching billions of web pages monthly with strict politeness policies, duplicate detection, and robust error handling.
 
-*   **Raft (Leader-Based Protocol):**
-    *   *States:* Follower, Candidate, Leader.
-    *   *Leader Election:* If a follower stops receiving heartbeats (Election Timeout), it transitions to Candidate, increments the *Term*, votes for itself, and requests votes from peers. It becomes Leader if it receives a majority of votes ($\ge N/2 + 1$).
-    *   *Log Replication:* All writes go to the Leader. The Leader writes sequentially to its log and sends an `AppendEntries` RPC to followers. Once a majority of followers ACK the write, the Leader *commits* it and applies it to its local state machine.
-    *   *Split-Brain Prevention:* The majority requirement ensures only one candidate can secure enough votes to become Leader in any partition. If a partition heals, the leader with the lower *Term* is demoted to follower.
-*   **Paxos (Leaderless/Multi-Leader):**
-    *   Operates in two phases:
-        1.  *Phase 1 (Prepare):* Proposer sends a proposal number $N$ to acceptor nodes. Acceptors return their highest accepted value if they promise not to accept any future proposals numbered $< N$.
-        2.  *Phase 2 (Accept):* If a majority of acceptors agree, the proposer broadcasts the value to acceptors to finalize the write.
+*   **Solution Walkthrough (Video):** [https://www.youtube.com/watch?v=BKZxZwUgL3Y](https://www.youtube.com/watch?v=BKZxZwUgL3Y)
+*   **Key Design Decisions:**
+    1.  *URL Frontier:* Priority queues for page importance + Politeness queues partitioned by host domain with rate-limiting delays.
+    2.  *Duplicate URL & Content Detection:* Bloom Filter for visited URLs ($0.1\%$ false positive rate); 64-bit SimHash algorithm for duplicate HTML content detection.
+    3.  *DNS Caching:* Custom in-memory DNS caching fleet to eliminate external DNS lookup latency.
 
 ---
 
-### Q4: Explain Vector Clocks vs. Lamport Timestamps. How do they track causality and detect/resolve conflicts?
+### Q22: Design a Distributed Notification Service (APNS, FCM, Email, SMS)
 
 **Answer:**
-Standard physical clocks cannot be used to order events in distributed systems due to network latencies and inevitable clock drift.
+Design an omni-channel notification platform sending billions of transactional and marketing alerts across iOS (APNS), Android (FCM), SMS (Twilio), and Email (SendGrid).
 
-*   **Lamport Timestamps:**
-    *   Every node maintains a local integer counter, initialized to 0.
-    *   Before executing a local event, increment the counter: $L = L + 1$.
-    *   When sending a message, attach the local counter value.
-    *   When receiving a message, update local counter: $L_{\text{recv}} = \max(L_{\text{local}}, L_{\text{msg}}) + 1$.
-    *   *Limitation:* If $L(A) < L(B)$, we **cannot** conclude that event A caused event B; it only provides a total ordering, not causal history.
-*   **Vector Clocks:**
-    *   Every node maintains an array/vector of size $N$ (where $N$ is the cluster size).
-    *   When sending a message, Node $i$ increments its own element: $V_i[i] = V_i[i] + 1$ and attaches the vector.
-    *   When receiving a message from Node $j$, update local vector: $V_i[k] = \max(V_i[k], V_{\text{msg}}[k])$ for all $k$, and increment $V_i[i] = V_i[i] + 1$.
-    *   *Causality:* Event $A$ causally preceded $B$ if every element in $V(A) \le V(B)$ and at least one element is strictly smaller. If elements diverge (e.g., $V(A)$ has some higher values and $V(B)$ has others), a **conflict** is detected, requiring application-level resolution.
+*   **Solution Link:** [https://algomaster.io/learn/system-design-interviews/design-notification-service](https://algomaster.io/learn/system-design-interviews/design-notification-service)
+*   **Key Design Decisions:**
+    1.  *Priority Queues:* Separate Kafka topics for high-priority transactional alerts (OTP / Payment receipts) vs low-priority marketing blasts.
+    2.  *Deduplication & Rate Limiting:* Deduplicate notifications within a 5-minute sliding window using Redis keys (`SETNX user:notif:template_id`) to prevent spamming users on network retries.
+    3.  *Integration Adapters:* Decoupled vendor adapter microservices with circuit breakers and fallback providers.
 
 ---
 
-### Q5: What are CRDTs (Conflict-free Replicated Data Types)? Explain state-based vs. operation-based types.
+### Q23: Design a Distributed Rate Limiter (HLD)
 
 **Answer:**
-**CRDTs** are distributed data structures that can be updated independently and concurrently across replicas without coordination, guaranteeing eventual convergence without conflict resolution loops.
+Design a global distributed rate limiter protecting API backends at scale with sub-millisecond decision latency and atomic synchronization.
 
-*   **State-Based (CvRDT):**
-    *   Replicas sync by sending their entire local state to other replicas.
-    *   A merge function must be **commutative** ($A \sqcup B = B \sqcup A$), **associative** ($A \sqcup (B \sqcup C) = (A \sqcup B) \sqcup C$), and **idempotent** ($A \sqcup A = A$).
-    *   *Use Case:* PNCounter (Positive-Negative Counter), LWW-Element-Set (Last-Write-Wins Set).
-*   **Operation-Based (CmRDT):**
-    *   Replicas sync by broadcasting individual operation payloads (e.g., "Add 5", "Remove Item X").
-    *   Requires a reliable, causal, ordered network delivery channel to guarantee all replicas apply operations in compatible sequences.
-    *   *Use Case:* Collaborative real-time document editors (e.g., Figma, Google Docs).
+*   **Solution Walkthrough (Video):** [https://www.youtube.com/watch?v=mhUQe4BKZXs](https://www.youtube.com/watch?v=mhUQe4BKZXs)
+*   **Algorithm Deep-Dive:** [https://blog.algomaster.io/p/rate-limiting-algorithms-explained-with-code](https://blog.algomaster.io/p/rate-limiting-algorithms-explained-with-code)
+*   **Key Design Decisions:**
+    1.  *Redis + Lua Scripts:* Execute token bucket evaluations inside atomic Redis Lua scripts to prevent read-modify-write race conditions.
+    2.  *Sliding Window Counter:* Combine current and previous window weights to achieve $O(1)$ memory usage per user while smoothing boundary traffic bursts.
+    3.  *Local Memory + Centralized Sync:* Maintain local in-memory token counters at each API Gateway, asynchronously batching sync deltas to Redis every 100ms.
 
 ---
 
-### Q6: Detail LSM-Trees vs. B+ Trees. Explain write amplification, read amplification, and compaction.
+### Q24: Design an API Gateway
 
 **Answer:**
-*   **B+ Trees:**
-    *   *Operation:* Updates data in-place by writing to random pages on disk.
-    *   *Read Amplification:* Low. Point lookup reads a single branch path down to leaf ($O(\log N)$).
-    *   *Write Amplification:* High. A minor update to a single byte requires rewriting the entire 4KB-16KB database page to disk.
-*   **LSM-Trees (Log-Structured Merge-Trees):**
-    *   *Operation:* All writes append sequentially to an in-memory **MemTable** and a disk WAL. When the MemTable is full, it is flushed to disk as a sorted, immutable **SSTable** file.
-    *   *Compaction:* Background threads merge and deduplicate multiple sorted SSTable levels (Size-Tiered or Leveled Compaction), purging older key versions to free space.
-    *   *Write Amplification:* Medium. Writing sequentially is extremely fast, but compaction continuously rewrites data during merges.
-    *   *Read Amplification:* High. To find a key, the engine must scan the MemTable and potentially multiple SSTable files on disk. Bloom Filters are used to skip SSTables that do not contain the target key.
+Design a high-performance reverse proxy gateway providing centralized routing, authentication, rate limiting, and telemetry for microservices.
+
+*   **Solution Link:** [https://blog.algomaster.io/p/what-is-an-api-gateway](https://blog.algomaster.io/p/what-is-an-api-gateway)
+*   **Key Design Decisions:**
+    1.  *Non-Blocking I/O Architecture:* Built on Netty / Envoy / Go reverse proxy for massive asynchronous connection concurrency.
+    2.  *Plugin Filter Pipeline:* Sequential filter chain: CORS $\to$ Rate Limiting $\to$ JWT Authentication $\to$ Request Transformation $\to$ Routing.
+    3.  *BFF (Backend for Frontend):* Dedicated gateway configurations for Mobile (aggregating multiple REST responses into compact payloads) vs Web.
 
 ---
 
-### Q7: Explain Single-Leader, Multi-Leader, and Leaderless Replication. Discuss conflict resolution.
+### Q25: Design BookMyShow / Ticketmaster (Seat Locking & Concurrency)
 
 **Answer:**
-*   **Single-Leader:** All writes go to one node; reads scale via replica slaves.
-    *   *Pros:* Simple consistency management.
-    *   *Cons:* Leader is a write bottleneck and single point of failure (SPOF).
-*   **Multi-Leader:** Multiple master nodes accept writes (often distributed across distinct geographic datacenters).
-    *   *Conflict Resolution:* Requires complex reconciliation engines using **Vector Clocks** or **Last-Write-Wins (LWW)** (which relies on physical clock synchronization, risking data loss).
-*   **Leaderless (Dynamo-Style):** Writes are broadcast directly to $N$ replicas.
-    *   *Quorum Read/Write:* Writes are successful if acknowledged by $W$ nodes; reads query $R$ nodes. If $R + W > N$, the overlap guarantees that at least one read replica contains the latest written version.
-    *   *Read Repair:* When a read query detects version differences among replicas, the client engine writes the latest version back to stale nodes.
+Design an entertainment ticketing platform with theater seating layouts, temporary seat holds during checkout, and zero double-booking under extreme traffic spikes.
+
+*   **Solution Guide (Text):** [https://www.geeksforgeeks.org/system-design/design-bookmyshow-a-system-design-interview-question/](https://www.geeksforgeeks.org/system-design/design-bookmyshow-a-system-design-interview-question/)
+*   **Deep-Dive Walkthrough (Video):** [https://www.youtube.com/watch?v=lBAwJgoO3Ek](https://www.youtube.com/watch?v=lBAwJgoO3Ek)
+*   **Key Design Decisions:**
+    1.  *Temporary Distributed Seat Lock:* Use Redis `SET seat:show_id:seat_id user_id NX EX 600` (10-minute hold).
+    2.  *Atomic State Transitions:* State Machine (`AVAILABLE` $\to$ `LOCKED` $\to$ `BOOKED`). When payment succeeds, transition in PostgreSQL using `UPDATE seats SET status = 'BOOKED' WHERE id = ? AND status = 'LOCKED'`.
+    3.  *Virtual Waiting Queue:* For blockbuster sales, funnel users through a Kafka-based virtual waiting room to smooth traffic to checkout servers.
 
 ---
 
-### Q8: What is distributed 2-Phase Commit (2PC) vs. 3-Phase Commit (3PC)?
+### Q26: Design a Flight Booking System (Airline Aggregator / GDS)
 
 **Answer:**
-*   **Two-Phase Commit (2PC):**
-    *   *Phase 1 (Prepare):* Coordinator asks all participant nodes if they can commit. Participants acquire locks and respond with VOTE_COMMIT or VOTE_ABORT.
-    *   *Phase 2 (Commit):* If all vote commit, coordinator broadcasts COMMIT. Otherwise, it broadcasts ROLLBACK.
-    *   *The Flaw:* **Blocking Nature.** If the coordinator crashes in Phase 2, participants are left hanging in uncertainty, unable to release locks because they do not know the final decision.
-*   **Three-Phase Commit (3PC):**
-    *   Introduces a **PreCommit** phase between Prepare and Commit, along with a timeout window.
-    *   If participants do not hear from the coordinator within the timeout during PreCommit, they assume commit or abort safely based on neighbor consensus.
-    *   *The Flaw:* Rarely used because it assumes a synchronous network model. Under realistic network partitions (asymmetric splits), 3PC can still easily trigger inconsistent state splits.
+Design a flight search and booking aggregator querying Global Distribution Systems (Amadeus, Sabre), managing multi-leg itineraries, and handling dynamic inventory.
+
+*   **Solution Walkthrough (Video):** [https://www.youtube.com/watch?v=qsGcfVGvFSs](https://www.youtube.com/watch?v=qsGcfVGvFSs)
+*   **Key Design Decisions:**
+    1.  *Aggregator Search Cache:* Cache flight route availability in Redis with short TTL (2 mins) to reduce expensive downstream airline API calls.
+    2.  *Distributed Booking SAGA:* Orchestrate multi-leg booking across independent airline APIs with automatic compensation rollbacks if a leg fails.
+    3.  *Price Volatility Tracking:* Background workers poll airline APIs to notify users of price drops.
 
 ---
 
-### Q9: Explain how Database MVCC (Multi-Version Concurrency Control) works.
+### Q27: Design Airbnb (Property Search, Calendar Availability & Booking)
 
 **Answer:**
-**MVCC** allows databases to execute highly concurrent reads and writes simultaneously without blocking each other.
+Design a vacation rental platform supporting full-text location search, interactive map bounding box filtering, and calendar availability reservations.
 
-*   **Mechanism:**
-    *   Instead of updating a database row in place (which requires locking), writes create a new, versioned copy of the row, attaching a transaction ID (`tx_id`) or timestamp.
-    *   Every row maintains fields like `created_by_tx` and `deleted_by_tx`.
-*   **Read Visibility rules:**
-    *   When Transaction A begins with ID `tx_100`, its read queries only see rows where:
-        *   `created_by_tx` $\le 100$ (and was committed).
-        *   `deleted_by_tx` is null or $> 100$.
-    *   *Benefit:* Readers do not block writers, and writers do not block readers, enabling lock-free repeatable reads. Old, deleted row versions are cleaned up asynchronously by a background vacuum process.
+*   **Solution Walkthrough (Video):** [https://www.youtube.com/watch?v=YyOXt2MEkv4](https://www.youtube.com/watch?v=YyOXt2MEkv4)
+*   **Key Design Decisions:**
+    1.  *Search & Spatial Indexing:* Elasticsearch / OpenSearch cluster indexing property attributes, amenities, and geo-point coordinates.
+    2.  *Calendar Availability Grid:* Store daily availability as bitmap arrays or interval sets for fast $O(1)$ multi-day overlap checks.
+    3.  *Two-Way Messaging Sync:* Real-time guest-host communication via WebSocket gateways.
 
 ---
 
-### Q10: What are Distributed Transactions? Detail Saga vs. 2PC.
+### Q28: Design a Location-Based Service like Yelp / Nearby Places
 
 **Answer:**
-*   **Two-Phase Commit (2PC):**
-    *   *Mechanism:* Central coordinator manages locking and commitment across multiple physical datastores.
-    *   *Cons:* Extremely slow write latencies; holds database locks across microservices, causing distributed deadlock cascades. High availability risk (if coordinator goes down).
-*   **Saga Pattern:**
-    *   *Mechanism:* A sequence of independent local microservice transactions. Each step executes a local write.
-    *   *Compensation:* If Step 3 fails, the orchestrator/choreographer publishes compensation transactions backward (e.g., reversing charging a card by issuing a refund).
-    *   *Cons:* **Lacks isolation.** A concurrent transaction can read dirty intermediate state before compensation finishes (violating ACID's 'I').
+Design a local business search platform resolving proximity queries ("Find coffee shops within 2km") with sub-50ms latency.
+
+*   **Solution Walkthrough (Video):** [https://www.youtube.com/watch?v=M4lR_Va97cQ](https://www.youtube.com/watch?v=M4lR_Va97cQ)
+*   **Key Design Decisions:**
+    1.  *Geohash / Google S2 Spatial Indexing:* Convert latitude/longitude coordinates into 6-character Geohashes or S2 cells. Businesses in the same geographic region share identical prefix hashes.
+    2.  *Spatial Queries:* Query candidate businesses by matching prefix strings (`WHERE geohash LIKE 'dr5r%'`) combined with exact mathematical Haversine distance filtering.
+    3.  *Read-Heavy Caching:* Cache search results by Geohash in Redis.
 
 ---
 
-### Q11: Detail the internals of Apache Kafka. Why does it scale to GBs/second?
+### Q29: Design a Stock Exchange / Trading Platform (Matching Engine HLD)
 
 **Answer:**
-Kafka achieves massive scale due to key architectural designs:
+Design an electronic financial exchange processing hundreds of thousands of orders per second with deterministic price-time priority matching and sub-millisecond execution.
 
-*   **Sequential Append-Only Log:** Partitions are stored as files on disk. Writes simply append to the end of the file. Sequential write speeds match memory speeds, maximizing sequential IOPS.
-*   **Zero-Copy Memory Transfer (OS Page Cache):**
-    *   Standard socket transfer: Disk $\rightarrow$ OS Cache $\rightarrow$ JVM Space $\rightarrow$ Socket Buffer $\rightarrow$ NIC.
-    *   Kafka zero-copy (`sendfile` system call): Disk $\rightarrow$ OS Cache $\rightarrow$ NIC directly. Bypasses user-space CPU and context-switch memory copying.
-*   **Partition Sharding:** Divides topics into multiple partitions distributed across distinct brokers, allowing concurrent, isolated writes and reads.
+*   **LLD/HLD Base Guide:** [https://github.com/ashishps1/awesome-low-level-design/blob/main/problems/online-stock-brokerage-system.md](https://github.com/ashishps1/awesome-low-level-design/blob/main/problems/online-stock-brokerage-system.md)
+*   **Key Design Decisions:**
+    1.  *Single-Threaded In-Memory Matching Engine:* Eliminate thread contention and locking overhead by pinning an in-memory Limit Order Book to a single CPU core per stock symbol (LMAX Disruptor ring buffer).
+    2.  *Event Sourcing & Hardware WAL:* Every incoming order is written to an append-only transaction log (NVMe SSD / FPGA) before matching, guaranteeing zero state loss.
+    3.  *Multicast UDP Market Feeds:* Broadcast real-time order book changes (Level 2/3 market data) over Multicast UDP with FIX/FAST protocol.
 
 ---
 
-### Q12: Explain Gossip Protocol internals. How do we calculate convergence time?
+### Q30: Design a Distributed Job Scheduler (Quartz / Airflow at Scale)
 
 **Answer:**
-A peer-to-peer communication model where nodes randomly select $k$ neighbors (Gossip Fanout) to swap state metadata every $T$ seconds.
+Design a distributed cron and task scheduling platform executing millions of recurring and one-shot tasks with fault tolerance and exactly-once execution.
 
-*   **States:**
-    *   *Anti-Entropy:* Nodes periodically compare their entire database state with randomly selected neighbors to fix differences. High network bandwidth.
-    *   *Rumor Mongering:* When a node receives a state change, it proactively broadcasts (gossips) it to $k$ random neighbors.
-*   **Convergence Time:**
-    *   With an active node count of $N$ and fanout parameter $k$, the number of rounds required to propagate a rumor to all nodes scales logarithmically:
-        $$\text{Rounds} \approx O\left(\frac{\ln(N)}{\ln(k)}\right)$$
-    *   This enables global cluster state convergence within seconds, even across thousands of active machines, with highly predictable network overhead.
+*   **Solution Link:** [https://blog.algomaster.io/p/design-a-distributed-job-scheduler](https://blog.algomaster.io/p/design-a-distributed-job-scheduler)
+*   **Key Design Decisions:**
+    1.  *Time-Wheel / Delayed Queue:* Use a Hierarchical Timing Wheel or Redis Sorted Set (`ZSET` with score = `execution_timestamp`) to poll due jobs in $O(\log N)$ time.
+    2.  *Distributed Worker Heartbeats:* Worker nodes register in ZooKeeper/Consul. Master uses Raft consensus for leader election and distributes tasks to available workers.
+    3.  *Idempotent Execution:* Workers verify task execution locks in Redis before starting to prevent duplicate execution during network partitions.
 
 ---
 
-### Q13: What is the Byzantine Fault Tolerance (BFT) problem?
+### Q31: Design a News Feed Ranking System
 
 **Answer:**
-**BFT** is the consensus challenge in distributed networks where nodes can fail, lag, or actively behave maliciously (sending conflicting, false, or forged data to different parts of the network).
+Design an AI-driven news feed ranking architecture sorting thousands of candidate posts per user into an engaging, personalized feed in under 100ms.
 
-*   **PBFT (Practical Byzantine Fault Tolerance):**
-    *   Solves consensus if less than $1/3$ of the nodes are malicious: $F < (N-1)/3$.
-    *   Requires $O(N^2)$ message complexity over three phases (Pre-prepare, Prepare, Commit), making it scale poorly beyond dozens of nodes.
-*   **PoW (Proof of Work):**
-    *   Decentralized BFT solution utilizing cryptographic hash puzzles.
-    *   Scales to millions of nodes, but suffers from low transaction throughput (high latency) and high energy footprint.
+*   **Solution Guide:** [https://www.geeksforgeeks.org/interview-experiences/design-twitter-a-system-design-interview-question/](https://www.geeksforgeeks.org/interview-experiences/design-twitter-a-system-design-interview-question/)
+*   **Key Design Decisions:**
+    1.  *Two-Stage Retrieval & Ranking:*
+        *   *Candidate Generation (Retrieval):* Fetch top 500 recent candidate posts from followed users and pages.
+        *   *Scoring & Ranking:* Pass candidate features (affinity, post type, freshness, engagement probability) through an ML model to compute final feed scores.
+    2.  *Nearline Feed Cache:* Pre-calculate the top 50 ranked posts and store them in Redis for instant mobile app loading.
 
 ---
 
-### Q14: Explain Snowflake ID generation (Twitter's unique ID generator).
+### Q32: Design a Real-Time Gaming Leaderboard (Redis Sorted Sets)
 
 **Answer:**
-Generates 64-bit, ordered, globally unique IDs at high throughput without central coordination.
+Design a real-time leaderboard platform managing millions of player scores, supporting real-time score updates, and retrieving top-N players and individual ranks in sub-5ms.
 
-```
-+--------------------------------------------------------------+
-| 1 bit | 41 bits (Timestamp) | 10 bits (Worker ID) | 12 bits |
-| (Unused) |                    |                     | (Seq) |
-+--------------------------------------------------------------+
-```
-
-*   **Bit Allocation Breakdown:**
-    *   *1 Unused Bit:* Keeps the signed integer positive.
-    *   *41 Timestamp Bits:* Millisecond precision, providing $2^{41} \text{ ms} \approx 69\text{ years}$ of unique IDs relative to a custom epoch.
-    *   *10 Worker ID Bits:* Supports up to $1024$ independent application worker nodes.
-    *   *12 Sequence Bits:* A local counter incremented for every ID generated within the same millisecond. Supports up to $4096$ IDs/ms per worker.
-*   **NTP Clock Drift Handling:** If the system clock drifts backward, the worker rejects ID generation until the clock catches up, preventing duplicate ID sequences.
+*   **Technical Reference:** [https://redis.com/blog/what-is-data-replication/](https://redis.com/blog/what-is-data-replication/) *(Search "design a leaderboard system redis sorted sets").*
+*   **Key Design Decisions:**
+    1.  *Redis Sorted Sets (ZSET):*
+        *   Update Score: `ZADD leaderboard score user_id` ($O(\log N)$).
+        *   Get Top 10: `ZREVRANGE leaderboard 0 9 WITHSCORES` ($O(\log N + M)$).
+        *   Get Player Rank: `ZREVRANK leaderboard user_id` ($O(\log N)$).
+    2.  *Sharding Massive Leaderboards:* For 100M+ players, partition by score ranges or use a composite leaderboard service.
 
 ---
 
-### Q15: What are SSD Write Amplification and Garbage Collection?
+### Q33: Design a Live Video Streaming & Real-Time Sports Score System
 
 **Answer:**
-*   **SSD Flash Block Layout:** SSD memory is divided into **pages** (usually 4KB) grouped into **blocks** (usually 128-512 pages).
-*   **Constraints:**
-    *   *Reads/Writes:* Done at the **Page** level.
-    *   *Erasures:* Can only be done at the **Block** level.
-*   **Write Amplification Factor (WAF):** When updating a page, the SSD controller must read the entire block into cache, erase the physical block, modify the page, and write the block back. This causes a physical write volume multiples higher than the logical write request.
-*   **Garbage Collection:** The controller shifts valid pages to clean blocks, freeing dirty blocks for erasure. Relational databases with frequent random page updates accelerate SSD physical wear-out, while LSM-Tree engines protect SSD lifespan by writing sequentially.
+Design an ultra-low latency live video and score distribution platform broadcasting live sports events to millions of concurrent viewers.
+
+*   **Solution Guide:** [https://www.geeksforgeeks.org/system-design/system-design-netflix-a-complete-architecture/](https://www.geeksforgeeks.org/system-design/system-design-netflix-a-complete-architecture/)
+*   **Key Design Decisions:**
+    1.  *Low-Latency HLS (LL-HLS) / WebRTC:* Chunk size reduced to 500ms to achieve $<2\text{s}$ live glass-to-glass latency.
+    2.  *Score Distribution via SSE / WebSockets:* Push real-time score updates via Server-Sent Events (SSE) fanned out through an edge Pub/Sub broker (Redis / NATS).
 
 ---
 
-### Q16: Contrast Database Indexing: B-Tree vs. LSM-Tree vs. Fractal Tree.
+### Q34: Design a Web Analytics & Metrics Logging Platform (Google Analytics)
 
 **Answer:**
-*   **B-Tree:** Updated in place. Leads to heavy random disk access. Fast reads ($O(\log N)$).
-*   **LSM-Tree:** Buffered writes appended to WAL + MemTable, flushed to sorted SSTables. Compacted asynchronously. Blazing-fast writes, slower reads.
-*   **Fractal Tree (B^e-Tree):**
-    *   *Mechanism:* Similar to a B-Tree, but internal nodes contain **Message Buffers** along with routing child pointers.
-    *   *Write Profile:* A write simply appends an update message to the root node buffer and returns. As buffers fill, background threads flush messages down to child buffers.
-    *   *Benefit:* Combines the write speeds of LSM-Trees with the read speeds and structure of B-Trees. Highly specialized (used in Percona/TokuDB).
+Design a real-time event analytics platform ingesting 100 billion daily pageviews, user clickstreams, and computing interactive dashboard aggregates.
+
+*   **Solution Walkthrough (Video):** [https://www.youtube.com/watch?v=kIcq1_pBQSY](https://www.youtube.com/watch?v=kIcq1_pBQSY)
+*   **Key Design Decisions:**
+    1.  *Ingestion Fleet:* Lightweight Golang pixel tracker collecting Beacon events into Apache Kafka.
+    2.  *Columnar OLAP Storage:* Ingest streams into ClickHouse / Apache Pinot for ultra-fast sub-second SQL aggregate queries across billions of rows.
+    3.  *Approximate Counting (HyperLogLog):* Calculate unique daily visitor counts with $0.81\%$ error using Redis HyperLogLog (`PFADD`, `PFCOUNT`) in $12\text{KB}$ of memory per site.
 
 ---
 
-### Q17: What is Database Connection Pool Starvation?
+### Q35: Design a Multiplayer Online Game Backend (Zoom / Real-Time Physics Sync)
 
 **Answer:**
-Starvation occurs under high concurrent traffic when all database connections in a pool are exhausted, forcing incoming execution threads to block indefinitely, triggering cascading timeouts.
+Design a low-latency game server backend synchronizing player positions, inputs, and game state at 60 ticks per second.
 
-*   **Prevention Strategies:**
-    *   *Thread Pools:* Decouple application execution threads from database connection threads using async non-blocking architectures.
-    *   *Deadlock Avoidance:* Ensure nested transactions acquire connections in the same dependency order.
-    *   *Failfast:* Set aggressive connection acquisition timeouts (e.g., $250\text{ ms}$) to fail fast rather than locking up thread pools.
+*   **Solution Walkthrough (Video):** [https://www.youtube.com/watch?v=G32ThJakeHk](https://www.youtube.com/watch?v=G32ThJakeHk)
+*   **Key Design Decisions:**
+    1.  *Authoritative Game Server:* Clients send raw inputs (e.g., "move forward"); the authoritative server simulates physics and broadcasts authoritative state snapshots.
+    2.  *UDP with Custom Reliability:* Use raw UDP for game state packets to prevent TCP Head-of-Line blocking.
+    3.  *Client-Side Prediction & Reconciliation:* Client simulates movement locally immediately and reconciles position upon receiving the server's authoritative tick update.
 
 ---
 
-### Q18: Explain TCP Slow Start, Congestion Avoidance, and Fast Recovery.
+### Master High-Level Design Reference Index
 
-**Answer:**
-Algorithms regulating data transmission speeds to prevent network collapse.
-
-*   **TCP Slow Start:**
-    *   *Mechanism:* Set Congestion Window (cwnd) to a low initial value (e.g., 10 packets). Double the window size with every ACK received. Exponential growth phase to probe available bandwidth.
-*   **Congestion Avoidance:**
-    *   When cwnd hits the Slow Start Threshold (ssthresh), transition to linear growth (+1 packet per round-trip).
-*   **Fast Recovery:**
-    *   If packet loss is detected (three duplicate ACKs), set ssthresh to half of cwnd, decrease cwnd to ssthresh, and continue linear growth without returning to slow start.
-*   **BBR (Bottleneck Bandwidth and RTT):** Google's modern algorithm that models physical network bottleneck bandwidth and round-trip times, preventing packet loss buffer-bloats.
-
----
-
-### Q19: Detail the CAP theorem formal proof.
-
-**Answer:**
-Let two nodes $G_1$ and $G_2$ belong to a distributed network.
-
-```
-+----------+      Network Partition       +----------+
-|  Node G1 | - - - - - X X X X - - - - -  |  Node G2 |
-+----------+                              +----------+
-```
-
-1.  **Partition ($P$):** A network split severing communication between $G_1$ and $G_2$.
-2.  **Write Event:** Client writes new value $v_1$ to $G_1$.
-3.  **Read Event:** Simultaneously, a client queries $G_2$ for the value.
-4.  **The Proof Constraint:**
-    *   To be **Available (A)**, $G_2$ must return a response immediately.
-    *   Because of the partition, $G_1$ cannot synchronize the update to $G_2$.
-    *   $G_2$ has two choices:
-        *   Return its old/stale value (violating **Consistency (C)**).
-        *   Block/Error the request (violating **Availability (A)**).
-5.  Thus, guaranteeing both Consistency and Availability under a network partition is mathematically impossible.
-
----
-
-### Q20: Explain distributed deadlock detection.
-
-**Answer:**
-Distributed deadlocks occur when microservice transactions form a circular dependency chain across different database instances (e.g., TxA holds resource on DB1 and waits for resource on DB2; TxB holds resource on DB2 and waits for resource on DB1).
-
-*   **Detection Algorithms:**
-    *   *Wait-For-Graphs (WFG):* Distributed nodes transmit local lock-wait states to a central coordinator that builds a global dependency graph to detect circular waits.
-    *   *Edge-Chasing:* Nodes send probe messages along active dependency edges. If a node receives its own probe back, a cycle exists, and the transaction with the lower priority is aborted.
-    *   *Chandy-Misra-Haas:* An edge-chasing algorithm that tracks (Proposer, Holder, Requester) triplets to safely identify circular blocks.
-
----
-
-### Q21: What is an SSTable (Sorted String Table)? How does Cassandra lookup keys?
-
-**Answer:**
-An **SSTable** is a sorted, immutable key-value file on disk.
-
-```
-MemTable (RAM) ---> SSTable (Disk: Sorted Keys) ---> Bloom Filter
-                                                ---> Sparse Key Index
-```
-
-*   **Cassandra Query Lookup Pipeline:**
-    1.  **MemTable Check:** Checks the active in-memory table. If key exists, return.
-    2.  **Bloom Filter:** Queries the SSTable's Bloom Filter in RAM. If it returns 0, Cassandra skips searching the SSTable entirely.
-    3.  **Key Cache:** Checks RAM Key Cache for direct index pointers.
-    4.  **Sparse Key Index:** Scans a sparse index file in memory (holds keys at regular offsets, e.g., every 128 keys) to locate the closest byte range in the primary index file on disk.
-    5.  **SSTable Data Read:** Reads the exact offset block in the SSTable file.
-
----
-
-### Q22: Explain HTTP/2 Multiplexing vs. HTTP/3 (QUIC) over UDP.
-
-**Answer:**
-*   **HTTP/1.1 Pipelining:** Blocked by Head-of-Line (HOL) blocking. Subsequent requests must wait for the preceding response to complete over the TCP connection.
-*   **HTTP/2 Multiplexing:**
-    *   *Mechanism:* Divides requests/responses into binary frames, interleaving them over a single TCP connection.
-    *   *The HOL Flaw:* Transport-layer HOL blocking remains. If a single TCP packet is dropped, the OS blocks the entire TCP queue, halting *all* multiplexed HTTP/2 streams until the missing packet is retransmitted.
-*   **HTTP/3 (QUIC):**
-    *   *Mechanism:* Replaces TCP with **QUIC** over **UDP**.
-    *   *Benefit:* QUIC implements stream congestion and packet recovery independently. If stream A drops a packet, stream B and C continue uninterrupted, completely eliminating transport Head-of-Line blocking.
-
----
-
-### Q23: Detail the Raft Log Compaction and Log Truncation mechanisms.
-
-**Answer:**
-*   **Log Compaction (Snapshotted State):**
-    *   As operations grow, Raft logs consume massive disk storage.
-    *   Raft uses **Snapshotting**. The database state is serialized, and all historical log entries up to the snapshot index are deleted. The snapshot stores the *last included index* and *last included term*.
-*   **Log Truncation (Handling Disagreements):**
-    *   If a follower node has uncommitted log entries that conflict with a new Leader's log (due to network lags or splits), the Leader identifies the last index where their logs agreed.
-    *   The Leader sends an `AppendEntries` RPC starting at that point, forcing the follower to overwrite/truncate its conflicting uncommitted log entries to match the Leader's state.
-
----
-
-### Q24: Explain Vector Databases (Pinecone, Milvus). How do they index high-dimensional embeddings?
-
-**Answer:**
-Vector databases store and index dense floating-point vector representations (embeddings) generated by AI models. Standard database B-Trees fail because searching high-dimensional space requires $O(D \times N)$ calculations.
-
-*   **Indexing Algorithms:**
-    *   **HNSW (Hierarchical Navigable Small World):** Builds a multi-layer graph structure. Upper layers have sparse long-range connections; lower layers have dense short-range connections. Searching navigates rapidly down layers, scaling search times logarithmically.
-    *   **IVF-PQ (Inverted File Product Quantization):** Clusters the vector space (Inverted File) and compresses high-dimensional vectors into compact byte codes (Product Quantization), allowing fast distance calculation using lookup tables.
-
----
-
-### Q25: Explain CPU L1/L2/L3 cache lines, false sharing, and memory barriers.
-
-**Answer:**
-*   **Cache Lines:** CPUs read main memory in fixed chunks called **Cache Lines** (usually 64 bytes).
-*   **False Sharing:** Occurs when two threads running on different cores update independent variables that reside on the exact same 64-byte Cache Line. Core A's write invalidates Core B's cache line, forcing slow, repetitive main memory reloads.
-    *   *Mitigation:* Pad variables to ensure they occupy separate cache lines (e.g., using `@Contended` or manual byte spacing).
-*   **Memory Barriers (Fences):** CPU instructions enforcing ordering constraints on memory reads and writes. Prevents compiler and CPU instruction re-ordering, guaranteeing thread changes are visible to other cores immediately (vital for lock-free datastructures like the LMAX Disruptor).
-
----
-
-### Q26: What is Paxos? Contrast Multi-Paxos with Single-Decree Paxos.
-
-**Answer:**
-*   **Single-Decree Paxos:** Reaches consensus on exactly one decision (value) in a cluster. Requires full two-phase round-trip preparation and acceptance.
-*   **Multi-Paxos:**
-    *   Optimizes Single-Decree by electing a long-lived leader (Proposer).
-    *   *Optimization:* The leader executes Phase 1 (Prepare) once for a sequence of decision slots.
-    *   For subsequent log writes, the leader executes only Phase 2 (Accept), halving network latencies to a single round-trip, matching Raft's performance.
-
----
-
-### Q27: Detail Google Spanner's TrueTime API. How does it achieve External Consistency?
-
-**Answer:**
-Google Spanner is a globally distributed, ACID-compliant database achieving True Serializability (External Consistency) without locking systems globally.
-
-*   **TrueTime API:**
-    *   Uses specialized hardware (Atomic Clocks and GPS receivers) inside every datacenter.
-    *   Instead of returning a single time, the API returns a time window with a bounded uncertainty window $[t.\text{earliest}, t.\text{latest}]$, where the maximum error drift is $\epsilon \approx 1\text{ ms}-7\text{ ms}$.
-*   **Commit Wait Rule:**
-    *   When Transaction A commits at time $s$, Spanner assigns it a commit timestamp $s = t.\text{latest}$.
-    *   Spanner then forces the transaction to **wait** (block) until physical time passes $s$ (i.e., until $t.\text{earliest} > s$).
-    *   This guarantees that any transaction starting afterward is assigned a higher timestamp, ensuring correct chronological order globally.
-
----
-
-### Q28: Explain database hot-spotting. How do you design partition keys to prevent it?
-
-**Answer:**
-**Hot-spotting** occurs when a disproportionate volume of write or read operations hit a single node in a distributed database cluster, bottlenecking performance.
-
-*   **Prevention Strategies:**
-    *   *Salted Keys:* Append a random suffix (e.g., `user_id + "_" + random(1, 10)`) to partition keys. This distributes writes uniformly across up to 10 partitions. Read operations must query all 10 salted keys to aggregate results.
-    *   *Hashing:* Wrap sharding keys in hash functions (e.g., MurmurHash3) to spread keys across the consistent hash ring, eliminating range-based clustering bottlenecks.
-
----
-
-### Q29: Explain how distributed schema migrations are executed with zero downtime.
-
-**Answer:**
-Modifying database schemas (e.g., changing column name, splitting tables) in high-availability environments requires a multi-step roll-out:
-
-1.  **Step 1 (Add):** Deploy new column/schema. App continues writing/reading only to the old column.
-2.  **Step 2 (Dual Write):** Update app code to write to *both* old and new columns, but continue reading strictly from the old column.
-3.  **Step 3 (Backfill):** Run a background job to copy historical data from old to new columns for existing rows (idempotently).
-4.  **Step 4 (Switch Reads):** Update app code to read from the new column.
-5.  **Step 5 (Cleanup):** Stop writing to the old column and execute a database command to delete the old column.
-
----
-
-### Q30: What is an event-sourced architecture? How do snapshots solve its challenges?
-
-**Answer:**
-In **Event Sourcing**, application state is not stored directly. Instead, every state modification is saved as an immutable sequence of events in an **Event Store** (e.g., "Item Added to Cart", "Address Updated").
-
-*   **The Challenge:** Reconstructing the current state of an entity (e.g., shopping cart) requires reading and playing back all historical events from day 1, which degrades read latency over time.
-*   **Snapshot Solution:**
-    *   Periodically (e.g., every 100 events), the system serializes the aggregate state and writes a "Snapshot" record (e.g., Cart State at Event 100).
-    *   To read, the engine loads the snapshot and plays back only the events generated *after* the snapshot index, maintaining fast read performance.
-
----
-
-### Q31: Detail the performance trade-offs of TLS 1.3 vs. TLS 1.2 handshakes.
-
-**Answer:**
-*   **TLS 1.2 Handshake (2 Round-Trips - 2-RTT):**
-    *   *RTT 1:* Client Hello $\leftrightarrow$ Server Hello + Certificate.
-    *   *RTT 2:* Key Exchange $\leftrightarrow$ Handshake Finished.
-*   **TLS 1.3 Handshake (1 Round-Trip - 1-RTT):**
-    *   Client proactively guesses the server's key exchange algorithm and sends its key shares in the first Client Hello message.
-    *   Server responds with key share and immediately encrypts subsequent payloads, saving one full network round-trip.
-*   **0-RTT Session Resumption:** TLS 1.3 supports sending HTTP request payloads alongside the initial Client Hello for returning visitors.
-    *   *Security Risk:* Vulnerable to **Replay Attacks** (adversaries intercepting and replaying the 0-RTT packet to replay database transactions).
-
----
-
-### Q32: What is a Distributed Commit Log? PostgreSQL vs. Kafka.
-
-**Answer:**
-*   **PostgreSQL WAL:** Designed for database crash recovery and engine durability. Writes represent physical page modifications (deltas). Read access is restricted to the internal database engine.
-*   **Apache Kafka Commit Log:** Designed for high-throughput, multi-consumer event streaming. Writes represent logical application events. Highly optimized for external concurrent reads, partition sharding, and long-term retention.
-
----
-
-### Q33: Explain the actor model (e.g., Akka, Erlang) vs. thread-based concurrency.
-
-**Answer:**
-*   **Thread-Based:** Shared memory model. Multiple threads access shared variables, requiring synchronization locks (mutexes, semaphores). High context-switch overhead; high risk of deadlocks and race conditions.
-*   **Actor Model:** Isolated memory model. Everything is an **Actor** containing isolated state.
-    *   Actors communicate strictly by exchanging asynchronous messages via mailboxes.
-    *   Actors process messages sequentially. Eliminates locks, completely avoiding race conditions and deadlocks, and allowing millions of actors to scale concurrently.
-
----
-
-### Q34: What are Vector Clocks vs. Version Vectors?
-
-**Answer:**
-*   **Vector Clocks:** Used to detect causal relationships between **arbitrary events** in a distributed system.
-*   **Version Vectors:** A highly optimized subset of Vector Clocks used exclusively to detect updates and reconcile values for a **particular state value** across masterless database replicas (e.g., resolving concurrent writes in Riak or Cassandra).
-
----
-
-### Q35: Explain how a distributed message queue handles Exactly-Once Semantics (EOS).
-
-**Answer:**
-EOS is achieved by combining three distinct mechanisms:
-
-1.  **Idempotent Producers:** Every message carries a producer ID and sequence number. The broker detects and discards duplicate packets at the entry point.
-2.  **Transactional Writes:** Producers write messages to multiple partitions inside an atomic transaction. A transaction coordinator coordinates commits using a 2-Phase Commit flow inside Kafka brokers.
-3.  **Idempotent Consumers:** Consumers track offsets and write output changes and offsets to the target database in a single atomic database transaction.
-
----
-
-### Q36: What is database deadlocking in PostgreSQL or MySQL Serializable isolation levels?
-
-**Answer:**
-Serializable levels evaluate database lock dependency graphs during execution. If two concurrent transactions execute conflicting read/write ranges (e.g., TxA reads range X and writes range Y; TxB reads range Y and writes range X), the database engine identifies a dependency loop (deadlock or serialization anomaly) and immediately aborts the younger transaction to preserve consistency.
-
----
-
-### Q37: Explain consistent hashing's hotspotting under non-uniform key distribution.
-
-**Answer:**
-Under non-uniform distributions, or when mapping low numbers of physical servers, consistent hashing ring zones can become unbalanced, leading to hotspots.
-*   **Mitigation:** Dynamically assign **Weights** or increase **Virtual Nodes (VNodes)** per physical server. An overloaded node's VNodes are dynamically split or shifted clockwise on the ring to unload traffic to neighbors.
-
----
-
-### Q38: What is a gossip-based membership protocol (like SWIM)?
-
-**Answer:**
-**SWIM (Structured Weakness-isolation Infection-style Process Group Membership Protocol)** is a gossip membership protocol.
-*   *Failure Detection:* Node A randomly pings Node B. If B fails to respond, Node A requests $k$ random neighbors to ping B. If they also fail, B is marked as `Suspect`.
-*   *Dissemination:* The `Suspect` status gossips across the cluster. If B does not clear its status within a timeout window, it is declared dead and removed from the active cluster registry, reducing failure detection latencies.
-
----
-
-### Q39: Explain the difference between linearizability and serializability.
-
-**Answer:**
-*   **Linearizability:** A **real-time** constraint on a single object. If operation A completes before operation B starts physically, B must see the state left by A (guarantees strong consistency globally in real time).
-*   **Serializability:** A **multi-operation** transactional constraint. Guarantees that the concurrent execution of multiple transactions yields the exact same state as some sequential execution (does not dictate real-time ordering).
-*   **Strict Serializability:** The combination of both. Transactions are executed with serializable properties and strictly ordered in real time.
-
----
-
-### Q40: Explain the architecture of a distributed log-search engine (like Elasticsearch).
-
-**Answer:**
-*   **Ingestion:** Documents are sent to a Coordinator node. The node hashes the document ID to select the primary shard: `shard_id = hash(id) % total_shards`.
-*   **Storage:** Each shard is a Lucene Index built as inverted index segment files on disk. Writes write to memory buffers and log to a translog before flushing immutable segments.
-*   **Distributed Querying (Scatter-Gather):**
-    1.  *Query Phase:* Coordinator broadcasts the search query to all active shards. Shards search local inverted indexes and return matching document IDs and sort scores.
-    2.  *Fetch Phase:* Coordinator merges and sorts results, requests the exact document contents from corresponding shards, and returns the payload to the client.
-
----
-
-### Q41: Compare Write-Intensive vs. Read-Intensive database engines.
-
-**Answer:**
-*   **Write-Intensive (e.g., RocksDB, Cassandra):** Utilizes append-only LSM-Tree layouts. Writes buffer in memory, writing sequentially to disk. Eliminates physical write page locking, maximizing write speeds.
-*   **Read-Intensive (e.g., PostgreSQL, MySQL):** Utilizes B+ Tree configurations. Updates happen in place. Features complex, granular secondary indexes and B+ Tree node caching, prioritizing instantaneous $O(\log N)$ point reads.
-
----
-
-### Q42: Explain garbage collection in distributed object storage (like AWS S3).
-
-**Answer:**
-*   **Soft Deletion:** Deleting an object writes a "Delete Marker" tombstone over the object version, keeping historical data accessible.
-*   **Background Sweep:** A background life-cycle worker scans metadata indexes. It detects orphaned versions, unlinked blocks, and files with expired Delete Markers, queueing physical data blocks for asynchronous block erasure on storage disks without blocking active user traffic.
-
----
-
-### Q43: Detail what a Thundering Herd problem is.
-
-**Answer:**
-*   **Socket Thundering Herd:** Multiple worker processes block inside an `accept()` loop waiting for a connection. When a connection arrives, all processes wake up, but only one acquires it, wasting CPU cycles on context switching.
-*   **Cache Thundering Herd (Stampede):** Occurs when a highly popular cached key expires, and thousands of concurrent requests miss the cache and hit the database to recalculate the value simultaneously, causing database crashes.
-
----
-
-## Architecture & Design Challenges
-
-### Q44: Design a Live Video Streaming Platform (like Twitch or YouTube Live)
-
-**Answer:**
-An architecture to ingest high-frequency live streams, transcode them in real time, and deliver chunked content globally.
-
-```mermaid
-graph TD
-    Broadcaster[Streamer App] -->|1. Ingest RTMP/WebRTC| Ingest[Ingest Gateway Fleet]
-    Ingest -->|2. Raw Video Stream| Transcoder[Real-Time Transcoder Cluster]
-    Transcoder -->|3. Output HLS Chunk Streams 1080p, 720p, 480p| Storage[(Temporary Object Store - S3)]
-    Storage -->|4. Push Manifest & Chunks| CDN[CDN Edge Servers]
-    CDN -->|5. Playback HTTP GET| Viewer[Client App / Viewer]
-```
-
-#### 1. API Specifications:
-*   `POST /api/v1/stream/start` -> Key validation, returns RTMP ingestion URL.
-*   `GET /stream/{channel_id}/manifest.m3u8` -> Returns HLS video playlist file.
-
-#### 2. Deep-Dive Playback Design (HLS vs. LL-HLS):
-*   **Ingest Layer:** RTMP (Real-Time Messaging Protocol) over TCP guarantees reliable ingestion.
-*   **Transcoder Cluster:** Auto-scaling CPU/GPU workers fetch raw stream, split it into 2-second segments, and transcode into multiple resolutions (MPEG-DASH or HLS).
-*   **Egress CDN:** Edge servers cache 2-second `.ts` chunks, updating the `.m3u8` playlist index dynamically, delivering streaming globally under $< 3\text{ seconds}$ latency.
-
----
-
-### Q45: Design a Distributed Financial Ledger System
-
-**Answer:**
-A high-integrity ledger ensuring double-entry bookkeeping accuracy with zero data corruption under massive parallel transactions.
-
-```mermaid
-graph TD
-    Client[Payment Service] -->|1. Submit Entry| Gateway[Idempotency API Gateway]
-    Gateway -->|2. Check Key| RedisCache[Idempotency Cache]
-    Gateway -->|3. Route Transaction| Ledger[Ledger Engine Service]
-    Ledger -->|4. Strict Balance Verification| PartitionCache[Redis Hot-Partition Lock]
-    Ledger -->|5. Commit DB Transaction| DB[(PostgreSQL Master DB - ACID)]
-    DB -->|6. Sync Replication| DBSlave[(PostgreSQL Slave DB)]
-```
-
-#### 1. Core Bookkeeping Schema (`ledger_entries` table):
-*   `entry_id` (UUID - PK), `journal_id` (UUID), `account_id` (UUID), `type` (VARCHAR - DEBIT/CREDIT), `amount` (DECIMAL), `created_at` (TIMESTAMP).
-
-#### 2. Double-Entry Constraint:
-A transaction *must* consist of at least one debit and one credit entry. The sum of debits must strictly equal the sum of credits:
-$$\sum \text{Debits} - \sum \text{Credits} = 0$$
-This constraint is enforced at the database level inside a single atomic `SERIALIZABLE` transaction block to guarantee correctness.
-
----
-
-### Q46: Design a Geospatial Ride-Sharing System (like Uber/Lyft)
-
-**Answer:**
-An ingest and routing system tracking millions of active drivers and matching them with passengers in real time.
-
-```mermaid
-graph TD
-    Driver[Driver App] -->|1. Ping Lat/Long every 4s| Ingest[WS Ingestion Fleet]
-    Ingest -->|2. Async stream updates| Kafka[Kafka Event Bus]
-    Kafka -->|3. Consume updates| GeoDB[(Geospatial DB: Redis / Google S2)]
-    Pass[Passenger App] -->|4. Request Trip| TripMatcher[Trip Matcher Service]
-    TripMatcher -->|5. Query nearby drivers| GeoDB
-    TripMatcher -->|6. Direct Offer to Driver| Driver
-```
-
-#### 1. Ingestion Flow:
-Driver apps push telemetry data (latitude, longitude, angle) every 4 seconds over persistent WebSockets. The WebSockets gateway stream-pushes these updates directly to a **Kafka** queue.
-#### 2. Real-Time Spatial Store:
-A Kafka consumer reads location streams and writes location coordinates into **Redis GEO** indexes (using S2 cell mapping). Old coordinates expire with low TTLs to keep data fresh. Matcher queries nearby active cells within a 2km radius to find available drivers.
-
----
-
-### Q47: Design a Scalable Ad Click Aggregator & Billing Pipeline
-
-**Answer:**
-A real-time analytics pipeline aggregating billions of ad clicks, detecting fraud, and billing advertisers accurately.
-
-```mermaid
-graph TD
-    User[Web Browser] -->|1. Click Ad| AdServer[Ad Serving Gateway]
-    AdServer -->|2. Append Click Event| Kafka[Kafka Click Event Topic]
-    Kafka -->|3. Consume & Check| FraudDetector[Async Fraud Analyzer]
-    FraudDetector -->|4. Valid Clicks| Flink[Apache Flink Stream Processor]
-    Flink -->|5. 1-Minute Aggregations| DB[(Time-Series DB: TimescaleDB)]
-    Flink -->|6. Batch Billing Log| Billing[(Ledger Database)]
-```
-
-#### 1. Stream Processing Engine:
-*   **Apache Flink:** Processes streams using **Tumbling Event-Time Windows** (1-minute intervals) to handle out-of-order network clicks.
-*   **Deduplication:** A local state store tracks (User ID + Ad ID + Timestamp) to detect and filter out multi-click fraud attempts. Validated aggregations update TimescaleDB to feed client dashboards.
-
----
-
-### Q48: Design a Scalable Distributed Search Engine (like Elasticsearch)
-
-**Answer:**
-A sharded search index supporting high-frequency ingestion, inverse index updates, and scatter-gather query flows.
-
-```mermaid
-graph TD
-    Client[Ingestion App] -->|1. Index Document| Coordinator[Coordinate Node]
-    Coordinator -->|2. Hash to Shard| ShardA[Primary Shard A - Node 1]
-    Coordinator -->|3. Hash to Shard| ShardB[Primary Shard B - Node 2]
-    Client2[User Browser] -->|4. Search Request| Coordinator
-    Coordinator -->|5. Scatter Query| ShardA & ShardB
-    ShardA & ShardB -->|6. Gather Top IDs & Scores| Coordinator
-    Coordinator -->|7. Return Sorted Documents| Client2
-```
-
-#### 1. Lucene Indexing Internals:
-Documents are parsed into tokens, which update an inverted index mapping tokens to document IDs.
-#### 2. Query Scatter-Gather:
-A search query hits the coordinator. The coordinator scatters the query to all active index shards. Each shard queries its local index segments, scores results, and returns top hits to the coordinator. The coordinator merges, sorts, and gathers final documents from storage.
-
----
-
-### Q49: Design a Distributed Job Scheduler (like Cron/Airflow at massive scale)
-
-**Answer:**
-A scalable task scheduler executing cron jobs and workflows with highly reliable execution states.
-
-```mermaid
-graph TD
-    Admin[Admin Console] -->|1. Schedule Job| DB[(Metadata DB: PostgreSQL)]
-    DB -->|2. Sync jobs| Scheduler[Scheduler Master Cluster]
-    Scheduler -->|3. Active Leader Election| ZK[ZooKeeper]
-    Scheduler -->|4. Queue Task| Queue[Redis Priority Task Queue]
-    Queue -->|5. Pull Tasks| Worker[Worker Fleet]
-    Worker -->|6. Heartbeat Status| DB
-```
-
-#### 1. Database Schema (`scheduled_jobs` table):
-*   `job_id` (UUID - PK), `cron_expression` (VARCHAR), `next_run_time` (TIMESTAMP), `status` (VARCHAR - IDLE/RUNNING/FAILED).
-
-#### 2. Execution Flow:
-A scheduler cluster uses ZooKeeper for active Leader Election. The active leader scans the DB for jobs where `next_run_time` $\le \text{now}$, pushes task events to a Redis queue, and updates status to `RUNNING`. Workers pull tasks, execute jobs, and heartbeat execution status back to the metadata DB.
-
----
-
-### Q50: Design a High-Throughput Ticket Booking System (like Ticketmaster)
-
-**Answer:**
-An architecture to handle high-concurrency seat locking, queuing, and booking transactions during flash ticket sales.
-
-```mermaid
-graph TD
-    User[User App] -->|1. Select Seat| LB[Application Load Balancer]
-    LB -->|2. Request API| BookService[Booking Service]
-    BookService -->|3. Try Atomic Lock| Cache[(Redis Shared Cache)]
-    BookService -->|4. Lock Granted| DB[(Relational DB - ACID)]
-    BookService -->|5. Schedule Release| Worker[Async Expiration Worker]
-    BookService -->|6. Return Success| User
-```
-
-#### 1. Database Schema (`ticket_status` table):
-*   `ticket_id` (UUID - PK), `seat_number` (VARCHAR), `status` (VARCHAR - AVAILABLE/LOCKED/BOOKED), `locked_until` (TIMESTAMP).
-
-#### 2. Concurrency Control (Seat Reservation):
-To avoid database locking bottlenecks, active seat states are held in Redis. A seat is locked atomically using a Redis Lua script:
-```lua
-if redis.call("get", KEYS[1]) == "AVAILABLE" then
-    redis.call("set", KEYS[1], "LOCKED")
-    redis.call("expire", KEYS[1], 600) -- 10-minute lock TTL
-    return 1
-else
-    return 0
-end
-```
-If the lock is granted, the transaction proceeds. An asynchronous background worker releases the seat back to `AVAILABLE` if the transaction is not paid and completed within the 10-minute TTL.
+Bookmark the comprehensive community repository of solved System Design resources:
+*   [Awesome System Design Resources GitHub Repository](https://github.com/ashishps1/awesome-system-design-resources)

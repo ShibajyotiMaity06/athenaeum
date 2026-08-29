@@ -165,7 +165,32 @@ export async function grantAccess(
   return user;
 }
 
+export async function grantAccessByEmail(
+  email: string,
+  grant: Omit<AccessGrant, "granted" | "grantedAt">
+): Promise<UserRecord | null> {
+  const db = load();
+  const normalized = email.trim().toLowerCase();
+  const user = db.users.find((u) => u.email === normalized);
+  if (!user) return null;
+  user.access = {
+    ...grant,
+    granted: true,
+    grantedAt: new Date().toISOString()
+  };
+  persist();
+  return user;
+}
+
 export async function recordOrder(order: OrderRecord): Promise<void> {
+  const db = load();
+  const existing = db.orders.findIndex((o) => o.id === order.id);
+  if (existing >= 0) db.orders[existing] = order;
+  else db.orders.push(order);
+  persist();
+}
+
+export async function upsertOrder(order: OrderRecord): Promise<void> {
   const db = load();
   const existing = db.orders.findIndex((o) => o.id === order.id);
   if (existing >= 0) db.orders[existing] = order;

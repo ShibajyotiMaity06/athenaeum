@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
       notes: { platform: "DevPrep", userId: user.id, email: user.email }
     });
 
-    recordOrder({
+    await recordOrder({
       id: order.id!,
       userId: user.id,
       provider: "razorpay",

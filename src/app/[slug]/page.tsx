@@ -39,9 +39,7 @@ interface PageProps {
   params: Promise<{ slug: string }>;
 }
 
-export async function generateStaticParams() {
-  return getAllHubParams();
-}
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
@@ -271,18 +269,36 @@ export default async function HubOrRolePage({ params }: PageProps) {
           </div>
         </section>
 
-        {/* Bottom CTA */}
-        <div className="mt-16 text-center industrial-card p-10">
-          <h3 className="text-2xl font-bold text-[var(--text-primary)]">
-            Ready to pass your {role.roleName} interview?
-          </h3>
-          <p className="mt-2 text-sm text-[var(--text-muted)] max-w-lg mx-auto">
-            Get full access to all {totalRoleQuestions}+ questions and code solutions across the entire {role.roleName} track.
-          </p>
-          <Link href="/pricing" className="btn-industrial btn-industrial-primary py-3.5 px-8 mt-6 inline-flex">
-            <span>Unlock Lifetime Access — <GeoPrice className="ml-1" /></span>
-          </Link>
-        </div>
+        {/* Bottom CTA / Unlocked Scholar Banner */}
+        {unlocked ? (
+          <div className="mt-16 text-center industrial-card p-10 border-emerald-500/30 bg-emerald-500/5">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-500 font-mono text-xs font-bold uppercase tracking-wider mb-3">
+              <CheckCircle2 className="w-4 h-4" />
+              <span>Full Track Unlocked · Lifetime Scholar Access</span>
+            </div>
+            <h3 className="text-2xl font-bold text-[var(--text-primary)]">
+              All {totalRoleQuestions}+ questions available in full
+            </h3>
+            <p className="mt-2 text-sm text-[var(--text-muted)] max-w-lg mx-auto">
+              Your account has permanent access to every question, architectural diagram, and code solution across the {role.roleName} syllabus.
+            </p>
+            <Link href="#technologies" className="btn-industrial btn-industrial-primary py-3.5 px-8 mt-6 inline-flex">
+              <span>Explore Curriculum Modules</span>
+            </Link>
+          </div>
+        ) : (
+          <div className="mt-16 text-center industrial-card p-10">
+            <h3 className="text-2xl font-bold text-[var(--text-primary)]">
+              Ready to pass your {role.roleName} interview?
+            </h3>
+            <p className="mt-2 text-sm text-[var(--text-muted)] max-w-lg mx-auto">
+              Get full access to all {totalRoleQuestions}+ questions and code solutions across the entire {role.roleName} track.
+            </p>
+            <Link href="/pricing" className="btn-industrial btn-industrial-primary py-3.5 px-8 mt-6 inline-flex">
+              <span>Unlock Lifetime Access — <GeoPrice className="ml-1" /></span>
+            </Link>
+          </div>
+        )}
       </div>
     );
   }

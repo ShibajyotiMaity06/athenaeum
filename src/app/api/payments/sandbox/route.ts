@@ -1,4 +1,4 @@
-﻿import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { grantAccess, recordOrder } from "@/lib/db";
 import { sandboxAllowed } from "@/lib/razorpay";
@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
   const price = PRICING[currency];
   const simulatedId = `sbx_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
 
-  recordOrder({
+  await recordOrder({
     id: simulatedId,
     userId: user.id,
     provider: "sandbox",

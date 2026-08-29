@@ -26,33 +26,21 @@ function getMongoClientPromise(): Promise<MongoClient> {
     throw new Error("MONGODB_URI is not set");
   }
 
-  if (process.env.NODE_ENV === "development") {
-    if (!globalThis._mongoClientPromise) {
-      const client = new MongoClient(uri, {
-        tls: true,
-        connectTimeoutMS: 10_000,
-        serverSelectionTimeoutMS: 10_000,
-        socketTimeoutMS: 45_000,
-        maxPoolSize: 10,
-        minPoolSize: 1
-      });
-      globalThis._mongoClientPromise = client.connect().catch((err) => {
-        globalThis._mongoClientPromise = undefined;
-        throw err;
-      });
-    }
-    return globalThis._mongoClientPromise;
+  if (!globalThis._mongoClientPromise) {
+    const client = new MongoClient(uri, {
+      tls: true,
+      connectTimeoutMS: 10_000,
+      serverSelectionTimeoutMS: 10_000,
+      socketTimeoutMS: 45_000,
+      maxPoolSize: 10,
+      minPoolSize: 1
+    });
+    globalThis._mongoClientPromise = client.connect().catch((err) => {
+      globalThis._mongoClientPromise = undefined;
+      throw err;
+    });
   }
-
-  const client = new MongoClient(uri, {
-    tls: true,
-    connectTimeoutMS: 10_000,
-    serverSelectionTimeoutMS: 10_000,
-    socketTimeoutMS: 45_000,
-    maxPoolSize: 10,
-    minPoolSize: 1
-  });
-  return client.connect();
+  return globalThis._mongoClientPromise;
 }
 
 let indexesInitialized = false;
@@ -185,9 +173,35 @@ export async function grantAccess(
   return result ?? null;
 }
 
+export async function grantAccessByEmail(
+  email: string,
+  grant: Omit<AccessGrant, "granted" | "grantedAt">
+): Promise<UserRecord | null> {
+  const col = await usersCol();
+  const result = await col.findOneAndUpdate(
+    { email: email.trim().toLowerCase() },
+    { $set: { access: { ...grant, granted: true, grantedAt: new Date().toISOString() } } },
+    { returnDocument: "after", projection: { _id: 0 } }
+  );
+  return result ?? null;
+}
+
 export async function recordOrder(order: OrderRecord): Promise<void> {
   const col = await ordersCol();
-  await col.insertOne({ ...order });
+  await col.updateOne(
+    { id: order.id },
+    { $set: { ...order } },
+    { upsert: true }
+  );
+}
+
+export async function upsertOrder(order: OrderRecord): Promise<void> {
+  const col = await ordersCol();
+  await col.updateOne(
+    { id: order.id },
+    { $set: { ...order } },
+    { upsert: true }
+  );
 }
 
 export async function markOrderPaid(

@@ -114,14 +114,16 @@ export const ROLE_PILLARS: Record<string, RolePillar> = {
       "css",
       "redux",
       "zustand",
-      "context-api"
+      "context-api",
+      "frontend-system-design"
     ],
     keyFocusAreas: [
       "Core JavaScript: Closures, Prototypes, Event Loop, Promises, Async/Await",
       "React Mastery: Hooks, Virtual DOM, Reconciliation, Fiber, Concurrent Mode",
       "TypeScript: Generics, Utility Types, Type Narrowing, Discriminated Unions",
       "Frontend Performance: Core Web Vitals, SSR vs SSG vs ISR, Bundle Optimization",
-      "State Management: Redux Toolkit, Zustand, Context API trade-offs"
+      "State Management: Redux Toolkit, Zustand, Context API trade-offs",
+      "Frontend System Design: RADIO framework, infinite scrolling, collaborative editors, offline sync"
     ]
   },
   "backend-interview-questions": {
@@ -146,7 +148,9 @@ export const ROLE_PILLARS: Record<string, RolePillar> = {
       "redis",
       "sql",
       "prisma",
-      "docker"
+      "docker",
+      "hld",
+      "lld"
     ],
     keyFocusAreas: [
       "Server Runtimes: Node.js libuv event loop, Java JVM memory model, Python GIL",
@@ -178,14 +182,16 @@ export const ROLE_PILLARS: Record<string, RolePillar> = {
       "sql",
       "redis",
       "docker",
-      "hld"
+      "hld",
+      "frontend-system-design"
     ],
     keyFocusAreas: [
       "End-to-End Type Safety: TypeScript from database models (Prisma) to API and React client",
       "Rendering Patterns: SSR, RSC (React Server Components), Client Components, Edge rendering",
       "Authentication & Security: CSRF, XSS, CORS, Secure Cookies, Session Management",
       "Data Layer Integration: Efficient ORM queries, N+1 problem mitigation, transactions",
-      "System Architecture: High-level design, database replication, CDN edge caching"
+      "System Architecture: High-level design, database replication, CDN edge caching",
+      "Frontend System Design: RADIO framework, virtualized lists, offline-first sync engines"
     ]
   },
   "sde-interview-questions": {
@@ -193,11 +199,11 @@ export const ROLE_PILLARS: Record<string, RolePillar> = {
     roleName: "Software Development Engineer (SDE)",
     title: "SDE Interview Questions — Core CS & System Design",
     shortTitle: "SDE & Core CS",
-    metaTitle: "SDE Interview Questions (2026 Guide) — OS, DBMS, Networks, HLD, LLD | DevPrep",
+    metaTitle: "SDE Interview Questions (2026 Guide) — OS, DBMS, Networks, HLD, LLD, Frontend SD | DevPrep",
     metaDescription:
-      "Ace SDE-1, SDE-2, and SDE-3 interviews at top tech companies. Comprehensive coverage of Operating Systems, DBMS, Computer Networks, OOPs, HLD, and LLD.",
+      "Ace SDE-1, SDE-2, and SDE-3 interviews at top tech companies. Comprehensive coverage of Operating Systems, DBMS, Computer Networks, OOPs, HLD, LLD, and Frontend System Design.",
     overview:
-      "The foundational and architectural pillars required for SDE roles at product companies and tier-1 tech firms. Focuses on deep Computer Science fundamentals and robust system design.",
+      "The foundational and architectural pillars required for SDE roles at product companies and tier-1 tech firms. Focuses on deep Computer Science fundamentals, high-level architecture, low-level design, and frontend systems.",
     techSlugs: [
       "os",
       "dbms",
@@ -205,6 +211,7 @@ export const ROLE_PILLARS: Record<string, RolePillar> = {
       "oops",
       "lld",
       "hld",
+      "frontend-system-design",
       "sql",
       "docker",
       "java"
@@ -214,7 +221,8 @@ export const ROLE_PILLARS: Record<string, RolePillar> = {
       "DBMS: Normalization, Transaction Isolation Levels, WAL, B+ Trees, Concurrency Control",
       "Computer Networks: TCP 3-Way Handshake, TCP vs UDP, DNS resolution, TLS/HTTPS, HTTP/2 & HTTP/3",
       "Low-Level Design (LLD): SOLID Principles, Design Patterns (Factory, Strategy, Observer, Decorator)",
-      "High-Level Design (HLD): Scalability, Load Balancers, Sharding, Consistent Hashing, CAP Theorem"
+      "High-Level Design (HLD): Scalability, Load Balancers, Sharding, Consistent Hashing, CAP Theorem",
+      "Frontend System Design: Virtualization, Collaborative Editors (OT/CRDT), Offline Sync, Video Streaming"
     ]
   }
 };
@@ -242,9 +250,9 @@ export const TECH_CATEGORIES = [
     slugs: ["os", "computer-networks", "oops"]
   },
   {
-    name: "System Design & DevOps",
-    description: "Scalable architecture, object design, and containerization",
-    slugs: ["hld", "lld", "docker"]
+    name: "System Design & Architecture",
+    description: "High-level architecture, object design, frontend systems, and DevOps",
+    slugs: ["hld", "lld", "frontend-system-design", "docker"]
   }
 ];
 
@@ -351,11 +359,15 @@ export const RELATED_TECH_MAP: Record<string, { related: string[]; roles: string
     roles: ["backend-interview-questions", "full-stack-interview-questions", "sde-interview-questions"]
   },
   hld: {
-    related: ["lld", "docker", "redis", "dbms", "computer-networks", "os"],
+    related: ["lld", "frontend-system-design", "docker", "redis", "dbms", "computer-networks", "os"],
     roles: ["sde-interview-questions", "backend-interview-questions", "full-stack-interview-questions"]
   },
   lld: {
-    related: ["oops", "java", "typescript", "hld"],
+    related: ["oops", "java", "typescript", "hld", "frontend-system-design"],
     roles: ["sde-interview-questions", "backend-interview-questions"]
+  },
+  "frontend-system-design": {
+    related: ["react", "nextjs", "typescript", "hld", "lld", "javascript"],
+    roles: ["frontend-interview-questions", "full-stack-interview-questions", "sde-interview-questions"]
   }
 };

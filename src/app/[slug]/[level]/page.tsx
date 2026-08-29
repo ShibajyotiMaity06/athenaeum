@@ -36,9 +36,7 @@ interface PageProps {
   params: Promise<{ slug: string; level: string }>;
 }
 
-export async function generateStaticParams() {
-  return getAllLevelParams();
-}
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug, level: rawLevel } = await params;
@@ -162,9 +160,9 @@ export default async function LevelPage({ params }: PageProps) {
         <span className="text-[var(--text-primary)] font-bold">{levelMeta.label.toUpperCase()}</span>
       </nav>
 
-      <div className="grid gap-10 lg:grid-cols-[1fr_280px]">
+      <div className="grid gap-10 lg:grid-cols-[1fr_280px] min-w-0 max-w-full">
         {/* ── Main Content Column ── */}
-        <div>
+        <div className="min-w-0 max-w-full">
           {/* Header Panel */}
           <header className="industrial-card p-8 sm:p-10 mb-10 corner-screws">
             <div className="flex flex-wrap items-center justify-between gap-4 mb-3">
@@ -209,7 +207,7 @@ export default async function LevelPage({ params }: PageProps) {
           </header>
 
           {/* ── Questions List ── */}
-          <section className="space-y-4">
+          <section className="space-y-4 min-w-0 max-w-full">
             <div className="flex items-center justify-between mb-4">
               <span className="stamped-label">THEORY QUESTIONS &amp; SOLUTIONS</span>
               <span className="text-xs font-mono text-[var(--text-muted)]">
@@ -221,7 +219,7 @@ export default async function LevelPage({ params }: PageProps) {
               <details
                 key={q.id}
                 id={`q-${q.num || idx + 1}`}
-                className="tech-question group rounded-xl bg-[var(--bg-chassis)] border border-[var(--border-card)] shadow-[var(--shadow-card)] p-5 hover:shadow-[var(--shadow-floating)] transition-all scroll-mt-24"
+                className="tech-question group rounded-xl bg-[var(--bg-chassis)] border border-[var(--border-card)] shadow-[var(--shadow-card)] p-5 hover:shadow-[var(--shadow-floating)] transition-all scroll-mt-24 min-w-0 max-w-full overflow-hidden"
                 open={idx < 2}
               >
                 <summary className="font-sans font-semibold text-base sm:text-lg text-[var(--text-primary)] select-none">
@@ -232,9 +230,9 @@ export default async function LevelPage({ params }: PageProps) {
                   <ChevronDown className="q-icon w-5 h-5 shrink-0" />
                 </summary>
 
-                <div className="mt-5 pt-4 border-t border-[rgba(186,190,204,0.4)] pl-2 sm:pl-10">
+                <div className="mt-5 pt-4 border-t border-[rgba(186,190,204,0.4)] pl-2 sm:pl-10 min-w-0 max-w-full overflow-hidden">
                   <div
-                    className="manuscript"
+                    className="manuscript min-w-0 max-w-full"
                     dangerouslySetInnerHTML={{ __html: q.html }}
                   />
                 </div>

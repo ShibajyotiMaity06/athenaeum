@@ -1,7 +1,7 @@
-﻿import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
-import { getOrderByProviderId, grantAccess, markOrderPaid } from "@/lib/db";
-import { verifyRazorpaySignature } from "@/lib/razorpay";
+import { getOrderByProviderId, grantAccess, markOrderPaid, upsertOrder } from "@/lib/db";
+import { fetchRazorpayOrder, verifyRazorpaySignature } from "@/lib/razorpay";
 
 export const dynamic = "force-dynamic";
 
@@ -26,14 +26,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, error: "Incomplete payment proof." }, { status: 400 });
   }
 
-  const order = await getOrderByProviderId(orderId);
-  if (!order || order.userId !== user.id) {
-    return NextResponse.json({ ok: false, error: "No matching order found." }, { status: 404 });
-  }
-  if (order.status === "paid") {
-    return NextResponse.json({ ok: true, alreadySealed: true });
-  }
-
+  // 1. Verify cryptographic signature first
   if (!verifyRazorpaySignature({ orderId, paymentId, signature })) {
     return NextResponse.json(
       { ok: false, error: "Signature mismatch — the payment could not be trusted." },
@@ -41,13 +34,40 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  await markOrderPaid(orderId, paymentId);
+  // 2. Fetch existing order or reconstruct from Razorpay API
+  let order = await getOrderByProviderId(orderId);
+  let amount = order?.amount ?? 39900;
+  let currency = order?.currency ?? "INR";
+
+  if (!order) {
+    const rzpOrder = await fetchRazorpayOrder(orderId);
+    if (rzpOrder) {
+      amount = rzpOrder.amount ?? amount;
+      currency = rzpOrder.currency ?? currency;
+    }
+
+    await upsertOrder({
+      id: orderId,
+      userId: user.id,
+      provider: "razorpay",
+      amount,
+      currency,
+      status: "paid",
+      paymentId,
+      createdAt: new Date().toISOString(),
+      paidAt: new Date().toISOString()
+    });
+  } else {
+    await markOrderPaid(orderId, paymentId);
+  }
+
+  // 3. Guarantee user gets lifetime access
   await grantAccess(user.id, {
     provider: "razorpay",
     orderId,
     paymentId,
-    amount: order.amount,
-    currency: order.currency
+    amount,
+    currency
   });
 
   return NextResponse.json({ ok: true });

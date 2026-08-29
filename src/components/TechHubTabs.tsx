@@ -115,7 +115,7 @@ export default function TechHubTabs({
                 {level.freeQuestions.map((q, idx) => (
                   <details
                     key={q.id}
-                    className="tech-question group rounded-xl bg-[var(--bg-chassis)] border border-[var(--border-card)] shadow-[var(--shadow-card)] p-5 hover:shadow-[var(--shadow-floating)] transition-all"
+                    className="tech-question group rounded-xl bg-[var(--bg-chassis)] border border-[var(--border-card)] shadow-[var(--shadow-card)] p-5 hover:shadow-[var(--shadow-floating)] transition-all min-w-0 max-w-full overflow-hidden"
                   >
                     <summary className="font-sans font-semibold text-base sm:text-lg text-[var(--text-primary)] select-none">
                       <span className="font-mono text-xs font-bold text-[var(--accent)] min-w-[2.5rem] px-2 py-1 rounded bg-[var(--bg-recessed)] shadow-[inset_1px_1px_2px_rgba(0,0,0,0.1)]">
@@ -125,9 +125,9 @@ export default function TechHubTabs({
                       <ChevronDown className="q-icon w-5 h-5 shrink-0" />
                     </summary>
 
-                    <div className="mt-5 pt-4 border-t border-[var(--border-recessed)] pl-2 sm:pl-10">
+                    <div className="mt-5 pt-4 border-t border-[var(--border-recessed)] pl-2 sm:pl-10 min-w-0 max-w-full overflow-hidden">
                       <div
-                        className="manuscript"
+                        className="manuscript min-w-0 max-w-full"
                         dangerouslySetInnerHTML={{ __html: q.html }}
                       />
                     </div>

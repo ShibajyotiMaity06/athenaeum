@@ -1,327 +1,455 @@
-# LLD - Basic Interview Questions
+# Low-Level Design (LLD) - Core Concepts & Object-Oriented Principles
 
-### Q1: What is Low-Level Design (LLD) and how does it fit into the software development life cycle?
-- **LLD (Object-Oriented Design)**: The process of translating business requirements and high-level architecture (HLD) into a detailed, executable blueprint containing classes, interfaces, relationships, and design patterns.
-- **SDLC Fit**: It bridges the gap between **High-Level Design (HLD)** (services, databases, system architecture) and **actual coding/implementation**.
-
-### Q2: What is the main objective of LLD?
-- **Objectives**:
-  - Guarantee **maintainability**, readability, and testability of the code.
-  - Implement structural **SOLID principles** and standard design patterns.
-  - Establish clear boundaries, class interfaces, and modular lifecycles.
-  - Reduce the risk of bugs by defining rigorous interaction protocols (UML) before writing code.
-
-### Q3: What are the primary inputs and outputs of the LLD phase?
-- **Inputs**: HLD documentation, System Use Cases, Functional Requirements, Database Schemas, API contracts.
-- **Outputs**: Class diagrams, Sequence diagrams, State-machine diagrams, detailed interface specifications, and database schema mappings (ERD).
-
-### Q4: What is Object-Oriented Analysis and Design (OOAD)?
-- **Analysis (OOA)**: Identifying the core business domain entities, their attributes, and operations from the requirements (e.g., identifying "User", "Order", "Cart" in e-commerce).
-- **Design (OOD)**: Structuring these entities into concrete software components (classes, interfaces), assigning behaviors, and arranging their interactions.
-
-### Q5: Explain the Single Responsibility Principle (SRP) with an LLD example.
-- **SRP**: A class should have exactly **one reason to change**.
-- **LLD Example**: Instead of an `Invoice` class that handles both calculations and PDF generation, split it into two:
-  - `Invoice`: Manages invoice data and mathematical calculations.
-  - `InvoicePDFGenerator`: Exclusively handles formatting and rendering of the PDF file.
-
-### Q6: Explain the Open-Closed Principle (OCP) with an LLD example.
-- **OCP**: Code components should be **open for extension** but **closed for modification**.
-- **LLD Example**: A `PaymentProcessor` class should not use `if-else` blocks to handle credit cards, PayPal, and Stripe. Instead, create a `PaymentStrategy` interface and implement separate classes for `CreditCardPayment`, `PayPalPayment`, and `StripePayment`. To support a new payment method, write a new class without modifying `PaymentProcessor`.
-
-### Q7: Explain the Liskov Substitution Principle (LSP) with an LLD example.
-- **LSP**: Derived classes must be completely substitutable for their base classes without breaking correctness.
-- **LLD Example**: An interface `Bird` with a `fly()` method should not be implemented by `Ostrich`. A proper design splits them: `Bird` (generic) and `FlyingBird` (which extends `Bird` and adds `fly()`). `Ostrich` only implements `Bird`.
-
-### Q8: Explain the Interface Segregation Principle (ISP) with an LLD example.
-- **ISP**: Clients should not be forced to implement methods they do not use.
-- **LLD Example**: Instead of a bloated `MultiFunctionPrinter` interface with `print()`, `scan()`, and `fax()`, split it into three single-method interfaces: `Printer`, `Scanner`, and `FaxDevice`. A simple desk printer then only implements `Printer`.
-
-### Q9: Explain the Dependency Inversion Principle (DIP) with an LLD example.
-- **DIP**: High-level modules must depend on abstractions (interfaces), not concrete implementations.
-- **LLD Example**: A `Car` class should not directly instantiate `V8Engine`. Instead, it should depend on an `Engine` interface, allowing any class implementing `Engine` (like `ElectricEngine` or `V6Engine`) to be injected at runtime.
-
-### Q10: What are GRASP (General Responsibility Assignment Software Patterns) principles?
-- **GRASP**: A set of 9 fundamental guidelines used in object-oriented design to determine **which class should be assigned which responsibility** (method or attribute).
-
-### Q11: What is the Information Expert principle in GRASP?
-- **Principle**: Assign a responsibility to the class that has the **necessary information** to fulfill it.
-- **Example**: In a POS system, the class `Order` holds the list of `OrderItem` objects, so `Order` (not `POSSystem`) should be responsible for calculating the total price.
-
-### Q12: What is Creator in GRASP?
-- **Principle**: Class B should be responsible for creating instances of Class A if B contains, aggregates, or closely uses A.
-- **Example**: An `Order` class contains `OrderItem` instances; therefore, `Order` should be the creator of `OrderItem` objects.
-
-### Q13: What is Controller in GRASP?
-- **Principle**: Assign the responsibility of handling system events/API requests to a non-UI class that represents the overall system or a use-case scenario.
-- **Example**: A `CheckoutController` class coordinates the flow of checking out instead of letting the UI window class handle database updates directly.
-
-### Q14: What is Low Coupling in GRASP?
-- **Principle**: Design classes to minimize structural dependencies on other classes.
-- **Impact**: Enhances reuse, simplifies testing, and ensures changes in one class don't cause widespread breakages.
-
-### Q15: What is High Cohesion in GRASP?
-- **Principle**: Ensure that a class's responsibilities are tightly focused and closely related.
-- **Impact**: Keeps classes simple, understandable, highly maintainable, and easy to reuse.
-
-### Q16: What is Polymorphism in the context of GRASP?
-- **Principle**: Use polymorphic operations instead of explicit conditional checks (`if-else` or `switch`) to handle varying behaviors based on type.
-
-### Q17: What is Pure Fabrication in GRASP?
-- **Principle**: Create a highly cohesive, artificial "helper" class that does not represent a real-world domain concept to maintain Low Coupling and High Cohesion.
-- **Example**: Creating a `DatabaseLogger` class. Logging is a system requirement, not a real-world business entity.
-
-### Q18: What is Indirection in GRASP?
-- **Principle**: Assign responsibility to an intermediate object to decouple two interacting classes.
-- **Example**: Placing a controller or adapter interface between a client and a third-party payment gateway.
-
-### Q19: What is Protected Variations in GRASP?
-- **Principle**: Identify points of predicted instability or variation and wrap them in a stable interface to protect surrounding code from changes.
-
-### Q20: What are Unified Modeling Language (UML) diagrams and why are they used in LLD?
-- **UML**: A standardized visual modeling language used to specify, visualize, and document software architecture.
-- **LLD Use**: It acts as a universal communication medium for developers, mapping structural blueprints before code writing starts.
-
-### Q21: What is a Class Diagram, and what are its key components?
-- **Class Diagram**: A static structure diagram depicting the system's classes, attributes, methods, and relationships.
-- **Key Components**: Class boxes (split into Name, Attributes, and Operations/Methods) and relationship arrows.
-
-### Q22: Explain the representation of Association, Aggregation, and Composition in UML.
-- **Association**: A solid line indicating a general relationship between classes (`A — B`).
-- **Aggregation**: A solid line with an empty diamond at the container class (`A ◇— B`), indicating a weak, independent container relationship.
-- **Composition**: A solid line with a filled black diamond at the container class (`A ◆— B`), indicating exclusive lifecycle ownership.
-
-### Q23: What is the difference between Generalization and Realization in UML diagrams?
-- **Generalization**: Represents class inheritance. Shown as a solid line with an empty, closed arrowhead pointing to the parent class (`A —▷ B`).
-- **Realization**: Represents interface implementation. Shown as a dashed line with an empty, closed arrowhead pointing to the interface (`A ╌▷ B`).
-
-### Q24: What is a Sequence Diagram, and what are its main elements?
-- **Sequence Diagram**: An interaction diagram showing how operations are carried out over time.
-- **Main Elements**: Lifelines (vertical dashed lines), Activation blocks (vertical bars indicating processing), and message arrows (solid for calls, dashed for returns).
-
-### Q25: What is a State Machine Diagram, and when is it useful?
-- **State Machine Diagram**: Depicts the lifecycles of a single object, showcasing its varying states, transitions, and event triggers.
-- **Use Case**: Critical for tracking complex lifecycle transitions (e.g., an `Order` shifting from `Created` → `Paid` → `Shipped` → `Delivered`).
-
-### Q26: What is an Activity Diagram, and how does it differ from a flowchart?
-- **Activity Diagram**: A behavioral diagram showing the step-by-step control and data flow of activities.
-- **Difference**: Unlike simple flowcharts, it natively supports parallel execution flows, synchronization bars (fork/join), and swimlanes partitioning actions by roles.
-
-### Q27: What is a Use Case Diagram, and who are "actors"?
-- **Use Case Diagram**: Models the functional interactions between the system's core features and external actors.
-- **Actors**: External entities (human users, external hardware, or external software systems) that interact with the application.
-
-### Q28: What is a design pattern, and how are they classified?
-- **Design Pattern**: A repeatable, elegant solution to a commonly occurring design problem in software development.
-- **Classification**:
-  - **Creational**: Deals with object creation mechanisms.
-  - **Structural**: Handles assembly of classes and objects into larger structures.
-  - **Behavioral**: Manages communication, responsibility, and interactions between objects.
-
-### Q29: What are Creational Design Patterns? List them.
-- **Definition**: Patterns that abstract the instantiation process, decoupling the client from specific creation logic.
-- **Patterns**: Singleton, Factory Method, Abstract Factory, Builder, and Prototype.
-
-### Q30: What are Structural Design Patterns? List them.
-- **Definition**: Patterns focused on how classes and objects are composed to form larger, more flexible structures.
-- **Patterns**: Adapter, Bridge, Composite, Decorator, Facade, Flyweight, and Proxy.
-
-### Q31: What are Behavioral Design Patterns? List them.
-- **Definition**: Patterns concerned with algorithms, communications, and assignments of responsibility between objects.
-- **Patterns**: Chain of Responsibility, Command, Interpreter, Iterator, Mediator, Memento, Observer, State, Strategy, Template Method, and Visitor.
-
-### Q32: Explain the Singleton Design Pattern and its main purpose.
-- **Singleton**: Ensures a class has exactly **one instance** in memory and provides a global access point to it.
-- **Purpose**: Used to coordinate access to shared, expensive, or bottleneck resources (e.g., Database connections, Loggers, Thread pools).
-
-### Q33: What is the Factory Method Design Pattern, and when should you use it?
-- **Factory Method**: Defines an interface for creating an object but lets subclasses decide which concrete class to instantiate.
-- **When to Use**: When a class cannot anticipate the exact class of objects it needs to create, or wants to delegate object creation details to subclasses.
-
-### Q34: Explain the Abstract Factory Pattern and its difference from Factory Method.
-- **Abstract Factory**: Provides an interface for creating families of related or dependent objects without specifying their concrete classes.
-- **Difference**: Factory Method uses a single method and relies on inheritance (subclassing); Abstract Factory uses an object composed of multiple factory methods to build families of products.
-
-### Q35: What is the Builder Design Pattern, and what problem does it solve?
-- **Builder**: Separates the construction of a complex object from its representation, allowing the same construction process to create different representations.
-- **Problem Solved**: Eliminates bloated constructors (telescoping constructors) with too many optional parameters, making client code readable and type-safe.
-
-### Q36: Explain the Prototype Design Pattern and its typical use case.
-- **Prototype**: Spawns new objects by copying/cloning an existing instance (the prototype) instead of creating them from scratch.
-- **Use Case**: Used when direct object creation is highly expensive (e.g., requires database hits or heavy file system access), so duplicating an existing memory block is faster.
-
-### Q37: What is the Adapter Design Pattern, and why is it called a wrapper?
-- **Adapter**: Converts the interface of a class into another interface clients expect, enabling incompatible interfaces to collaborate.
-- **Wrapper**: It is called a wrapper because it wraps an incompatible object inside a compatible adapter class that translates calls.
-
-### Q38: Explain the Bridge Design Pattern and its decouple intent.
-- **Bridge**: Decouples an abstraction from its implementation so that the two can vary independently.
-- **Intent**: Replaces inheritance with composition to prevent an exponential explosion of classes when both abstractions and implementations are modified.
-
-### Q39: What is the Composite Design Pattern, and when is it used?
-- **Composite**: Composes objects into tree structures to represent part-whole hierarchies.
-- **Use Case**: Allows clients to treat individual objects and compositions of objects uniformly (e.g., rendering file systems where files and folders share a common interface).
-
-### Q40: Explain the Decorator Design Pattern and how it supports OCP.
-- **Decorator**: Dynamically attaches additional responsibilities to an object at runtime.
-- **OCP Support**: Provides a flexible alternative to subclassing for extending functionality without modifying the original class source code.
-
-### Q41: What is the Facade Design Pattern, and how does it simplify clients?
-- **Facade**: Provides a simplified, high-level interface to a complex subsystem of classes.
-- **Benefit**: Shields the client from having to learn and manage numerous individual subsystem classes, lowering coupling.
-
-### Q42: Explain the Flyweight Design Pattern and its memory-saving mechanism.
-- **Flyweight**: Minimizes memory usage by sharing as much data as possible with other similar objects.
-- **Mechanism**: Splits state into:
-  - **Intrinsic**: Shared, immutable state stored within the Flyweight object.
-  - **Extrinsic**: Contextual state passed to the Flyweight by the client during operations.
-
-### Q43: What is the Proxy Design Pattern, and what are its different types?
-- **Proxy**: Provides a placeholder or surrogate object to control access to another target object.
-- **Types**:
-  - **Virtual Proxy**: Defers creation of expensive objects until accessed.
-  - **Protection Proxy**: Controls access rights based on client permissions.
-  - **Remote Proxy**: Handles network serialization to represent objects in different memory spaces.
+Welcome to the Low-Level Design (LLD) Foundations Guide. This codex provides 50 foundational low-level design and object-oriented concept questions with in-depth explanations, real-world examples, and design pattern mechanics.
 
 ---
 
-### Q44: Implement a Thread-Safe Singleton Pattern (Double-Checked Locking)
-```java
-public class DatabaseConnection {
-    private static volatile DatabaseConnection instance;
-    private DatabaseConnection() {} // Prevents direct instantiation
+## Theory Questions & Answers
 
-    public static DatabaseConnection getInstance() {
-        if (instance == null) { // First check (no synchronization)
-            synchronized (DatabaseConnection.class) {
-                if (instance == null) { // Second check (synchronized)
-                    instance = new DatabaseConnection();
-                }
-            }
-        }
-        return instance;
-    }
-}
-```
+### Q1: What is the purpose of Low-Level Design (LLD)?
 
-### Q45: Implement the Factory Method Pattern
-```java
-// Product
-interface Document { void open(); }
-class PDFDocument implements Document { public void open() { System.out.println("Opening PDF."); } }
-class WordDocument implements Document { public void open() { System.out.println("Opening Word."); } }
+**Answer:**
+Low-Level Design (LLD) transforms abstract high-level architectural requirements into concrete, implementable software blueprints—specifying class structures, object relationships, design patterns, method signatures, and state transitions before writing production code.
+*   **Why it matters:** It eliminates architectural ambiguity, prevents costly refactors, and ensures the codebase remains modular, unit-testable, and scalable.
+*   **Real-World Example:** In designing a **Parking Lot System**, LLD defines the exact inheritance hierarchy between `Vehicle` $\to$ (`Car`, `Motorcycle`, `Truck`), the strategy pattern for `FeeCalculationStrategy`, and the thread-safe synchronization on `ParkingSpot.occupy()`.
 
-// Creator
-abstract class DocumentCreator {
-    public abstract Document createDocument();
-    public void openDocument() {
-        Document doc = createDocument();
-        doc.open();
-    }
-}
-class PDFCreator extends DocumentCreator {
-    public Document createDocument() { return new PDFDocument(); }
-}
-```
+---
 
-### Q46: Implement the Builder Pattern
-```java
-public class HttpRequest {
-    private final String url;
-    private final String method;
-    private final String body;
+### Q2: How does database indexing optimize queries in LLD data persistence?
 
-    private HttpRequest(Builder builder) {
-        this.url = builder.url;
-        this.method = builder.method;
-        this.body = builder.body;
-    }
+**Answer:**
+Database indexing constructs an auxiliary data structure (typically a B+ Tree, Hash Table, or GiST/GIN index) that maps key column values to their physical disk block addresses, eliminating slow $O(N)$ full table scans.
+*   **Mechanism:** By maintaining sorted keys in a balanced tree, lookups, range scans, and foreign key joins drop to $O(\log N)$ disk page reads.
+*   **Real-World Example:** In an e-commerce order database, adding a composite index on `(customer_id, order_date DESC)` allows the user profile page to fetch the last 10 orders in 2ms instead of scanning 50 million rows.
 
-    public static class Builder {
-        private String url;
-        private String method = "GET"; // Default value
-        private String body;
+---
 
-        public Builder setUrl(String url) { this.url = url; return this; }
-        public Builder setMethod(String method) { this.method = method; return this; }
-        public Builder setBody(String body) { this.body = body; return this; }
-        public HttpRequest build() { return new HttpRequest(this); }
-    }
-}
-```
+### Q3: What are the Four Pillars of OOP and their practical benefits?
 
-### Q47: Implement the Adapter Pattern
-```java
-// Target Interface expected by client
-interface JsonReader { String readJson(); }
+**Answer:**
+1.  **Encapsulation:** Bundling internal state and behaviors within a class while restricting direct access via access modifiers (`private`, `protected`). Prevents invalid state mutations (e.g., preventing a `BankAccount.balance` from becoming negative directly).
+2.  **Abstraction:** Hiding complex internal implementation details behind clean, minimal public interfaces (e.g., calling `paymentGateway.charge(amount)` without exposing TLS socket handshakes).
+3.  **Inheritance:** Reusing common fields and methods from a base class in derived classes to model "is-a" relationships (e.g., `SavingsAccount extends BankAccount`).
+4.  **Polymorphism:** Enabling objects of different types to respond to the same method invocation with custom runtime behavior (e.g., iterating through a list of `Notification` objects and calling `send()`, where email, SMS, and push notifications execute their own logic).
 
-// Adaptee with incompatible interface
-class XmlReader {
-    public String readXml() { return "<data><name>John</name></data>"; }
-}
+---
 
-// Adapter implementing Target
-class XmlToJsonAdapter implements JsonReader {
-    private final XmlReader xmlReader;
-    public XmlToJsonAdapter(XmlReader xmlReader) { this.xmlReader = xmlReader; }
+### Q4: Why is concurrency control important in Low-Level Design?
 
-    public String readJson() {
-        String xml = xmlReader.readXml();
-        return "{ \"name\": \"John\" }"; // In practice, parses xml to json
-    }
-}
-```
+**Answer:**
+In multi-threaded environments, concurrent execution without proper synchronization leads to **race conditions, deadlocks, lost updates, and memory visibility bugs**.
+*   **Mechanism:** LLD uses mutexes, read-write locks (`ReentrantReadWriteLock`), atomic variables (`AtomicInteger`), or optimistic concurrency controls (`Compare-And-Swap`).
+*   **Real-World Example:** In a ticket booking system, if two threads attempt to book seat `B14` at the exact same millisecond, concurrency control ensures only one thread successfully acquires the seat lock while the other receives a `SeatAlreadyBookedException`.
 
-### Q48: Implement the Decorator Pattern
-```java
-interface Coffee { double getCost(); }
-class SimpleCoffee implements Coffee { public double getCost() { return 2.0; } }
+---
 
-// Decorator
-abstract class CoffeeDecorator implements Coffee {
-    protected final Coffee decoratedCoffee;
-    public CoffeeDecorator(Coffee coffee) { this.decoratedCoffee = coffee; }
-    public double getCost() { return decoratedCoffee.getCost(); }
-}
+### Q5: What are UML Behavioral Diagrams and when are they used?
 
-class MilkDecorator extends CoffeeDecorator {
-    public MilkDecorator(Coffee coffee) { super(coffee); }
-    public double getCost() { return super.getCost() + 0.5; }
-}
-```
+**Answer:**
+UML Behavioral Diagrams visualize the dynamic runtime interactions, state changes, and time-ordered message flows between system components.
+*   **Primary Types:**
+    *   *Sequence Diagrams:* Depict step-by-step lifecycles and asynchronous RPC/method calls between actors and services over time.
+    *   *State Machine Diagrams:* Model an entity's lifecycle through discrete states and transition triggers.
+    *   *Activity Diagrams:* Model complex procedural workflows and parallel execution forks (like an order fulfillment pipeline).
 
-### Q49: Implement the Observer Pattern
-```java
-import java.util.*;
+---
 
-interface Observer { void update(String news); }
-class EmailSubscriber implements Observer {
-    public void update(String news) { System.out.println("Received: " + news); }
-}
+### Q6: Walk through a UML Sequence Diagram for a User Login flow.
 
-class NewsPublisher {
-    private final List<Observer> observers = new ArrayList<>();
-    public void attach(Observer o) { observers.add(o); }
-    public void detach(Observer o) { observers.remove(o); }
-    public void notifyObservers(String news) {
-        for (Observer o : observers) { o.update(news); }
-    }
-}
-```
+**Answer:**
+A standard time-ordered sequence flow:
+1.  **User $\to$ UI Client:** Submits email and password.
+2.  **UI Client $\to$ AuthController:** `POST /api/v1/auth/login` payload.
+3.  **AuthController $\to$ AuthService:** Invokes `authenticate(email, rawPassword)`.
+4.  **AuthService $\to$ UserRepository:** `findByEmail(email)`.
+5.  **UserRepository $\to$ Database:** Executes parameterized SQL query.
+6.  **Database $\to$ UserRepository:** Returns `UserRecord` with `passwordHash`.
+7.  **AuthService:** Validates password hash via `bcrypt.compare()`.
+8.  **AuthService $\to$ TokenProvider:** Generates signed JWT access & refresh tokens.
+9.  **AuthController $\to$ UI Client:** Returns HTTP 200 with HttpOnly session cookie.
 
-### Q50: Implement the Strategy Pattern
-```java
-interface PaymentStrategy { void pay(double amount); }
-class CreditCardPayment implements PaymentStrategy {
-    public void pay(double amount) { System.out.println("Paid " + amount + " via Card."); }
-}
-class PaypalPayment implements PaymentStrategy {
-    public void pay(double amount) { System.out.println("Paid " + amount + " via PayPal."); }
-}
+---
 
-class ShoppingCart {
-    private PaymentStrategy strategy;
-    public void setPaymentStrategy(PaymentStrategy strategy) { this.strategy = strategy; }
-    public void checkout(double amount) { strategy.pay(amount); }
-}
-```
+### Q7: When and why should you use a State Diagram in LLD?
+
+**Answer:**
+State Diagrams model systems where an entity transitions through well-defined, mutually exclusive states triggered by discrete business events.
+*   **Why it matters:** It prevents illegal transitions (e.g., refunding an order that was never paid).
+*   **Real-World Example:** An `Order` lifecycle transitions: `CREATED` $\to$ (on payment success) $\to$ `PAID` $\to$ (on warehouse pickup) $\to$ `SHIPPED` $\to$ `DELIVERED`. If payment fails, it transitions `CREATED` $\to$ `FAILED`.
+
+---
+
+### Q8: What factors influence data structure selection in LLD?
+
+**Answer:**
+1.  **Access Pattern:** Frequent random lookups by key require a `HashMap` ($O(1)$) vs. ordered range traversal requiring a `TreeMap` / B-Tree ($O(\log N)$).
+2.  **Insertion/Deletion Cost:** Frequent head/tail additions favor `LinkedList` / `ArrayDeque`.
+3.  **Memory Overhead:** Contiguous arrays (`ArrayList`) maximize CPU L1/L2 cache locality compared to pointer-heavy node structures.
+4.  **Thread Safety:** Single-threaded collections vs. lock-striped concurrent collections (e.g., `ConcurrentHashMap`).
+
+---
+
+### Q9: What are the benefits of Database Normalization in LLD?
+
+**Answer:**
+Normalization (1NF through 3NF/BCNF) organizes relational tables to eliminate data redundancy and anomalies:
+*   *Insertion Anomaly:* Inability to record an entity without creating another unrelated record.
+*   *Update Anomaly:* Inconsistent records when updating duplicated data across multiple rows.
+*   *Deletion Anomaly:* Accidental loss of data when deleting an associated record.
+*   **Real-World Example:** Separating `Users` and `Orders` into normalized tables prevents updating a user's address in 100 historical order rows.
+
+---
+
+### Q10: How do you design logging and observability for a complex application?
+
+**Answer:**
+1.  **Structured JSON Logging:** Emit logs as structured JSON objects containing timestamp, severity (`DEBUG`, `INFO`, `WARN`, `ERROR`), `trace_id`, `span_id`, and contextual metadata.
+2.  **Correlation IDs:** Propagate a unique request ID across all internal method boundaries and microservices to trace the exact execution path.
+3.  **Centralized Ingestion:** Use asynchronous non-blocking log appenders (Logback AsyncAppender) pushing to ELK (Elasticsearch/Logstash/Kibana) or Grafana Loki.
+
+---
+
+### Q11: What is Tight Coupling and why must it be avoided?
+
+**Answer:**
+Tight coupling occurs when a class depends directly on the concrete implementation of another class rather than an interface.
+*   **Why avoid it:** Modifying the dependency breaks the dependent class; isolated unit testing becomes impossible because dependencies cannot be mocked.
+*   **Solution:** Depend on abstractions via **Dependency Inversion** and inject instances using **Dependency Injection** (e.g., `OrderService` depends on `IPaymentProcessor`, allowing easy swapping between `StripeProcessor` and `PayPalProcessor`).
+
+---
+
+### Q12: What are Design Patterns and why do they matter?
+
+**Answer:**
+Design Patterns are battle-tested, standardized solutions to recurring software engineering and object-oriented design problems.
+*   **Value:** They provide a shared architectural vocabulary across engineering teams, accelerate development, and ensure systems adhere to SOLID principles for maintainability, loose coupling, and high cohesion.
+
+---
+
+### Q13: Explain the Singleton Pattern, its use cases, and common pitfalls.
+
+**Answer:**
+The **Singleton Pattern** ensures a class has only one instance and provides a global access point to it.
+*   **Use Cases:** Database connection pools, thread pools, logging managers, and hardware driver interfaces.
+*   **Implementation:** Private constructor, static instance variable, and thread-safe Double-Checked Locking.
+*   **Pitfalls:** Introduces hidden global state, tightly couples caller code, violates Single Responsibility Principle, and makes unit testing difficult unless mockable via interfaces.
+
+---
+
+### Q14: Explain the Observer Pattern with a real-world example.
+
+**Answer:**
+The **Observer Pattern** defines a one-to-many dependency where when a subject changes state, all registered observers are notified automatically.
+*   **Structure:** `Subject` maintains a list of `Observer` interfaces and exposes `registerObserver()`, `removeObserver()`, and `notifyObservers()`.
+*   **Real-World Example:** In a stock trading platform, `StockTicker` (Subject) notifies `MobilePushNotifier`, `AuditLogService`, and `TraderDashboardUI` (Observers) whenever a stock price changes.
+
+---
+
+### Q15: Explain the Factory Method Pattern.
+
+**Answer:**
+The **Factory Method Pattern** delegates object instantiation to subclasses or dedicated factory methods, allowing client code to remain decoupled from concrete class names.
+*   **Structure:** Client calls `PaymentFactory.getProcessor("UPI")` and receives an object implementing `IPaymentProcessor`.
+*   **Real-World Example:** A document processing app uses a `DocumentParserFactory` to return `PDFParser`, `CSVParser`, or `WordParser` based on the file extension.
+
+---
+
+### Q16: Explain the Strategy Pattern with a real-world example.
+
+**Answer:**
+The **Strategy Pattern** defines a family of interchangeable algorithms, encapsulates each one into a separate class, and makes them interchangeable at runtime.
+*   **Structure:** Context holds a reference to a `Strategy` interface and delegates execution.
+*   **Real-World Example:** An e-commerce checkout system swaps between `FlatRateShippingStrategy`, `ExpressWeightBasedShippingStrategy`, and `FreePrimeShippingStrategy` dynamically based on the user's tier.
+
+---
+
+### Q17: What is the role of Interfaces in LLD?
+
+**Answer:**
+Interfaces establish formal contracts specifying *what* operations a component provides without prescribing *how* they are executed.
+*   **Benefits:** Enables polymorphism, promotes loose coupling, facilitates test-driven development (TDD) via mock implementations, and satisfies the **Dependency Inversion Principle (DIP)**.
+
+---
+
+### Q18: How do you choose a sorting algorithm for large datasets?
+
+**Answer:**
+1.  **Fits in Memory (In-Memory Sort):**
+    *   *QuickSort:* Average $O(N \log N)$, low memory overhead (in-place). Standard for primitive types.
+    *   *MergeSort / TimSort:* Guaranteed $O(N \log N)$, stable. Standard for objects (Java `Arrays.sort`).
+2.  **Exceeds Memory (External Sorting):**
+    *   *External Merge Sort:* Splits multi-gigabyte files into memory-sized chunks, sorts each in RAM, writes temporary files to disk, and merges them using a min-heap priority queue.
+
+---
+
+### Q19: How do you handle API Versioning and Backward Compatibility in LLD?
+
+**Answer:**
+1.  **URI Versioning:** `/api/v1/users` vs `/api/v2/users` (most explicit and transparent).
+2.  **Header Versioning:** `Accept: application/vnd.app.v2+json`.
+3.  **Additive Changes Only:** When evolving models, add optional fields rather than deleting or renaming existing fields.
+4.  **Deprecation Windows:** Tag old endpoints with `@Deprecated` headers (`Sunset: Wed, 11 Nov 2026 00:00:00 GMT`).
+
+---
+
+### Q20: How do you design secure Authentication and Authorization in distributed systems?
+
+**Answer:**
+1.  **Authentication (AuthN):** Use stateless cryptographic tokens (JWTs) signed with asymmetric keys (RS256). Passwords hashed using bcrypt/Argon2 with unique salts.
+2.  **Authorization (AuthZ):** Implement **Role-Based Access Control (RBAC)** or **Attribute-Based Access Control (ABAC)** verified at the API Gateway or middleware layer.
+3.  **Token Rotation:** Short-lived access tokens (15 mins) paired with HttpOnly, Secure, SameSite refresh tokens stored in Redis.
+
+---
+
+### Q21: Why is Modular Design critical in software architecture?
+
+**Answer:**
+Modular design decomposes a monolithic codebase into discrete, loosely coupled packages with high internal cohesion.
+*   **Benefits:** Teams can build, test, and refactor individual modules without risk of collateral damage to other features. Reduces build times and enables parallel feature development.
+
+---
+
+### Q22: Why is Low-Level Design (LLD) essential before coding?
+
+**Answer:**
+Writing code without LLD leads to fragile "spaghetti code", cyclic dependencies, missing concurrency handling, and costly architectural rewrites. LLD establishes class boundaries, data contracts, and design patterns early when changes cost minutes rather than weeks.
+
+---
+
+### Q23: What are the most common data structures used in LLD?
+
+**Answer:**
+*   **Arrays / Dynamic Arrays (`ArrayList`):** $O(1)$ random access, high CPU cache locality.
+*   **Hash Maps / Hash Sets:** $O(1)$ average key lookups, deduplication.
+*   **LinkedList / Deque:** $O(1)$ head/tail operations, used in LRU caches and task queues.
+*   **Priority Queues (Binary Heaps):** $O(\log N)$ min/max extraction, used in rate limiters and schedulers.
+*   **Trees (Trie, B+ Tree):** Autocomplete prefix matching, database indexing.
+
+---
+
+### Q24: What are the core principles of Database Schema Design?
+
+**Answer:**
+1.  **Normalization:** Normalize to 3NF to prevent write anomalies; denormalize deliberately only for read-heavy query performance.
+2.  **Foreign Keys & Constraints:** Enforce referential integrity and check constraints at the database level.
+3.  **Indexing:** Create B+ Tree indexes on foreign keys, unique columns, and frequent `WHERE` filter predicates.
+4.  **Auditing:** Include `created_at`, `updated_at`, and `is_deleted` (soft deletes) on all tables.
+
+---
+
+### Q25: What is Object-Oriented Design (OOD) and why does it matter?
+
+**Answer:**
+Object-Oriented Design models a real-world domain as collaborating software objects that encapsulate data (state) and methods (behavior). OOD promotes modularity, testability, reusability, and maintainability across large engineering teams.
+
+---
+
+### Q26: What is Dependency Injection (DI) and what are its advantages?
+
+**Answer:**
+**Dependency Injection** is a design pattern where an object receives its dependencies from an external assembler (e.g., Spring, Guice) rather than instantiating them internally (`new Service()`).
+*   **Advantages:** Eliminates hardcoded dependencies, makes components easily swappable, and allows unit tests to inject mock implementations.
+
+---
+
+### Q27: List and explain common UML Diagrams.
+
+**Answer:**
+1.  **Class Diagram (Structural):** Shows classes, attributes, methods, and relationships (inheritance, aggregation, composition).
+2.  **Sequence Diagram (Behavioral):** Shows time-ordered method invocations between objects.
+3.  **Use Case Diagram:** Depicts system boundaries and actor interactions.
+4.  **State Machine Diagram:** Depicts entity lifecycle states and event transitions.
+5.  **Activity Diagram:** Flowchart of business processes and parallel forks.
+
+---
+
+### Q28: What are Code Smells and how do you resolve them?
+
+**Answer:**
+**Code Smells** are symptoms of poor structural design that indicate deeper maintainability issues.
+*   *Long Method:* Break into smaller, single-responsibility private helper methods.
+*   *God Class / Large Class:* Split into cohesive domain classes following SRP.
+*   *Feature Envy:* Move methods closer to the data they operate on.
+*   *Duplicate Code:* Extract reusable utility classes or template methods (DRY).
+
+---
+
+### Q29: What are the three primary categories of Gang of Four (GoF) Design Patterns?
+
+**Answer:**
+1.  **Creational Patterns:** Focus on object creation mechanisms (Singleton, Factory Method, Abstract Factory, Builder, Prototype).
+2.  **Structural Patterns:** Focus on class and object composition (Adapter, Decorator, Facade, Composite, Proxy, Bridge).
+3.  **Behavioral Patterns:** Focus on communication and algorithms between objects (Observer, Strategy, Command, State, Chain of Responsibility, Iterator).
+
+---
+
+### Q30: Explain all 5 SOLID Principles with concise definitions.
+
+**Answer:**
+1.  **Single Responsibility Principle (SRP):** A class should have one, and only one, reason to change.
+2.  **Open/Closed Principle (OCP):** Software entities should be open for extension, but closed for modification.
+3.  **Liskov Substitution Principle (LSP):** Subtypes must be substitutable for their base types without altering program correctness.
+4.  **Interface Segregation Principle (ISP):** Clients should not be forced to depend on interface methods they do not use.
+5.  **Dependency Inversion Principle (DIP):** High-level modules should not depend on low-level modules; both must depend on abstractions.
+
+---
+
+### Q31: What is the DRY (Don't Repeat Yourself) Principle?
+
+**Answer:**
+The DRY principle states that every piece of knowledge or business logic must have a single, unambiguous, authoritative representation within a system. Duplication causes maintenance nightmares where updating a business rule in one place leaves copies outdated.
+
+---
+
+### Q32: When should you avoid design patterns to prevent over-engineering?
+
+**Answer:**
+Design patterns should be avoided when the problem does not genuinely warrant extra abstraction. Introducing patterns prematurely adds unnecessary indirection, interfaces, and boilerplate files. Always start with simple, readable code (KISS) and refactor into patterns only when complexity and recurring variation emerge.
+
+---
+
+### Q33: How do design patterns manage dependencies at scale?
+
+**Answer:**
+Patterns decouple high-level business logic from concrete technical implementations by introducing intermediary interfaces, factories, and dependency injection containers. This allows swapping databases, payment processors, or third-party APIs with zero changes to core domain logic.
+
+---
+
+### Q34: What is the KISS (Keep It Simple, Stupid) Principle?
+
+**Answer:**
+The KISS principle dictates that systems work best when kept simple rather than made complex. Avoid clever, obscure tricks; favor clear, straightforward, easily readable code that any junior developer can maintain and debug.
+
+---
+
+### Q35: What is the YAGNI (You Aren't Gonna Need It) Principle?
+
+**Answer:**
+YAGNI states that a programmer should not add functionality until it is deemed necessary. Avoid building speculative features or hypothetical extension points that add maintenance overhead and are rarely used.
+
+---
+
+### Q36: What is the difference between Abstract Factory and Factory Method?
+
+**Answer:**
+*   **Factory Method:** Uses inheritance to create a **single product** (e.g., `createButton()`).
+*   **Abstract Factory:** Uses composition to create **families of related or dependent products** without specifying their concrete classes (e.g., `GUIFactory` creates matching `Button`, `Checkbox`, and `Scrollbar` for Windows or Mac).
+
+---
+
+### Q37: What are the disadvantages of the Singleton Pattern?
+
+**Answer:**
+1.  Introduces global state, making state changes unpredictable across distant modules.
+2.  Violates Single Responsibility Principle (manages its own lifecycle and business duty).
+3.  Hampers unit testing (cannot easily inject mock singletons).
+4.  Can mask bad architecture where dependencies should have been passed explicitly.
+
+---
+
+### Q38: What is the difference between Proxy and Decorator Patterns?
+
+**Answer:**
+*   **Proxy Pattern:** Controls and manages **access** to an object (e.g., security check, lazy loading, caching) without altering the interface or primary behavior.
+*   **Decorator Pattern:** Dynamically **augments or adds new behavior** to an object at runtime (e.g., adding encryption or compression to a data stream).
+
+---
+
+### Q39: What problem does the Chain of Responsibility Pattern solve?
+
+**Answer:**
+It decouples the sender of a request from its potential receivers by passing the request along a sequential chain of handler objects. Each handler decides either to process the request or pass it to the next handler in the chain (e.g., an HTTP Middleware Pipeline checking Auth $\to$ Rate Limiting $\to$ CORS $\to$ Request Validation).
+
+---
+
+### Q40: What is the difference between Composition and Aggregation?
+
+**Answer:**
+Both are "has-a" relationships:
+*   **Composition (Strong Ownership):** The child entity's lifecycle is bound to the parent. If parent is destroyed, child is destroyed (e.g., `House` and `Room`).
+*   **Aggregation (Weak Ownership):** The child entity can exist independently of the parent (e.g., `Department` and `Professor`).
+
+---
+
+### Q41: How does the Command Pattern support Undo/Redo operations?
+
+**Answer:**
+The **Command Pattern** encapsulates a request as a standalone object containing all information needed to execute the action (receiver, method, arguments) plus an `unexecute()` / `undo()` method.
+*   **Mechanism:** Commands are pushed onto an execution `HistoryStack`. When the user presses `Ctrl+Z`, the system pops the latest command and calls its `undo()` method, pushing it to the `RedoStack`.
+
+---
+
+### Q42: Explain Association vs. Aggregation vs. Composition.
+
+**Answer:**
+*   **Association:** General relationship where two classes know about each other (e.g., `Doctor` and `Patient`).
+*   **Aggregation:** Specialized association with a "whole-part" relationship where parts exist independently (e.g., `Car` and `Wheel`).
+*   **Composition:** Strict "whole-part" relationship with coincident lifecycles (e.g., `Order` and `OrderItem`).
+
+---
+
+### Q43: Can multiple design patterns be combined in a single application?
+
+**Answer:**
+Yes, real-world systems routinely combine patterns. For example, the **MVC (Model-View-Controller)** pattern combines **Observer** (Model notifies View of updates), **Strategy** (Controller acts as a strategy for the View), and **Composite** (Nested UI view hierarchies).
+
+---
+
+### Q44: What factors should you evaluate before applying a design pattern?
+
+**Answer:**
+1.  Is there a genuine recurring problem, or is simple code sufficient?
+2.  Will the pattern improve testability and loose coupling?
+3.  Does the team understand the pattern, or will it create cognitive overhead?
+4.  Does the pattern introduce unacceptable runtime indirection or latency?
+
+---
+
+### Q45: What is the Null Object Pattern and what problem does it solve?
+
+**Answer:**
+The **Null Object Pattern** replaces `null` references with an object that implements the expected interface but performs a safe no-operation (no-op).
+*   **Benefit:** Eliminates boilerplate `if (object != null)` checks across the codebase, preventing `NullPointerException` bugs (e.g., using a `NullLogger` when logging is disabled).
+
+---
+
+### Q46: What is the difference between a Static Factory Method and the Factory Pattern?
+
+**Answer:**
+*   **Static Factory Method:** A simple static method on a class that returns an instance (e.g., `LocalDate.of(2026, 8, 29)` or `Integer.valueOf("42")`). It does not involve polymorphism or subclassing.
+*   **Factory Pattern:** An object-oriented design pattern utilizing inheritance or interfaces to defer instantiation to subclasses.
+
+---
+
+### Q47: What is the difference between Abstraction and Encapsulation?
+
+**Answer:**
+*   **Abstraction:** Focuses on **what** an object does. Hides implementation complexity behind public interfaces.
+*   **Encapsulation:** Focuses on **how** to restrict access. Hides internal state data within classes using `private` variables to enforce invariants.
+
+---
+
+### Q48: Why is Composition generally preferred over Class Inheritance?
+
+**Answer:**
+"Favor Object Composition over Class Inheritance" (Gang of Four):
+1.  **Flexibility:** Behavior can be swapped dynamically at runtime using interfaces (Strategy Pattern).
+2.  **Avoids Fragile Base Class Problem:** Changes to base class methods do not silently break derived classes.
+3.  **Prevents Class Explosion:** Avoids massive deep inheritance trees (e.g., `FlyingElectricAutonomousVehicle`).
+
+---
+
+### Q49: What is Polymorphism and what are its two primary types?
+
+**Answer:**
+**Polymorphism** allows treating objects of different derived classes through a common base interface.
+1.  **Compile-Time (Static / Overloading):** Multiple methods with the same name but different parameter signatures within the same class.
+2.  **Runtime (Dynamic / Overriding):** A subclass overrides a virtual method defined in its superclass/interface; the JVM resolves the exact method at runtime via virtual method tables (vtable).
+
+---
+
+### Q50: What is the difference between an Interface and an Abstract Class?
+
+**Answer:**
+*   **Interface:** A pure contract containing abstract method declarations. A class can implement multiple interfaces (supporting multiple inheritance of type). Best for defining capabilities across unrelated classes (e.g., `Comparable`, `Serializable`).
+*   **Abstract Class:** Can contain state variables, constructors, and partial concrete method implementations. A class can only inherit from one abstract class. Best for closely related classes sharing core baseline logic.

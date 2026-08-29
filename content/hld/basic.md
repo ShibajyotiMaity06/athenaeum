@@ -1,671 +1,467 @@
-# HLD - Basic Interview Questions
+# High-Level Design (HLD) - Core Concepts & Distributed System Foundations
 
-Welcome to the High-Level Design (HLD) Basic Prep Guide. This document covers foundational elements of system scalability, load balancing, caching, networking, databases, replication, and basic architecture challenges.
+Welcome to the High-Level Design (HLD) Core Concepts Guide. This codex covers 52 foundational high-level design questions, architectural trade-offs, networking protocols, database scaling strategies, and distributed systems consensus mechanisms.
 
 ---
 
 ## Theory Questions & Answers
 
-### Q1: Define Scalability, Availability, Reliability, and Latency vs. Throughput.
+### Q1: What are the key components of High-Level Design (HLD)?
 
 **Answer:**
-These represent the core non-functional metrics (NFRs) used to evaluate distributed system health and capacity.
-
-```mermaid
-graph TD
-    Metrics[NFR Metrics] --> Scalability[Scalability: Horiz/Vert]
-    Metrics --> Availability[Availability: SLA Nines]
-    Metrics --> Reliability[Reliability: MTTF/MTBF]
-    Metrics --> LatencyThroughput[Latency vs Throughput]
-```
-
-*   **Scalability:** The system's ability to handle growing volume of traffic/work by adding computing resources.
-    *   *Vertical (Scale Up):* Adding more power (CPU, RAM, SSD) to a single machine. bounded by hardware ceilings and acts as a Single Point of Failure (SPOF).
-    *   *Horizontal (Scale Out):* Adding more machines to the resource pool. Requires a Load Balancer (LB) and distributed coordination, but supports infinite growth.
-*   **Availability:** The percentage of time a system remains fully functional and accessible.
-    *   *SLA (Service Level Agreement):* Measured in "nines". 99.9% ("three nines") allows ~8.76 hours of downtime/year; 99.999% ("five nines") allows only ~5.26 minutes/year.
-    *   *Active-Passive:* One active server handles traffic; passive standby replicates state and takes over via failover on active node failure.
-    *   *Active-Active:* All nodes handle traffic concurrently, maximizing resource utility.
-*   **Reliability:** The probability that a system performs its function without failure over time. While availability is "is it up?", reliability is "does it perform correctly without error when used?". Measured via **MTBF** (Mean Time Between Failures) and **MTTF** (Mean Time To Failure).
-*   **Latency vs. Throughput:**
-    *   *Latency:* Time taken for a single request to travel from sender to receiver and back (measured in ms).
-    *   *Throughput:* Number of requests or data units processed per unit of time (e.g., Transactions Per Second - TPS, or Queries per Second - QPS).
+High-Level Design (HLD) defines the overall macroscopic architecture of a software system—outlining the major service boundaries, communication protocols, data persistence layers, caching strategies, and infrastructure components before writing code.
+*   **Key Components:** Client applications (Web/Mobile), API Gateways, Load Balancers, Application Microservices, Distributed Caches (Redis), Message Queues (Kafka), Primary/Replica Databases, and Object Storage (S3).
+*   **Real-World Example:** In an e-commerce platform, HLD models how the `User Service`, `Product Catalog Service`, and `Payment Gateway` interact via asynchronous message queues rather than defining specific class methods.
 
 ---
 
-### Q2: Explain Load Balancing. Contrast Layer 4 and Layer 7 Load Balancing, and list core routing algorithms.
+### Q2: Monolith vs. Microservices — How do you decide which architecture to use?
 
 **Answer:**
-A **Load Balancer (LB)** routes client requests across a pool of servers to optimize resource utilization, maximize throughput, and prevent server bottlenecks.
-
-*   **Layer 4 (L4) Load Balancing:**
-    *   Operates at the transport layer (TCP/UDP).
-    *   Routes traffic based on IP address and port numbers.
-    *   Does not inspect request content (cannot read HTTP headers, cookies, or payloads).
-    *   *Pros:* Extremely fast, low CPU usage, highly secure (no SSL/TLS termination needed).
-*   **Layer 7 (L7) Load Balancing:**
-    *   Operates at the application layer (HTTP/HTTPS/FTP).
-    *   Routes traffic based on headers, cookies, URL paths, and query parameters.
-    *   Requires terminating and decrypting SSL/TLS traffic.
-    *   *Pros:* Intelligent routing (e.g., `/images` to CDN, `/api` to microservice), allows cookie-based sticky sessions.
-*   **Core Routing Algorithms:**
-    *   *Round Robin:* Cycles through servers sequentially. Assumes uniform server capacity.
-    *   *Weighted Round Robin:* Assigns traffic proportionally based on server capability weights.
-    *   *Least Connections:* Directs traffic to the server with the fewest active connections. Best for long-lived sessions.
-    *   *IP Hash:* Hashes client IP to assign a dedicated server. Guarantees session persistence (sticky sessions).
+*   **Monolithic Architecture:** A single unified codebase and database.
+    *   *When to choose:* Early-stage startups (0 to 1 product-market fit), small teams (<15 engineers), low domain complexity, and workflows requiring strict ACID cross-table joins.
+*   **Microservices Architecture:** Decomposed autonomous services owning independent databases.
+    *   *When to choose:* Large engineering organizations requiring independent team deployment velocity (Conway's Law), services with drastically different scaling requirements (e.g., 100,000 read QPS vs 10 write QPS), and polyglot technology needs.
+*   **Rule of Thumb:** Start with a clean, modular monolith; extract microservices only when team scale and database scaling bottlenecks demand it.
 
 ---
 
-### Q3: Explain Caching Strategies, eviction policies, and cache-consistency patterns.
+### Q3: What are the trade-offs between Relational (SQL) and NoSQL Databases?
 
 **Answer:**
-A **Cache** is a high-speed, temporary, in-memory data store (e.g., Redis, Memcached) used to shield databases and serve data fast.
-
-*   **Cache-Consistency Write Strategies:**
-    *   *Cache-Aside (Lazy Loading):* Read checks cache first. On miss, reads from DB, writes back to cache, and returns. Writes go directly to DB, then invalidates cache key.
-    *   *Write-Through:* Writes update cache and DB *synchronously* in a single transaction. Guarantees consistency but increases write latency.
-    *   *Write-Back (Write-Behind):* Writes update cache immediately; async background worker batch-updates DB. High write performance, but risks data loss on cache crash.
-*   **Eviction Policies:**
-    *   *LRU (Least Recently Used):* Evicts keys unaccessed for the longest duration.
-    *   *LFU (Least Frequently Used):* Evicts keys with the lowest access count.
-    *   *FIFO (First-In, First-Out):* Evicts keys in order of creation.
-*   **Cache Failures:**
-    *   *Cache Penetration:* Client requests keys existing in neither cache nor DB. *Mitigation:* Cache null values with low TTL, or use **Bloom Filters**.
-    *   *Cache Avalanche:* Multiple keys expire simultaneously or cache crashes, flooding DB. *Mitigation:* Add random TTL jitter, use highly available cache clusters.
-    *   *Cache Stampede:* A highly popular key expires and concurrent requests miss cache, hitting DB to recalculate simultaneously. *Mitigation:* Implement distributed locks or background pre-warming.
+*   **Relational Databases (Postgres, MySQL):**
+    *   *Strengths:* Strict ACID transaction guarantees, structured schemas with foreign key integrity, powerful multi-table `JOIN` queries.
+    *   *Weaknesses:* Horizontal write scaling requires complex sharding; fixed schemas slow down rapid iterations. Best for financial ledgers, billing, and core business transactions.
+*   **NoSQL Databases (MongoDB, Cassandra, DynamoDB):**
+    *   *Strengths:* Dynamic schemas, native horizontal sharding out of the box, massive write throughput, low-latency key-value lookups.
+    *   *Weaknesses:* Lacks multi-row ACID guarantees (BASE model), eventual consistency anomalies, no native foreign key joins. Best for real-time analytics, user sessions, chat feeds, and time-series data.
 
 ---
 
-### Q4: What is a CDN (Content Delivery Network)? Contrast Push vs. Pull CDNs.
+### Q4: How do you ensure High Availability in distributed systems?
 
 **Answer:**
-A **CDN** is a globally distributed network of edge servers designed to cache static and dynamic assets close to users, reducing physical network latency.
-
-```mermaid
-graph LR
-    User[User] -->|Lowest Latency| Edge[CDN Edge Server]
-    Edge -->|Cache Miss| Origin[Origin Server]
-```
-
-*   **Pull CDN:**
-    *   Edge servers fetch content from the origin server on the first cache miss.
-    *   *Use case:* High-traffic sites with standard static assets (images, CSS, JS). Low maintenance.
-*   **Push CDN:**
-    *   Origin server explicitly uploads/pushes content to CDN storage.
-    *   *Use case:* Large, rarely updated files (software downloads, video files). Content is guaranteed to be on the CDN before the first request.
+High Availability (HA) ensures a system remains accessible and operational without downtime, typically measured in "nines" (99.999% = $<5.26$ minutes downtime/year).
+*   **Core Strategies:**
+    1.  **Redundancy:** Deploy at least $N+1$ active instances across multiple availability zones (AZs) with no Single Point of Failure (SPOF).
+    2.  **Load Balancing & Health Checks:** Route traffic away from degraded nodes automatically.
+    3.  **Database Replication & Auto-Failover:** Use multi-AZ primary-replica replication with automated consensus failover (e.g., AWS Aurora, Patroni for Postgres).
 
 ---
 
-### Q5: Contrast SQL vs. NoSQL databases. When would you use one over the other?
+### Q5: What is Load Balancing and how does it work?
 
 **Answer:**
-*   **SQL (Relational):**
-    *   Structured schema with strict tables, columns, and foreign keys.
-    *   Supports **ACID** (Atomicity, Consistency, Isolation, Durability) guarantees.
-    *   Scales vertically (horizontal scaling via sharding is complex).
-    *   *Use Case:* Financial systems, order management, user profiles requiring transactional safety.
-*   **NoSQL (Non-Relational):**
-    *   Flexible schema (Document, Key-Value, Column-family, Graph).
-    *   Prioritizes **BASE** (Basically Available, Soft-state, Eventual consistency).
-    *   Scales horizontally by default.
-    *   *Use Case:* Real-time analytics, catalog systems, high-volume sensor data, unstructured logs.
+A **Load Balancer (LB)** sits between clients and backend server clusters, distributing incoming network requests evenly across healthy instances to optimize resource utilization and prevent server saturation.
+*   **Layers:** Operates at **Layer 4** (Transport Layer: TCP/UDP routing based on IP/Port, e.g., AWS NLB, HAProxy) or **Layer 7** (Application Layer: HTTP header, cookie, and path-based routing, e.g., AWS ALB, NGINX).
+*   **Algorithms:** Round Robin, Weighted Round Robin, Least Connections, and IP Hash (for session stickiness).
 
 ---
 
-### Q6: What is DNS (Domain Name System)? Explain its resolution steps.
+### Q6: How do you design a system for massive horizontal scalability?
 
 **Answer:**
-**DNS** translates human-readable domain names (e.g., `google.com`) into machine-routable IP addresses.
-
-*   **Resolution Steps (Client to IP):**
-    1.  **Local Cache Check:** OS/Browser checks local cache.
-    2.  **Recursive Resolver:** Hits ISP or public recursive DNS resolver (e.g., `8.8.8.8`).
-    3.  **Root Nameserver:** Resolver queries root (`.`) for TLD server.
-    4.  **TLD Nameserver:** Resolver queries TLD (`.com`) for authoritative nameserver.
-    5.  **Authoritative Nameserver:** Resolver fetches exact IP.
-    6.  **Caching:** Resolver caches IP and returns it to Client.
+1.  **Stateless Application Tier:** Keep web and app servers completely stateless so any server can handle any request; offload user session data to distributed caches (Redis).
+2.  **Database Partitioning (Sharding):** Horizontally split large database tables across multiple physical database nodes using a consistent hash of the Shard Key.
+3.  **Asynchronous Decoupling:** Offload heavy background workloads (image resizing, email sending, payment receipts) to distributed message queues (Kafka / RabbitMQ / AWS SQS).
+4.  **Edge Caching (CDN):** Serve static assets and public API responses directly from edge Points of Presence (Cloudflare, CloudFront).
 
 ---
 
-### Q7: What is Horizontal vs. Vertical Scaling? Discuss cost and single point of failure (SPOF).
+### Q7: How do you implement end-to-end Security in High-Level Design?
 
 **Answer:**
-*   **Vertical Scaling:**
-    *   *Cost:* Exponentially expensive as hardware limits are reached.
-    *   *SPOF:* High risk. If the single machine crashes, the entire system goes down.
-    *   *Downtime:* Often requires hardware restarts to add CPU/RAM.
-*   **Horizontal Scaling:**
-    *   *Cost:* Linear and predictable. Runs on cheap, commodity hardware.
-    *   *SPOF:* Resilient. If one node fails, load balancer routes traffic to surviving nodes.
-    *   *Complexity:* High. Demands distributed data consistency and networking overhead.
+*   **Edge & Transport:** Enforce TLS 1.3 / HTTPS everywhere; terminate SSL at the Load Balancer/CDN and use mutual TLS (mTLS) for zero-trust internal microservice communication.
+*   **Identity & Access:** Authenticate via OAuth 2.0 / OIDC; authorize via fine-grained Role-Based Access Control (RBAC) at the API Gateway.
+*   **Data Protection:** Encrypt data at rest using AES-256 (KMS keys) and in transit; hash all passwords using bcrypt or Argon2 with unique per-user salts.
+*   **Perimeter Defense:** Deploy Web Application Firewalls (WAF) for DDoS protection, SQL Injection, and XSS filtering.
 
 ---
 
-### Q8: Explain the difference between Synchronous and Asynchronous communication.
+### Q8: What is Database Indexing and what are its performance trade-offs?
 
 **Answer:**
-*   **Synchronous:**
-    *   Caller blocks, waiting for the receiver to process the request and return a response.
-    *   *Protocol:* HTTP, gRPC.
-    *   *Risk:* Cascading failures and thread pool starvation if downstream services slow down.
-*   **Asynchronous:**
-    *   Caller fires request and immediately resumes work. Notification of completion happens via callback, event, or queue polling.
-    *   *Protocol:* AMQP, Kafka, MQTT.
-    *   *Benefit:* Decouples services, absorbs load spikes, improves system responsiveness.
+A database index is a data structure (predominantly a **B+ Tree**) maintained alongside a table to speed up row retrieval without scanning the entire disk table.
+*   **Trade-offs:** Drastically speeds up `SELECT`, `WHERE`, `JOIN`, and `ORDER BY` operations from $O(N)$ to $O(\log N)$. However, it introduces write amplification: every `INSERT`, `UPDATE`, and `DELETE` must synchronously update the B+ Tree on disk, increasing write latency and storage footprint.
 
 ---
 
-### Q9: What are WebSockets vs. HTTP Long Polling vs. Server-Sent Events (SSE)?
+### Q9: What are the key steps in designing a production-grade REST API?
 
 **Answer:**
-*   **HTTP Long Polling:** Client requests data; server holds connection open until new data is available or timeout occurs. Client immediately opens another request. *High overhead*.
-*   **WebSockets:** Full-duplex, bidirectional communication over a single TCP connection. *Ideal for real-time multiplayer, chat, gaming*.
-*   **SSE (Server-Sent Events):** Monodirectional client-to-server connection where server stream-pushes text updates. Runs over standard HTTP. *Ideal for stock tickers, live news feeds*.
+1.  **Resource-Oriented URIs:** Use clean, predictable noun endpoints (`POST /api/v1/orders`, `GET /api/v1/orders/{id}`).
+2.  **Standard HTTP Status Codes:** `200 OK`, `201 Created`, `400 Bad Request`, `401 Unauthorized`, `403 Forbidden`, `404 Not Found`, `429 Too Many Requests`, `500 Server Error`.
+3.  **Idempotency & Pagination:** Require `Idempotency-Key` headers on payment POSTs; implement cursor-based pagination (`?cursor=xyz&limit=20`) to prevent deep offset degradation.
+4.  **Security & Rate Limiting:** Enforce JWT token verification and token bucket rate limits per client.
 
 ---
 
-### Q10: What is a Single Point of Failure (SPOF) and how do you eliminate it?
+### Q10: How do you ensure Data Consistency across distributed microservices?
 
 **Answer:**
-A **SPOF** is any part of a system whose failure stops the entire system from working.
-
-*   **Elimination Strategy:** Redundancy + Automated Failover.
-    *   *Web Servers:* Run multiple stateless nodes behind a Load Balancer.
-    *   *Database:* Maintain Master-Slave replication with automatic promotion via consensus/monitoring.
-    *   *Network:* Use redundant internet service providers and switches.
+Because distributed transactions (Two-Phase Commit - 2PC) lock resources and reduce availability, modern microservices achieve eventual consistency using the **SAGA Pattern**:
+*   *Choreography-based:* Services publish domain events (Kafka) and react asynchronously.
+*   *Orchestration-based:* A central Saga Orchestrator coordinates transaction steps. If a downstream step fails (e.g., Payment Declined), the orchestrator executes **Compensating Transactions** in reverse order (e.g., Unreserve Inventory).
 
 ---
 
-### Q11: Explain RAID (Redundant Array of Independent Disks) at a high level.
+### Q11: What is the role of Fault Tolerance in system architecture?
 
 **Answer:**
-**RAID** combines multiple physical hard drives into a single logical unit to protect against disk failures and/or increase speed.
-
-*   **RAID 0 (Striping):** Splits data across disks. High performance, zero redundancy (any disk failure = data loss).
-*   **RAID 1 (Mirroring):** Duplicates data on multiple disks. High redundancy, higher cost (halves total capacity).
-*   **RAID 5 (Striping + Parity):** Distributes data and parity across $\ge 3$ disks. Survives single disk failure with decent capacity.
-*   **RAID 10 (1+0):** Mirrors and stripes. Extreme speed and resilience, but requires double the disk count.
+Fault tolerance is the property that enables a system to continue operating properly in the event of failure (component crashes, network partitions, disk errors) of one or more of its subcomponents.
+*   **Mechanisms:** Failure isolation (bulkheads), automated retries with exponential backoff and jitter, circuit breaking (Hystrix / Resilience4j), and graceful degradation (e.g., serving cached movie recommendations when the ML engine is down).
 
 ---
 
-### Q12: What is High Availability (HA)? How do active-passive and active-active setups work?
+### Q12: How do you design for Disaster Recovery (RPO and RTO)?
 
 **Answer:**
-**HA** ensures system services remain operational over long durations with minimal downtime.
-
-*   **Active-Passive Setup:**
-    *   Active node handles all live traffic.
-    *   Passive node acts as standby, heartbeat-monitoring the active node.
-    *   On active failure, virtual IP switches to passive (failover).
-*   **Active-Active Setup:**
-    *   All nodes simultaneously handle traffic.
-    *   Distributes load across the cluster.
-    *   Requires active-active database replication or stateless nodes to avoid split-brain consistency bugs.
+*   **RPO (Recovery Point Objective):** The maximum acceptable data loss time window (e.g., RPO = 5 mins means we can lose at most 5 minutes of data).
+*   **RTO (Recovery Time Objective):** The maximum acceptable duration of system downtime to restore operations (e.g., RTO = 30 mins).
+*   **Implementation:** Automated multi-region database replication (Active-Passive or Active-Active), continuous automated backups to immutable S3 buckets, and Infrastructure-as-Code (Terraform) scripts for automated disaster recovery rebuilds.
 
 ---
 
-### Q13: What is Replication? Contrast Master-Slave and Master-Master Replication.
+### Q13: What is Event-Driven Architecture (EDA) and what are its advantages?
 
 **Answer:**
-**Replication** copies data across multiple servers to increase read throughput, enhance availability, and prevent data loss.
-
-*   **Master-Slave (Primary-Replica):**
-    *   Writes go exclusively to the Master. Master streams log updates to Slaves.
-    *   Reads are distributed across all Slaves (scales reads).
-    *   *Trade-off:* Slave promotion is required if Master dies; potential read lag.
-*   **Master-Master (Multi-Primary):**
-    *   Writes can go to any Master node. Masters sync writes bi-directionally.
-    *   *Trade-off:* High risk of write conflicts; requires complex resolution (Vector Clocks or Last-Write-Wins).
+In an **Event-Driven Architecture**, services communicate asynchronously by producing and consuming immutable state events through an event broker (Apache Kafka / RabbitMQ) rather than making direct synchronous HTTP/gRPC calls.
+*   **Advantages:** Complete temporal decoupling (Service A doesn't care if Service B is temporarily offline), natural traffic spike buffering, and effortless integration of new subscriber microservices without modifying upstream publisher code.
 
 ---
 
-### Q14: Explain Database Indexing. How do B-Trees/B+Trees speed up read queries?
+### Q14: How does a cache determine when it is full and what happens on eviction?
 
 **Answer:**
-An **Index** is a data structure designed to accelerate data retrieval operations at the cost of slower writes and extra storage.
-
-*   **B+Tree Internals:**
-    *   Organized as a self-balancing, multi-way search tree.
-    *   *Internal Nodes:* Store search keys and child pointers only (increases fan-out).
-    *   *Leaf Nodes:* Store actual data/pointers in a sorted, doubly-linked list.
-    *   *Why B+Tree?* Supports both fast point lookups ($O(\log N)$) and efficient range scans (via traversal of the leaf linked list).
+Caches maintain a configured memory limit (e.g., `maxmemory 16gb` in Redis). When an insertion pushes memory over the threshold, the cache triggers an **Eviction Policy**:
+*   *LRU (Least Recently Used):* Evicts keys that have not been accessed for the longest time (most common).
+*   *LFU (Least Frequently Used):* Evicts keys with the lowest access counter.
+*   *Volatile-TTL:* Evicts keys with the shortest remaining Time-To-Live first.
 
 ---
 
-### Q15: What are the key HTTP status codes used in high-level system APIs?
+### Q15: How is Concurrency Control handled in High-Level System Design?
 
 **Answer:**
-*   **200 OK / 201 Created:** Successful query / creation.
-*   **301 Moved Permanently:** Permanent redirection (CDNs, SEO).
-*   **302 Found:** Temporary redirect (session routing, short URLs).
-*   **400 Bad Request:** Client syntax error.
-*   **401 Unauthorized / 403 Forbidden:** No credentials / lacks permissions.
-*   **404 Not Found:** Resource missing.
-*   **429 Too Many Requests:** Throttled/Rate limited.
-*   **500 Internal Server Error:** General crash on server.
-*   **503 Service Unavailable / 504 Gateway Timeout:** Downstream overload or network timeout.
+1.  **Pessimistic Concurrency Control:** Uses database row-level exclusive locks (`SELECT ... FOR UPDATE`). Blocks other transactions until the current transaction completes. Best for high-contention bank balances.
+2.  **Optimistic Concurrency Control (OCC):** Verifies a `version` column before writing (`UPDATE ... SET version = version + 1 WHERE id = 1 AND version = 5`). If updated rows $= 0$, retries or aborts. Best for low-contention high-throughput applications.
+3.  **Distributed Locks:** Uses Redis Redlock or ZooKeeper ephemeral nodes to serialize operations across multi-server microservices.
 
 ---
 
-### Q16: What is the difference between monolithic and microservice architectures?
+### Q16: What are the core architectural constraints of REST?
 
 **Answer:**
-*   **Monolith:**
-    *   Single, unified codebase deploying all modules together.
-    *   *Pros:* Simple testing, local function calls (low latency), ease of deployment initially.
-    *   *Cons:* Scaling a single bottleneck requires scaling the whole stack; code release dependencies.
-*   **Microservices:**
-    *   Decoupled, fine-grained services collaborating via network APIs (HTTP, gRPC).
-    *   *Pros:* Independent deployments, technology-agnostic, isolated horizontal scaling.
-    *   *Cons:* High network latency, distributed transaction complexity (Sagas), operations overhead.
+1.  **Client-Server:** Decouples user interface concerns from data persistence.
+2.  **Stateless:** Every request from client to server must contain all information needed to understand and process the request (no server session state).
+3.  **Cacheable:** Responses must implicitly or explicitly define themselves as cacheable or non-cacheable (`Cache-Control: max-age=3600`).
+4.  **Uniform Interface:** Resource identification in requests, resource manipulation through representations, and self-descriptive messages.
+5.  **Layered System:** The client cannot tell whether it is connected directly to the end server or an intermediate proxy/load balancer.
 
 ---
 
-### Q17: What is rate limiting and why is it important in distributed systems?
+### Q17: What is the role of a Message Broker in distributed systems?
 
 **Answer:**
-**Rate Limiting** throttles incoming requests to protect service infrastructure from exhaustion.
-
-*   **Why it matters:**
-    *   Prevents **Denial of Service (DoS)** attacks and API abuse.
-    *   Ensures fair use among API clients.
-    *   Protects backend resources (DB, third-party APIs) from thundering herd spikes.
+A **Message Broker** acts as an intermediary message transport pipeline that buffers, routes, and guarantees delivery of messages between decoupled software services.
+*   **Core Responsibilities:** Absorbing sudden traffic bursts (load leveling), enabling asynchronous pub/sub broadcast to multiple consumers, providing message durability, and decoupling producer write latency from consumer processing latency.
 
 ---
 
-### Q18: Explain IP, TCP, and UDP protocols and their relevance to HLD.
+### Q18: Explain Database Replication and its primary topologies.
 
 **Answer:**
-*   **IP (Internet Protocol):** Directs and routes individual packets across network borders based on IP addresses. Lacks delivery guarantees.
-*   **TCP (Transmission Control Protocol):** Connection-oriented protocol. Guarantees ordered, reliable delivery of bytes via sequence numbers and ACKs. Features flow and congestion control. *Used for HTTP, APIs, databases*.
-*   **UDP (User Datagram Protocol):** Connectionless, lightweight protocol. Sends packets immediately without handshakes or delivery checks. *Used for real-time media streaming, DNS, gaming*.
+Replication maintains copies of database data across multiple physical machines to ensure high availability and read scalability.
+*   **Primary-Replica (Master-Slave):** All write operations execute on 1 Primary node; read operations are distributed across multiple read-only Replicas.
+*   **Multi-Primary (Master-Master):** Writes can occur on multiple primary nodes across regions (requires write conflict resolution).
+*   **Leaderless (Quorum-based):** Clients write to and read from multiple nodes directly using $W + R > N$ quorums (Apache Cassandra, Amazon DynamoDB).
 
 ---
 
-### Q19: What is session persistence (Sticky Sessions) and what are its pros and cons?
+### Q19: How do you build a Fault-Tolerant Network Infrastructure?
 
 **Answer:**
-**Sticky Sessions** route all subsequent requests from a specific client to the exact same backend server instance.
-
-*   **Pros:** Easy to implement; allows caching session data locally in the application server's RAM.
-*   **Cons:** Uneven load distribution (if one server gets sticky, popular users); server failures cause session loss unless persisted externally.
+1.  **Redundant Network Links:** Dual Tier-1 ISP uplinks with automated BGP failover.
+2.  **Anycast IP Routing:** Announces the same IP address from multiple geographic edge data centers; if one router drops, traffic automatically converges to the nearest healthy PoP.
+3.  **Redundant Load Balancers:** Active-Passive HAProxy/ALB pairs using VRRP (Virtual Router Redundancy Protocol) for instant IP takeover.
 
 ---
 
-### Q20: Explain what a Heartbeat or Ping is in distributed systems.
+### Q20: What is the role of Containerization (Docker) and Orchestration (Kubernetes)?
 
 **Answer:**
-A **Heartbeat** is a periodic signal sent between nodes to declare status and detect node failures.
-
-*   **Mechanism:** Node A sends a ping packet to Node B every $T$ seconds.
-*   **Timeout:** If Node B fails to receive Node A's heartbeat within $(k \times T)$ seconds, Node B marks Node A as offline and initiates cluster failover or master re-election.
+*   **Containerization (Docker):** Packages application code along with its runtime, system libraries, and dependencies into a lightweight, immutable container image that runs identically on development laptops and production clusters.
+*   **Orchestration (Kubernetes):** Automates container deployment, horizontal pod autoscaling (HPA), rolling zero-downtime updates, service discovery, self-healing container restarts, and load balancing across worker nodes.
 
 ---
 
-### Q21: What is an API Gateway? What are its primary functions?
+### Q21: How do you design systems for Data Privacy and Regulatory Compliance (GDPR/HIPAA)?
 
 **Answer:**
-An **API Gateway** is a single entry point for all client requests, routing them to appropriate backend microservices.
-
-*   **Core Functions:**
-    *   *Routing:* Dynamic reverse-proxying.
-    *   *Security:* SSL/TLS termination, authentication, authorization.
-    *   *Resilience:* Rate limiting, circuit breaking, request logging.
+1.  **Data Isolation & Encryption:** Field-level encryption for Personally Identifiable Information (PII) using dedicated KMS encryption keys.
+2.  **Right to be Forgotten (GDPR Erasure):** Implement soft-delete and automated asynchronous hard-delete pipelines that cascade through databases, replicas, data lakes, and backups.
+3.  **Immutable Audit Logs:** Log all accesses to medical/financial records in write-once append-only audit stores.
+4.  **Data Residency:** Geoshard databases so EU citizen data is stored strictly within EU data centers.
 
 ---
 
-### Q22: Explain the concept of Database Normalization vs. Denormalization.
+### Q22: What is a Distributed Cache (Redis Cluster) and what are its advantages?
 
 **Answer:**
-*   **Normalization:**
-    *   Splitting data into multiple related tables to eliminate redundancy.
-    *   *Pros:* Minimizes storage, simplifies data updates, maintains integrity.
-    *   *Cons:* Requires heavy `JOIN` operations, degrading read performance at scale.
-*   **Denormalization:**
-    *   Redundantly storing duplicate data within tables to optimize reads.
-    *   *Pros:* Blazing fast reads with fewer or zero `JOIN`s.
-    *   *Cons:* Increases storage footprints; updates require multi-table modifications (potential inconsistency).
+A **Distributed Cache** pools the RAM of multiple servers into a unified in-memory storage layer partitioned across 16,384 hash slots.
+*   **Advantages:** Sub-millisecond read/write latency ($<1\text{ms}$), handles millions of operations per second, prevents relational database CPU exhaustion, and provides high availability via master-replica automatic failover.
 
 ---
 
-### Q23: What is a reverse proxy? How does it differ from a forward proxy?
+### Q23: How do you ensure Data Integrity in mission-critical applications?
 
 **Answer:**
-*   **Forward Proxy:** Sits in front of **clients**. Hides client identity; routes requests from private networks to public internet (e.g., corporate web filter).
-*   **Reverse Proxy:** Sits in front of **servers**. Hides server identity; receives client requests and distributes them internally (e.g., Nginx, Apache).
+1.  **Relational Database Constraints:** Unique constraints, foreign keys, `NOT NULL`, and check constraints.
+2.  **ACID Transactions:** Enforce strict serializable or snapshot isolation on multi-step financial transfers.
+3.  **Cryptographic Checksums:** Store SHA-256 file hashes in object stores to verify data has not suffered bitrot corruption.
 
 ---
 
-### Q24: Explain SSL/TLS Termination and why we do it at the Load Balancer level.
+### Q24: How does the CAP Theorem guide distributed database choices?
 
 **Answer:**
-**SSL/TLS Termination** is the decryption of encrypted traffic at an entry point before routing it inside the internal network.
-
-*   **Why do it at the LB?**
-    *   Decryption is CPU-intensive. Offloading it from app servers frees resources for business logic.
-    *   Simplifies certificate management (certificates updated in one place on LB).
+In any distributed network prone to network partitions (**P**), you must trade off between:
+*   **CP (Consistency over Availability):** If a network split occurs, reject writes or wait for consensus to ensure all nodes have identical data (e.g., HBase, MongoDB primary reads, CockroachDB). Best for banking.
+*   **AP (Availability over Consistency):** If a network split occurs, all nodes accept writes and return responses, but data may be temporarily out of sync until eventual consistency convergence (e.g., Cassandra, DynamoDB, CouchDB). Best for social feeds.
 
 ---
 
-### Q25: What is data redundancy, and how do checksums ensure data integrity?
+### Q25: What is the difference between Horizontal and Vertical Scaling?
 
 **Answer:**
-*   **Data Redundancy:** Storing duplicate copies of data across geographically isolated drives or nodes to survive physical data destruction.
-*   **Checksums:** Mathematical functions (e.g., MD5, SHA-256) that map files/packets to a unique string. Comparing checksums before and after transfer/storage detects silent data corruption.
+*   **Vertical Scaling (Scale-Up):** Upgrading a single server with more CPU cores, RAM, and PCIe SSDs. Simple (no distributed complexity), but bounded by hardware limits and acts as a Single Point of Failure.
+*   **Horizontal Scaling (Scale-Out):** Adding more commodity compute instances to a cluster pool behind a Load Balancer. Practically unlimited capacity, high fault tolerance, but requires stateless code and distributed data management.
 
 ---
 
-### Q26: What is the role of a message broker (e.g., RabbitMQ, Kafka) at a basic level?
+### Q26: What is Rate Limiting and what are its primary algorithms?
 
 **Answer:**
-A **Message Broker** facilitates asynchronous, decoupled communication between system modules.
-
-*   **Producer:** Sends message to broker.
-*   **Broker:** Enqueues or streams the message.
-*   **Consumer:** Polls or receives message asynchronously.
-*   **Benefit:** Buffers spikes in user requests, ensuring downstream databases are not overwhelmed.
+Rate Limiting restricts the number of requests a client can execute within a specified time window to prevent brute force attacks, resource starvation, and cascading outages.
+*   **Core Algorithms:** **Token Bucket** (allows traffic bursts up to bucket capacity), **Leaky Bucket** (smooths traffic to a constant rate), and **Sliding Window Counter** (memory-efficient burst-proof counter in Redis).
 
 ---
 
-### Q27: Define Latency. What are some of the main sources of network and disk latency?
+### Q27: Define Latency, Throughput, and Availability with real-world analogies.
 
 **Answer:**
-*   **Sources of Latency:**
-    *   *Network:* Propagation delay (speed of light in fiber optic cables), queueing delay at routers, TCP handshakes.
-    *   *Disk:* HDD seek times (mechanical arm movement $\approx 10\text{ ms}$), SSD flash reads ($\approx 0.1\text{ ms}$), cache RAM reads ($\approx 10\text{ ns}$).
-    *   *Mitigation:* Keep state in RAM (Redis), place resources physically close to users (CDNs).
+*   **Latency:** The duration required for a single request to travel round-trip (e.g., 25ms to load a user profile). *Analogy:* The speed of a single delivery van.
+*   **Throughput:** The volume of work or requests completed per unit of time (e.g., 50,000 queries per second - QPS). *Analogy:* The width of a highway and number of vans passing per minute.
+*   **Availability:** The percentage of time a system is fully operational and accepting traffic (e.g., 99.99% uptime). *Analogy:* The percentage of days the highway is open without roadwork closures.
 
 ---
 
-### Q28: What is connection pooling in database client libraries?
+### Q28: What is the difference between Database Sharding and Partitioning?
 
 **Answer:**
-**Connection Pooling** maintains a cache of active, open database connections.
-
-*   **Why use it:** Establishing a TCP and TLS connection to a database is expensive. Re-using existing connections from a pre-allocated pool reduces connection latency from $\sim 100\text{ ms}$ to $< 1\text{ ms}$.
+*   **Partitioning (Table Partitioning):** Dividing a large table into smaller physical files **within a single database instance** (e.g., PostgreSQL range partitioning by month `orders_2026_01`).
+*   **Sharding:** Horizontally distributing table partitions across **multiple independent physical database servers**, requiring a Shard Router to direct queries based on the Shard Key.
 
 ---
 
-### Q29: What is database backup? Contrast hot (active) backups vs. cold backups.
+### Q29: What are the primary Cache Update Strategies and when should you use each?
 
 **Answer:**
-*   **Hot Backup:** Executed while the database is actively running and taking writes. *Pros:* Zero downtime. *Cons:* Complex; requires transactional logging/snapshots to guarantee state consistency.
-*   **Cold Backup:** Executed while the database is completely offline and shut down. *Pros:* Extremely simple and 100% consistent. *Cons:* Requires system downtime.
+1.  **Cache-Aside (Lazy Loading):** Application reads cache; on miss, reads DB, writes to cache. Best for general read-heavy workloads.
+2.  **Write-Through:** Application writes to cache; cache synchronously writes to DB before returning. Guarantees consistency at higher write latency.
+3.  **Write-Back (Write-Behind):** Application writes to cache; cache asynchronously batches updates to DB. Extreme write performance, but risk of data loss on cache crash.
+4.  **Write-Around:** Writes go straight to DB, bypassing cache. Prevents cache pollution for write-heavy data that is rarely read.
 
 ---
 
-### Q30: What is an SLA, SLO, and SLI?
+### Q30: What is a Content Delivery Network (CDN) and how does it optimize web delivery?
 
 **Answer:**
-*   **SLI (Service Level Indicator):** A quantifiable metric measuring service behavior (e.g., Latency of `/GET` user $\le 100\text{ ms}$).
-*   **SLO (Service Level Objective):** Target reliability level defined by SLIs (e.g., Latency must be $\le 100\text{ ms}$ for 99.9% of requests over 30 days).
-*   **SLA (Service Level Agreement):** The legal contract defining financial penalties if the SLO is not met.
+A **CDN** is a globally distributed network of Edge Point of Presence (PoP) proxy servers caching assets in geographic proximity to end users. It reduces latency by using **Anycast DNS** to serve static files (images, JS bundles, videos) from the nearest edge cache and accelerates dynamic API traffic via persistent pre-warmed TCP/TLS connections to the origin server.
 
 ---
 
-### Q31: What is vertical scaling's hard hardware limit?
+### Q31: How does Leader Election work in distributed consensus (Raft / Paxos)?
 
 **Answer:**
-Vertical scaling hits physical constraints where motherboard layouts cannot support more RAM slots, CPU cores, or PCI lanes on a single chassis. At this threshold, upgrading hardware yields zero scalability, leaving horizontal scaling as the only path.
+When a distributed cluster starts or detects that the current leader has crashed (heartbeat timeout), candidate nodes trigger an election. Candidates increment the election `term` and request votes from peers. A candidate becomes the new leader upon receiving votes from a **strict majority (quorum $= \lfloor N/2 \rfloor + 1$)** of nodes, preventing split-brain scenarios.
 
 ---
 
-### Q32: What is statelessness in application servers and why is it desirable?
+### Q32: How do Apache Kafka and RabbitMQ improve overall system design?
 
 **Answer:**
-**Statelessness** means application servers do not store client session state (e.g., login tokens, shopping cart items) in their local memory.
-
-*   **Why it's desirable:** Any app server can handle any request. Scaling out is as simple as adding or removing VM instances behind the load balancer with zero data sync overhead.
+They decouple services by converting synchronous blocking RPCs into asynchronous event streams. They absorb high-throughput traffic spikes, enable non-intrusive broadcast to multiple independent downstream consumers, and guarantee message persistence and replayability.
 
 ---
 
-### Q33: Explain the difference between optimistic locking and pessimistic locking.
+### Q33: Contrast Synchronous and Asynchronous Communication in microservices.
 
 **Answer:**
-*   **Pessimistic Locking:** Locks the database row immediately upon reading until the transaction finishes. *Pros:* Prevents conflicts. *Cons:* Restricts concurrency; causes deadlocks.
-*   **Optimistic Locking:** Does not lock rows. Instead, it checks a `version` number on write. If the database version is higher, a collision occurred, and the transaction aborts and retries. *Pros:* High throughput in low-conflict environments.
+*   **Synchronous (HTTP REST, gRPC):** Caller blocks and waits for immediate response. Simple to reason about, but creates tight temporal coupling and cascading latency failures.
+*   **Asynchronous (Kafka, SQS, RabbitMQ):** Caller publishes message and resumes execution immediately. Resilient against downstream outages and buffers bursts, but introduces eventual consistency and complex error handling.
 
 ---
 
-### Q34: What are some common database read replication lags, and why do they occur?
+### Q34: What is an API Gateway and what core responsibilities does it handle?
 
 **Answer:**
-**Replication Lag** is the delay between a write to the Master DB and its propagation to the Slave DB.
-
-*   **Why it occurs:** Heavy write transactions on the Master, network bottlenecks between Master and Slave nodes, or single-threaded replication engines on the Slaves.
+An **API Gateway** serves as the single reverse proxy entry point for all client applications into a microservice backend.
+*   **Core Responsibilities:** Request routing, SSL/TLS termination, centralized Authentication & JWT validation, Rate Limiting, CORS handling, Request/Response payload transformation, and Telemetry logging.
 
 ---
 
-### Q35: What is the purpose of database replication vs. database sharding?
+### Q35: How does the Circuit Breaker Pattern prevent cascading outages?
 
 **Answer:**
-*   **Replication:** Copies the *entire* database to multiple servers. Designed for high availability, read scaling, and fault tolerance.
-*   **Sharding:** Splits the database table horizontally, distributing *different rows* to different servers. Designed for write scaling and bypassing storage limits of single drives.
+When an upstream service notices that calls to a downstream dependency are failing repeatedly (e.g., $>50\%$ error rate in 10s), the Circuit Breaker trips from **Closed** to **Open**. While Open, all subsequent requests fail fast immediately or return a fallback response without making network calls, allowing the failing service time to recover. After a sleep window, it enters **Half-Open** to test recovery.
 
 ---
 
-### Q36: What is static content caching and how does it optimize web performance?
+### Q36: What is Consistent Hashing and why is it essential in distributed caching?
 
 **Answer:**
-It is the caching of unchangeable web files (CSS, JS, raw images) on browsers, reverse proxies, or CDNs using HTTP `Cache-Control` headers. It completely bypasses application servers, reducing processing loads to zero for static page elements.
+Consistent Hashing maps both servers and data keys to positions on a $360^\circ$ circular hash ring ($0$ to $2^{32}-1$). Keys are assigned to the first server encountered moving clockwise. When a server is added or removed, only $K/N$ keys need to be remapped (compared to nearly $100\%$ in modulo hashing), eliminating cache wipeouts. Virtual nodes ensure uniform load distribution.
 
 ---
 
-### Q37: Explain the function of a VPN (Virtual Private Network) in internal infrastructure.
+### Q37: How does Service Discovery work in dynamic cloud environments?
 
 **Answer:**
-A **VPN** encrypts connection tunnels between external clients/offices and internal datacenter networks. It isolates database nodes and backend microservices from the public internet, restricting entry strictly to verified network endpoints.
+In dynamic container environments (Kubernetes, AWS ECS), instances spin up and down with changing IP addresses. **Service Discovery** maintains a real-time registry (Consul, Eureka, Kubernetes CoreDNS) of active healthy IP addresses. Services query the registry to route RPC traffic without hardcoding hostnames.
 
 ---
 
-### Q38: What is garbage collection (GC) in high-level languages, and how does it affect latency?
+### Q38: What is a Reverse Proxy and what advantages does it offer?
 
 **Answer:**
-**GC** automatically reclaims memory by deleting unreferenced objects.
-
-*   **Latency Impact:** Certain GC sweeps trigger "Stop-the-World" pauses, freezing all application execution threads. This causes sudden spike anomalies (p99 latency spikes) in highly responsive APIs.
+A **Reverse Proxy** sits in front of internal web servers and intercepts incoming client requests.
+*   **Advantages:** Load balances traffic across backend nodes, offloads SSL/TLS encryption/decryption, caches static and dynamic responses, compresses payloads (Gzip/Brotli), and shields internal server network topology from public exposure.
 
 ---
 
-### Q39: What is CPU-bound vs. I/O-bound application design?
+### Q39: What is the difference between ACID and BASE properties?
 
 **Answer:**
-*   **CPU-bound:** Processing bottlenecked by raw computing speed (e.g., cryptography, video encoding, matrix math).
-*   **I/O-bound:** Processing bottlenecked by waiting on network, disk, or API calls (e.g., fetching a database row, downloading files).
-    *   *Architecture:* Async non-blocking runtimes (e.g., Node.js) excel in I/O-bound, while multi-threaded runtimes excel in CPU-bound.
+*   **ACID (Atomicity, Consistency, Isolation, Durability):** Prioritizes immediate correctness, strict transactional boundaries, and linearizability. Standard in relational SQL databases.
+*   **BASE (Basically Available, Soft state, Eventual consistency):** Prioritizes 100% availability, horizontal scalability, and low latency by tolerating temporary data staleness while nodes converge. Standard in distributed NoSQL databases.
 
 ---
 
-### Q40: What is a multi-tier architecture?
+### Q40: What is the fundamental difference between HLD and LLD?
 
 **Answer:**
-A software architecture split into separate logical and physical layers:
-1.  **Presentation Tier:** Frontend user interface (browser, mobile app).
-2.  **Application Tier:** Server-side business logic (Express, Spring, Go).
-3.  **Data Tier:** Datastores, queues, and persistent layers.
-Separating tiers allows scaling and security-isolating each tier independently.
+*   **High-Level Design (HLD):** Architectural macro view—system context, microservices, databases, load balancers, caching layers, message streams, data flow, and capacity planning.
+*   **Low-Level Design (LLD):** Implementation micro view—class diagrams, object-oriented design patterns, method signatures, database table column schemas, and algorithm logic.
 
 ---
 
-### Q41: What is a cluster, and how does node clustering provide fault tolerance?
+### Q41: Contrast Stateful and Stateless server architectures.
 
 **Answer:**
-A **Cluster** is a group of interconnected servers working as a single system. If one node fails, cluster monitoring systems (e.g., Kubernetes, Consul) detect the death and automatically route traffic to surviving nodes, providing high fault tolerance.
+*   **Stateful:** Servers retain client session data (e.g., shopping cart) in local memory. Requires sticky sessions; server crashes lose active sessions; horizontal autoscaling is cumbersome.
+*   **Stateless:** Servers hold zero local session state; every request contains full authentication credentials (JWT), and transient state lives in shared Redis clusters. Instances can be added or destroyed instantly to handle traffic surges.
 
 ---
 
-### Q42: Explain what a health check is and how a load balancer uses it.
+### Q42: Explain the 7 Layers of the OSI Model from top to bottom.
 
 **Answer:**
-A **Health Check** is a scheduled request (e.g., `GET /health`) sent by a load balancer to backend servers. If a server fails to respond with a `200 OK` multiple times, the load balancer removes the unhealthy node from the active routing pool, stopping traffic redirection to dead servers.
+1.  **Layer 7 - Application:** HTTP, HTTPS, WebSockets, DNS, SMTP, SSH (User application interfaces).
+2.  **Layer 6 - Presentation:** Data encryption, compression, SSL/TLS, serialization (JSON, Protobuf).
+3.  **Layer 5 - Session:** Manages sessions and connection dialogs.
+4.  **Layer 4 - Transport:** TCP (reliable, ordered), UDP (fast, connectionless), port numbers.
+5.  **Layer 3 - Network:** IP addressing, routers, packet routing across WAN/LAN.
+6.  **Layer 2 - Data Link:** MAC addresses, Ethernet switches, frames.
+7.  **Layer 1 - Physical:** Physical cables, optical fiber, radio frequencies, raw bit streams.
 
 ---
 
-### Q43: What is a distributed unique ID, and why is standard auto-incrementing SQL ID bad for distributed systems?
+### Q43: Explain the 4 Layers of the TCP/IP Networking Model.
 
 **Answer:**
-An auto-incrementing integer ID fails in distributed, sharded databases because independent database nodes do not communicate in real time, leading to primary key collisions (different nodes assigning the exact same ID). A distributed ID generator (e.g., Snowflake, UUIDv4) creates globally unique, non-colliding IDs without synchronous database bottlenecks.
+1.  **Application Layer:** Combines OSI Layers 5, 6, and 7 (HTTP, DNS, TLS, SSH).
+2.  **Transport Layer:** Host-to-host communication and reliability (TCP, UDP).
+3.  **Internet Layer:** Inter-network packet routing and logical addressing (IPv4, IPv6, ICMP).
+4.  **Network Access (Link) Layer:** Physical network hardware and MAC framing (Ethernet, Wi-Fi).
 
 ---
 
-## Architecture & Design Challenges
-
-### Q44: Design a High-Scale URL Shortener (TinyURL)
+### Q44: What is the difference between HTTP and HTTPS?
 
 **Answer:**
-System capable of generating short aliases for URLs and redirecting users to original destinations.
-
-```mermaid
-graph TD
-    User[Client Browser] -->|1. GET /xyz789| LB[Load Balancer]
-    LB -->|2. Route| Gateway[API Gateway / Web Server]
-    Gateway -->|3. Lookup short_code| Cache[Redis Cache]
-    Cache -->|3a. Cache Miss| DB[(NoSQL Key-Value Store)]
-    Gateway -->|4. Return 302 Redirect| User
-```
-
-#### 1. API Design:
-*   `POST /api/v1/shorten`
-    *   *Req:* `{"long_url": "https://example.com/very/long/path", "custom_alias": "promo1"}`
-    *   *Res:* `{"short_url": "https://tiny.url/xyz789"}`
-*   `GET /{short_code}`
-    *   *Res:* `HTTP 302 Redirect` to target `long_url`.
-
-#### 2. Schema (Cassandra/DynamoDB - High Scale Key-Value lookup):
-*   **Partition Key:** `short_code` (VARCHAR, 7 characters).
-*   **Attributes:** `long_url` (VARCHAR), `created_at` (TIMESTAMP), `user_id` (INT).
-
-#### 3. Key Generation Strategy:
-Use **Base62 Encoding** (`[a-z, A-Z, 0-9]`). A 7-character short URL yields $62^7 \approx 3.5\text{ Trillion}$ combinations.
-*   *Range Allocation:* Maintain a central **Token Range Service** (using ZooKeeper) that distributes blocks of integers (e.g., 1000000-2000000) to each application server. Application servers convert their unique local counter to Base62, completely avoiding ID collision and network round-trips per request.
+*   **HTTP (Port 80):** Transmits data in unencrypted plaintext over TCP. Vulnerable to packet sniffing, Man-in-the-Middle (MITM) attacks, and payload tampering.
+*   **HTTPS (Port 443):** Encapsulates HTTP inside a **TLS (Transport Layer Security)** session. Authenticates server identity via X.509 SSL certificates and encrypts all headers, URLs, and payloads with symmetric keys negotiated via asymmetric public-key cryptography (ECDHE).
 
 ---
 
-### Q45: Design a Static Webpage Hosting Platform (like AWS S3 + CloudFront CDN)
+### Q45: What is the difference between TCP and UDP?
 
 **Answer:**
-An architecture to host static web assets (HTML, CSS, images) globally with low latency.
-
-```mermaid
-graph TD
-    Client[User Browser] -->|1. Request static assets| CDN[CloudFront CDN Edge]
-    CDN -->|2. Cache Hit| Client
-    CDN -->|3. Cache Miss| S3[(Amazon S3 Object Storage)]
-    S3 -->|4. Return Asset & Cache| CDN
-```
-
-#### 1. Data Flow (Ingress vs. Egress):
-*   *Upload (Ingress):* Developer uploads assets to **Object Store (S3)** bucket. S3 triggers an invalidation event to clear old cached assets on CDN edges.
-*   *Download (Egress):* User requests `index.html`. DNS routes user to the physically closest CDN Edge server. If cached, served in $< 10\text{ ms}$. If not, fetched from S3 bucket.
-
-#### 2. Key API Spec:
-*   `GET /static/{asset_name}` -> Returns file with `Cache-Control: public, max-age=31536000` header.
+*   **TCP:** Connection-oriented (3-way handshake: SYN $\to$ SYN-ACK $\to$ ACK), guarantees ordered and error-checked delivery via packet sequence numbers and retransmissions, includes flow and congestion control. Best for web, databases, and file transfers.
+*   **UDP:** Connectionless, lightweight (8-byte header), sends datagrams without handshakes or retransmissions, ultra-low latency. Best for live video streaming, online multiplayer gaming, VoIP, DNS, and HTTP/3 (QUIC).
 
 ---
 
-### Q46: Design a Basic Distributed Cache Cluster
+### Q46: What is DNS and how does Domain Name Resolution work?
 
 **Answer:**
-A horizontally scaling, low-latency key-value cache cluster with data replication.
-
-```mermaid
-graph LR
-    Client[App Client] -->|1. Hash key to find Node| Router[Consistent Hash Router]
-    Router -->|Read / Write| NodeA[Cache Node A - Master]
-    NodeA -->|Async Replication| NodeA_S[Cache Node A - Slave]
-    Router -->|Read / Write| NodeB[Cache Node B - Master]
-    NodeB -->|Async Replication| NodeB_S[Cache Node B - Slave]
-```
-
-#### 1. Key Components:
-*   **Consistent Hashing Ring:** Client routes keys to specific cache nodes based on key hashes, ensuring minimal re-hashing when cache nodes are added/removed.
-*   **Master-Slave Sync:** Each cache partition has an active master and an asynchronous read slave.
-*   **Failover Protocol:** If a master node drops heartbeats, the cluster coordinator (e.g., ZooKeeper/Consul) automatically promotes the slave to master.
+**DNS (Domain Name System)** is the internet's hierarchical distributed phonebook translating human-readable names (`devprep.online`) to IP addresses (`104.21.48.1`).
+*   **Resolution Flow:** Browser Cache $\to$ OS Resolver $\to$ Local DNS Recursive Resolver (ISP / 8.8.8.8) $\to$ Root Nameserver (`.`) $\to$ TLD Nameserver (`.online`) $\to$ Authoritative Nameserver (Cloudflare) $\to$ returns A/AAAA record with TTL.
 
 ---
 
-### Q47: Design a Multi-Tier Contact Management System
+### Q47: What happens during a Cache Miss in a production system?
 
 **Answer:**
-A resilient, 3-tier standard architecture for managing personal contact cards.
-
-```mermaid
-graph TD
-    User[Web Client] -->|HTTP Requests| LB[Layer 7 Load Balancer]
-    LB -->|Port 80/443| App1[App Server Node 1]
-    LB -->|Port 80/443| App2[App Server Node 2]
-    App1 & App2 -->|Reads| Cache[Redis Master-Slave Caches]
-    App1 & App2 -->|Writes| DBMaster[(PostgreSQL Master DB)]
-    DBMaster -->|Async Replication| DBSlave[(PostgreSQL Slave DB)]
-    App1 & App2 -->|Reads on Cache Miss| DBSlave
-```
-
-#### 1. API Design:
-*   `POST /api/v1/contacts` -> Create contact card.
-*   `GET /api/v1/contacts/{id}` -> Fetch contact details.
-
-#### 2. Database Schema:
-*   `contacts` table: `id` (UUID), `user_id` (UUID), `name` (VARCHAR), `email` (VARCHAR), `phone` (VARCHAR).
+When requested data is not found in cache (Cache Miss):
+1.  Application falls back to querying the primary relational or NoSQL database.
+2.  Database processes query and returns row data.
+3.  Application writes the fetched data into the cache with a specified TTL.
+4.  Application delivers the response to the user. Subsequent requests hit cache instantly ($0\text{ms}$).
 
 ---
 
-### Q48: Design a Scalable Image Upload & Processing System
+### Q48: What is Cache Invalidation and why is it considered a hard problem?
 
 **Answer:**
-Asynchronous architecture to upload high-resolution images, generate thumbnails, and serve them globally.
-
-```mermaid
-graph TD
-    User[Client App] -->|1. Upload Image| Gateway[API Gateway]
-    Gateway -->|2. Direct Upload| BlobStore[(Blob Storage - S3)]
-    Gateway -->|3. Publish Image Uploaded Event| Queue[Message Queue - RabbitMQ]
-    Queue -->|4. Pull Event| Worker[Image Processing Worker]
-    Worker -->|5. Write Thumbnails| BlobStore
-    BlobStore -->|6. Sync Assets| CDN[CDN Edge Network]
-```
-
-#### 1. Ingestion Flow:
-Client requests a presigned S3 upload URL from API Gateway. Client uploads the image directly to S3.
-#### 2. Processing Flow:
-S3 upload triggers an event written to a Message Queue. A fleet of auto-scaling CPU-bound worker servers pulls events, resizes images, and writes output files back to S3 under optimized formats (WebP). CDN serves final formats.
+"There are only two hard things in Computer Science: cache invalidation and naming things" (Phil Karlton).
+*   **Cache Invalidation** ensures stale cached entries are updated or evicted when the underlying database is modified.
+*   *Mechanisms:* Short TTL expiration, explicit Write-Through invalidation (`DEL cache:user:123`), or Change-Data-Capture (CDC) via database transaction logs (Debezium $\to$ Kafka $\to$ Cache Invalidator).
 
 ---
 
-### Q49: Design a High-Availability Single-Server Failover Infrastructure
+### Q49: What happens when a Leader Node fails in a distributed cluster?
 
 **Answer:**
-An active-passive dual-server model with DNS-level failover monitoring for low-budget systems.
-
-```mermaid
-graph TD
-    DNS[DNS with Health Check] -->|Active Route| IP1[Virtual IP - Server A Active]
-    DNS -.->|Failed Route| IP2[Virtual IP - Server B Passive]
-    IP1 -->|Master Database Sync| IP2
-```
-
-#### 1. Mechanism:
-Two identical web servers run in parallel. DNS record points to Server A. A cron-health monitor checks Server A. If Server A fails three times, an API call is made to the DNS host (e.g., Route53) to switch the A-Record pointer to Server B. DB replica on Server B is promoted to master.
+1.  Follower nodes stop receiving heartbeat messages and their election timers expire.
+2.  Followers transition to Candidate state and trigger a new leader election (Raft/Paxos).
+3.  The candidate receiving a majority quorum vote becomes the new Leader.
+4.  The new leader updates the cluster metadata epoch/term number and begins accepting writes. Any uncommitted writes from the dead leader are discarded.
 
 ---
 
-### Q50: Design a Notification Dispatcher (Email & SMS)
+### Q50: How does Cloud Auto-Scaling work?
 
 **Answer:**
-Queue-backed notification engine capable of handling spikes and failures during mass marketing events.
+Cloud Auto-Scaling monitors operational metrics (CPU utilization $>70\%$, Request Count per Target, Memory pressure, SQS Queue Depth) over an evaluation period (e.g., 3 consecutive minutes). When thresholds are breached, the Auto-Scaling Group triggers scaling policies to provision additional container tasks or EC2 virtual machines behind the Load Balancer, scaling down gracefully during off-peak hours to minimize cloud cost.
 
-```mermaid
-graph TD
-    Service[Service Client] -->|1. Trigger API| Gateway[API Gateway]
-    Gateway -->|2. Push Notification Job| Queue[Priority Message Queue]
-    Queue -->|3. Consume Jobs| Dispatcher[Notification Worker Fleet]
-    Dispatcher -->|4. Push Send Payload| ServiceProvider[Third Party: Twilio / SendGrid]
-    Dispatcher -->|5. Log Status| DB[(NoSQL Activity Log DB)]
-```
+---
 
-#### 1. API Spec:
-*   `POST /api/v1/notify`
-    *   *Payload:* `{"user_id": "123", "type": "SMS", "message": "Your OTP is 9876"}`
+### Q51: What are Sticky Sessions and what are their architectural drawbacks?
 
-#### 2. Key Components:
-*   **Priority Queues:** Separates critical transactional notifications (OTPs) from low-priority marketing emails.
-*   **Idempotency Engine:** Each notification carries a deduplication key to prevent sending duplicate SMS/Emails. Activity log DB records dispatch status.
+**Answer:**
+**Sticky Sessions (Session Affinity)** configure the Load Balancer to route all requests from a specific user to the same physical backend server instance using an HTTP cookie or client IP hash.
+*   *Drawbacks:* Impedes uniform load balancing (creates hot servers), prevents autoscaling from cleanly terminating idle instances, and loses the user's active session if that specific server crashes. Modern systems replace sticky sessions with stateless JWTs and distributed Redis stores.
+
+---
+
+### Q52: How does a Load Balancer detect server failure?
+
+**Answer:**
+Load Balancers execute continuous periodic **Health Checks** (e.g., sending `GET /healthz` every 5 seconds). If a server returns an HTTP 5xx status code or fails to respond within a timeout window (e.g., 2 consecutive timeouts), the load balancer marks the instance as **Unhealthy** and immediately removes it from the active routing pool until it passes consecutive health checks.
+
+---
+
+### Source & References
+*   [GeeksforGeeks Top System Design Interview Questions](https://www.geeksforgeeks.org/system-design/top-10-system-design-interview-questions-and-answers/)

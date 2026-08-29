@@ -104,6 +104,20 @@ export async function grantAccess(
   return jsonStore.grantAccess(userId, grant);
 }
 
+export async function grantAccessByEmail(
+  email: string,
+  grant: Omit<AccessGrant, "granted" | "grantedAt">
+): Promise<UserRecord | null> {
+  if (mongoStore.mongoEnabled()) {
+    try {
+      return await mongoStore.grantAccessByEmail(email, grant);
+    } catch (err) {
+      console.warn("[db] MongoDB grantAccessByEmail failed, falling back to local store:", err);
+    }
+  }
+  return jsonStore.grantAccessByEmail(email, grant);
+}
+
 export async function recordOrder(order: OrderRecord): Promise<void> {
   if (mongoStore.mongoEnabled()) {
     try {
@@ -114,6 +128,18 @@ export async function recordOrder(order: OrderRecord): Promise<void> {
     }
   }
   return jsonStore.recordOrder(order);
+}
+
+export async function upsertOrder(order: OrderRecord): Promise<void> {
+  if (mongoStore.mongoEnabled()) {
+    try {
+      await mongoStore.upsertOrder(order);
+      return;
+    } catch (err) {
+      console.warn("[db] MongoDB upsertOrder failed, falling back to local store:", err);
+    }
+  }
+  return jsonStore.upsertOrder(order);
 }
 
 export async function markOrderPaid(
