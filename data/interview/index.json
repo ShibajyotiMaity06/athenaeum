@@ -1,0 +1,122 @@
+[
+  {
+    "slug": "nodejs",
+    "name": "Node.js",
+    "headline": "Runtime Internals, Libuv, Streams, Worker Threads & Non-Blocking Architecture",
+    "description": "Curated real-world Node.js interview questions focusing on event loop phases, microtasks vs macrotasks, worker threads, streams, backpressure, IPC, memory profiling, and high-concurrency server architectures.",
+    "icon": "nodejs",
+    "totalQuestions": 112,
+    "easyCount": 27,
+    "mediumCount": 55,
+    "hardCount": 30,
+    "sourcesCount": 67
+  },
+  {
+    "slug": "javascript",
+    "name": "JavaScript",
+    "headline": "V8 Engine Internals, Closures, Prototypal Inheritance & Modern ESNext",
+    "description": "52 core JavaScript questions spanning scope, TDZ, hoisting, closures, event delegation, garbage collection, memory leaks, custom async utilities, and modern ECMAScript specifications.",
+    "icon": "javascript",
+    "totalQuestions": 107,
+    "easyCount": 30,
+    "mediumCount": 41,
+    "hardCount": 36,
+    "sourcesCount": 135
+  },
+  {
+    "slug": "typescript",
+    "name": "TypeScript",
+    "headline": "Type System Mechanics, Generics, Conditional Types, Type Narrowing & AST",
+    "description": "Essential TypeScript interview questions covering advanced generics, mapped types, template literal types, conditional type inference (infer), branded types, covariance/contravariance, and compiler options.",
+    "icon": "typescript",
+    "totalQuestions": 70,
+    "easyCount": 20,
+    "mediumCount": 30,
+    "hardCount": 20,
+    "sourcesCount": 80
+  },
+  {
+    "slug": "react",
+    "name": "React & React 19",
+    "headline": "React 19 Actions, Server Components, Hooks, State Architecture & Performance",
+    "description": "100 curated React questions covering TypeScript prop narrowing, useActionState, useOptimistic, RSCs, state libraries (Zustand/RTK), virtualization, and enterprise performance optimizations.",
+    "icon": "react",
+    "totalQuestions": 99,
+    "easyCount": 31,
+    "mediumCount": 42,
+    "hardCount": 26,
+    "sourcesCount": 122
+  },
+  {
+    "slug": "nextjs",
+    "name": "Next.js",
+    "headline": "App Router, Server Actions, SSR/SSG/ISR, Middleware, Caching & Performance",
+    "description": "Production-grade Next.js interview questions covering App Router conventions, Server vs Client Components, Server Actions, streaming SSR with Suspense, caching layers, middleware routing, and SEO optimization.",
+    "icon": "nextjs",
+    "totalQuestions": 35,
+    "easyCount": 10,
+    "mediumCount": 15,
+    "hardCount": 10,
+    "sourcesCount": 74
+  },
+  {
+    "slug": "java",
+    "name": "Java",
+    "headline": "JVM Memory Model, Garbage Collection, Concurrency, OOP & Collections Internals",
+    "description": "Curated Core & Advanced Java interview questions covering JVM memory structure, GC algorithms, multithreading, synchronization primitives, CompletableFuture, Collections internals, and thread-safe data structures.",
+    "icon": "java",
+    "totalQuestions": 100,
+    "easyCount": 25,
+    "mediumCount": 50,
+    "hardCount": 25,
+    "sourcesCount": 126
+  },
+  {
+    "slug": "sql",
+    "name": "SQL",
+    "headline": "Relational Queries, Window Functions, CTEs, Indexing & Query Tuning",
+    "description": "70 curated SQL interview questions spanning aggregations, self-joins, recursive CTEs, ranking window functions, partitioning, and complex analytical queries.",
+    "icon": "sql",
+    "totalQuestions": 65,
+    "easyCount": 20,
+    "mediumCount": 31,
+    "hardCount": 14,
+    "sourcesCount": 86
+  },
+  {
+    "slug": "dbms",
+    "name": "DBMS",
+    "headline": "ACID Properties, Concurrency Control, MVCC, B-Trees & Distributed Transactions",
+    "description": "Deep-dive DBMS interview questions covering storage engines, indexing mechanics, lock escalation, isolation levels, write-ahead logging (WAL), snapshot isolation, and distributed 2PC/CAP replication.",
+    "icon": "dbms",
+    "totalQuestions": 72,
+    "easyCount": 19,
+    "mediumCount": 25,
+    "hardCount": 28,
+    "sourcesCount": 106
+  },
+  {
+    "slug": "computer-networks",
+    "name": "Computer Networks",
+    "headline": "OSI & TCP/IP Stack, Routing, Transport Protocols, DNS, TLS & Network Security",
+    "description": "Essential Computer Networks interview questions covering TCP 3-way handshake, UDP, flow and congestion control, DNS resolution, HTTP/2 & HTTP/3, TLS handshake, subnetting, and real-time networking protocols.",
+    "icon": "computernetworks",
+    "totalQuestions": 70,
+    "easyCount": 20,
+    "mediumCount": 30,
+    "hardCount": 20,
+    "sourcesCount": 152
+  },
+  {
+    "slug": "operating-systems",
+    "name": "Operating Systems",
+    "headline": "Processes, Threads, Concurrency, Deadlocks, Virtual Memory & Kernel Architecture",
+    "description": "Core Operating Systems interview questions spanning process lifecycles, CPU scheduling algorithms, virtual memory paging, page fault handling, synchronization primitives, deadlocks, and system calls.",
+    "icon": "os",
+    "totalQuestions": 35,
+    "easyCount": 10,
+    "mediumCount": 15,
+    "hardCount": 10,
+    "sourcesCount": 54
+  }
+]

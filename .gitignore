@@ -7,8 +7,10 @@
 next-env.d.ts
 *.tsbuildinfo
 
-# data (users, orders, secrets)
-/data
+# data (users, orders, secrets - but keep interview codex content)
+/data/*
+!/data/interview
+!/data/interview/**
 
 # env
 .env

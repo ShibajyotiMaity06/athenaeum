@@ -1,0 +1,2362 @@
+{
+  "slug": "computer-networks",
+  "name": "Computer Networks",
+  "headline": "OSI & TCP/IP Stack, Routing, Transport Protocols, DNS, TLS & Network Security",
+  "description": "Essential Computer Networks interview questions covering TCP 3-way handshake, UDP, flow and congestion control, DNS resolution, HTTP/2 & HTTP/3, TLS handshake, subnetting, and real-time networking protocols.",
+  "icon": "computernetworks",
+  "totalQuestions": 70,
+  "easyCount": 20,
+  "mediumCount": 30,
+  "hardCount": 20,
+  "questions": [
+    {
+      "question": "What is a computer network, and what are the main benefits of connecting devices in a network?",
+      "difficulty": "Easy",
+      "answer": "A computer network is a collection of interconnected devices (computers, servers, phones, IoT devices) that can exchange data and share resources over wired or wireless links using standard communication protocols. The core benefits are: (1) resource sharing — printers, storage, and internet connections can be shared instead of duplicated per device; (2) communication — email, messaging, and file transfer between users; (3) centralized data management and backup; (4) scalability and cost efficiency, since infrastructure like servers can serve many clients; and (5) enabling distributed applications (e.g., client-server and cloud computing) that would be impossible on isolated machines. In an interview, it helps to mention common network types by scope — PAN, LAN, MAN, WAN — since 'network' spans everything from two laptops connected via Bluetooth to the global internet.",
+      "sources": [
+        {
+          "title": "Networking Interview Questions and Answers - GeeksforGeeks",
+          "url": "https://www.geeksforgeeks.org/blogs/networking-interview-questions/",
+          "domain": "geeksforgeeks.org"
+        },
+        {
+          "title": "Top Computer Network Interview Questions [2025] | PrepInsta",
+          "url": "https://prepinsta.com/interview-preparation/technical-interview-questions/computer-network/",
+          "domain": "prepinsta.com"
+        }
+      ],
+      "id": 1
+    },
+    {
+      "question": "What are the seven layers of the OSI model, and what is the general responsibility of each layer?",
+      "difficulty": "Easy",
+      "answer": "From bottom to top: (1) Physical — transmits raw bits over a medium (cables, radio); (2) Data Link — frames data and handles MAC addressing and error detection between directly connected nodes (e.g., Ethernet, ARP fits here conceptually); (3) Network — logical addressing and routing between networks using IP; (4) Transport — end-to-end delivery, segmentation, and reliability via TCP or UDP, using port numbers; (5) Session — establishes, manages, and tears down communication sessions between applications; (6) Presentation — formats, encrypts/decrypts, and compresses data (e.g., TLS, character encoding); (7) Application — provides network services directly to end-user software (HTTP, DNS, SMTP). Data flows down the stack on the sender (each layer adds a header) and up the stack on the receiver (each layer strips its header) — this is encapsulation/decapsulation. In interviews, being able to place a real protocol or device (router, switch, firewall) at the correct layer is often more important than reciting the list.",
+      "sources": [
+        {
+          "title": "What is OSI Model | 7 Layers Explained - GeeksforGeeks",
+          "url": "https://www.geeksforgeeks.org/computer-networks/open-systems-interconnection-model-osi/",
+          "domain": "geeksforgeeks.org"
+        },
+        {
+          "title": "What is the OSI Model? The 7 Layers Explained – BMC Software",
+          "url": "https://www.bmc.com/blogs/osi-model-7-layers/",
+          "domain": "bmc.com"
+        },
+        {
+          "title": "What Is The OSI Model? - Cloudflare",
+          "url": "https://www.cloudflare.com/learning/ddos/glossary/open-systems-interconnection-model-osi/",
+          "domain": "cloudflare.com"
+        }
+      ],
+      "id": 2
+    },
+    {
+      "question": "What is the difference between the OSI model and the TCP/IP model?",
+      "difficulty": "Easy",
+      "answer": "OSI is a 7-layer conceptual/theoretical reference model (Physical, Data Link, Network, Transport, Session, Presentation, Application) created to standardize how networking should be discussed and taught. TCP/IP is a 4-layer practical model (Network Access/Link, Internet, Transport, Application) that describes the protocol suite actually used to build the internet. TCP/IP's Application layer collapses OSI's Session, Presentation, and Application layers into one, and its Link layer collapses OSI's Physical and Data Link layers. OSI was designed first and is protocol-independent, useful for teaching and troubleshooting layer-by-layer; TCP/IP came from real, working protocols (it's descriptive, not purely prescriptive) and is what's actually implemented in operating systems and routers today. A common interview follow-up: 'the modern internet doesn't strictly follow OSI — it follows the TCP/IP suite — but OSI is still the standard vocabulary for discussing where a device or attack operates.'",
+      "sources": [
+        {
+          "title": "OSI Model: Complete Guide to the 7 Network Layers - Codecademy",
+          "url": "https://www.codecademy.com/article/osi-model-complete-guide-to-the-7-network-layers",
+          "domain": "codecademy.com"
+        },
+        {
+          "title": "What Is The OSI Model? - Cloudflare",
+          "url": "https://www.cloudflare.com/learning/ddos/glossary/open-systems-interconnection-model-osi/",
+          "domain": "cloudflare.com"
+        },
+        {
+          "title": "Best 45 Computer Networks Interview Questions (2026) - Bosscoder Academy",
+          "url": "https://www.bosscoderacademy.com/blog/computer-networks-interview-questions",
+          "domain": "bosscoderacademy.com"
+        }
+      ],
+      "id": 3
+    },
+    {
+      "question": "What is the difference between an IP address and a MAC address?",
+      "difficulty": "Easy",
+      "answer": "A MAC (Media Access Control) address is a 48-bit hardware address burned into a device's network interface card; it operates at the Data Link layer (Layer 2) and is used for communication within a local network segment. It's generally fixed (though it can be spoofed/randomized) and not routable across networks. An IP address is a logical, Network-layer (Layer 3) address assigned to a device — statically or via DHCP — that identifies it for routing across different networks, including the internet. IP addresses can change (e.g., when you move networks), while a device's MAC address typically doesn't. The two are linked via ARP: when a device wants to send a packet on a LAN, it knows the destination IP but needs the corresponding MAC address to actually put the frame on the wire — that's exactly the problem ARP solves.",
+      "sources": [
+        {
+          "title": "Networking Interview Questions and Answers - GeeksforGeeks",
+          "url": "https://www.geeksforgeeks.org/blogs/networking-interview-questions/",
+          "domain": "geeksforgeeks.org"
+        },
+        {
+          "title": "What Is OSI Model | 7 Layers Explained - BMC",
+          "url": "https://www.bmc.com/blogs/osi-model-7-layers/",
+          "domain": "bmc.com"
+        }
+      ],
+      "id": 4
+    },
+    {
+      "question": "What is the functional difference between a hub, a switch, and a router?",
+      "difficulty": "Easy",
+      "answer": "A hub is a Layer 1 device that simply repeats every incoming electrical signal out to all connected ports — it has no intelligence, creates a single collision domain, and is essentially obsolete in modern networks. A switch is a Layer 2 device that learns the MAC address of each connected device and forwards frames only to the specific port where the destination MAC lives, using a MAC address table — this creates separate collision domains per port but keeps everyone in the same broadcast domain (unless VLANs are used). A router is a Layer 3 device that connects separate networks (different IP subnets) and forwards packets based on destination IP address using a routing table, typically also acting as the default gateway out to other networks or the internet. In short: hub = dumb repeater, switch = intelligent forwarding within a LAN by MAC, router = intelligent forwarding between networks by IP.",
+      "sources": [
+        {
+          "title": "70+ Top Networking Interview Questions (2026) - InterviewBit",
+          "url": "https://www.interviewbit.com/networking-interview-questions/",
+          "domain": "interviewbit.com"
+        },
+        {
+          "title": "Top 50 Networking Interview Questions and Answers in 2025 - Edureka",
+          "url": "https://www.edureka.co/blog/interview-questions/networking-interview-questions/",
+          "domain": "edureka.co"
+        }
+      ],
+      "id": 5
+    },
+    {
+      "question": "What is the difference between TCP and UDP, and when would you use one over the other?",
+      "difficulty": "Easy",
+      "answer": "TCP (Transmission Control Protocol) is connection-oriented: it establishes a session via a three-way handshake, guarantees reliable, ordered delivery through sequence numbers and acknowledgments, retransmits lost segments, and applies flow and congestion control. This reliability adds overhead (larger 20+ byte header, handshake latency, retransmission delays). UDP (User Datagram Protocol) is connectionless: it sends datagrams with an 8-byte header and no handshake, acknowledgment, or retransmission — if a packet is lost, it's simply gone unless the application handles it. Use TCP when correctness matters more than speed — web browsing (HTTP/1.1, HTTP/2), file transfer, email, database connections. Use UDP when low latency matters more than perfect delivery, or the application can tolerate loss — DNS queries, VoIP, live video/game state updates, and DHCP. Note that reliability can be built on top of UDP at the application layer (this is exactly what QUIC/HTTP-3 and WebRTC do), so 'unreliable' doesn't mean 'unusable for reliable-feeling apps' — it means reliability becomes the application's choice rather than the transport's default.",
+      "sources": [
+        {
+          "title": "TCP vs UDP Ports Explained: Differences and Use Cases - Anavem",
+          "url": "https://anavem.com/explanations/tcp-vs-udp-ports-explained-key-differences-and-use-cases",
+          "domain": "anavem.com"
+        },
+        {
+          "title": "TCP vs UDP: When to Use Each Transport Protocol",
+          "url": "https://www.speedtesthq.com/guides/fundamentals/tcp-vs-udp",
+          "domain": "speedtesthq.com"
+        }
+      ],
+      "id": 6
+    },
+    {
+      "question": "What is a subnet mask, and why do networks use subnetting?",
+      "difficulty": "Easy",
+      "answer": "A subnet mask is a 32-bit value (e.g., 255.255.255.0) that, when combined with an IP address, tells devices which bits represent the network portion and which represent the host portion. It's commonly written as CIDR notation (e.g., /24). Subnetting is the practice of dividing a larger network into smaller logical sub-networks. Reasons to subnet: (1) efficient IP address allocation — avoid wasting a huge address block on a small segment; (2) reduced broadcast traffic — broadcasts stay within a subnet instead of flooding the whole network; (3) security segmentation — isolating, say, a database tier from a public web tier so a compromise doesn't spread; (4) easier management and troubleshooting — smaller, logically organized segments are easier to monitor and secure. For example, a /24 network (255.255.255.0) gives 256 addresses (254 usable after network and broadcast addresses), while splitting it into /26 subnets gives four smaller segments of 64 addresses each.",
+      "sources": [
+        {
+          "title": "15 server and networking interview questions and answers - TechTarget",
+          "url": "https://www.techtarget.com/whatis/feature/15-server-and-networking-interview-questions-and-answers",
+          "domain": "techtarget.com"
+        },
+        {
+          "title": "60 Networking Interview Questions with Sample Answers & PDF",
+          "url": "https://taggd.in/blogs/networking-interview-questions-answers-examples/",
+          "domain": "taggd.in"
+        }
+      ],
+      "id": 7
+    },
+    {
+      "question": "What is DNS, and what problem does it solve for users on the internet?",
+      "difficulty": "Easy",
+      "answer": "DNS (Domain Name System) is the internet's distributed, hierarchical naming system that translates human-readable domain names (like example.com) into the numeric IP addresses computers actually use to route traffic. The problem it solves is memorability and indirection: humans can't realistically remember IP addresses for every service they use, and IP addresses behind a domain can change (e.g., when infrastructure moves or scales) without anyone needing to update how they refer to the service. DNS works as a distributed database: a recursive resolver (often run by your ISP or a public service like 8.8.8.8) walks the hierarchy from root servers, to TLD servers (.com, .org), to the domain's authoritative name servers, which hold the actual records (A, AAAA, CNAME, MX, etc.) and return the final answer. Results are cached at multiple levels (browser, OS, resolver) according to each record's TTL to reduce repeated lookups.",
+      "sources": [
+        {
+          "title": "What Is DNS (Domain Name System)? - IBM",
+          "url": "https://www.ibm.com/think/topics/dns",
+          "domain": "ibm.com"
+        },
+        {
+          "title": "Working of Domain Name System (DNS) Server - GeeksforGeeks",
+          "url": "https://www.geeksforgeeks.org/computer-networks/working-of-domain-name-system-dns-server/",
+          "domain": "geeksforgeeks.org"
+        }
+      ],
+      "id": 8
+    },
+    {
+      "question": "What is the difference between HTTP and HTTPS?",
+      "difficulty": "Easy",
+      "answer": "HTTP (Hypertext Transfer Protocol) transmits requests and responses in plain text over TCP, typically on port 80 — anyone intercepting the traffic (on public Wi-Fi, at an ISP, etc.) can read or tamper with it. HTTPS is HTTP layered inside a TLS/SSL session, typically on port 443, which adds three properties: confidentiality (data is encrypted so eavesdroppers can't read it), integrity (tampering is detectable via authenticated encryption / MACs), and authentication (the server proves its identity via an X.509 certificate signed by a trusted Certificate Authority, so you know you're actually talking to the real example.com and not an impostor). Modern browsers actively flag plain HTTP sites as 'Not Secure' and refuse to allow sensitive APIs (like geolocation or service workers) over unencrypted connections. From TLS 1.3 onward, the handshake overhead of upgrading to HTTPS is minimal (often a single round trip), so there's essentially no good reason to serve production traffic over plain HTTP today.",
+      "sources": [
+        {
+          "title": "HTTP vs HTTPS in Tech Interviews: What to Answer Beyond 'It's Encrypted'",
+          "url": "https://pasqualepillitteri.it/en/news/1852/http-vs-https-tech-interview-tls-handshake",
+          "domain": "pasqualepillitteri.it"
+        },
+        {
+          "title": "Mastering Web Fundamentals: Top Interview Questions and Answers - DEV Community",
+          "url": "https://dev.to/lourdesyang1023/mastering-web-fundamentals-top-interview-questions-and-answers-http-tls-security-performance-30oo",
+          "domain": "dev.to"
+        }
+      ],
+      "id": 9
+    },
+    {
+      "question": "What are some common well-known port numbers (e.g., 80, 443, 22, 25, 53), and what service is each associated with?",
+      "difficulty": "Easy",
+      "answer": "Well-known ports (0–1023) are assigned by IANA to standard services. Key ones to know: 20/21 — FTP (data/control); 22 — SSH (secure remote shell, also used for SCP/SFTP); 23 — Telnet (insecure remote shell, largely deprecated); 25 — SMTP (sending email); 53 — DNS (name resolution — UDP for standard queries, TCP for zone transfers or large responses); 80 — HTTP; 110 — POP3; 143 — IMAP; 443 — HTTPS (also used by HTTP/3 over UDP via QUIC); 3389 — RDP. Above the well-known range, 1024–49151 are 'registered' ports for specific applications (e.g., 3306 for MySQL), and 49152–65535 are dynamic/ephemeral ports the OS assigns temporarily for outbound client connections. A useful interview point: TCP and UDP port numbers are independent namespaces — port 53 on TCP and port 53 on UDP are technically different 'channels,' and DNS legitimately uses both.",
+      "sources": [
+        {
+          "title": "TCP vs UDP Ports Explained - Anavem",
+          "url": "https://anavem.com/explanations/tcp-vs-udp-ports-explained-key-differences-and-use-cases",
+          "domain": "anavem.com"
+        },
+        {
+          "title": "Common Network Ports: What They Are and What They Do - NetworkCheckr",
+          "url": "https://networkcheckr.com/common-network-ports-explained/",
+          "domain": "networkcheckr.com"
+        }
+      ],
+      "id": 10
+    },
+    {
+      "question": "Walk through what happens, step by step, when you type a URL into a browser and press Enter.",
+      "difficulty": "Medium",
+      "answer": "This is one of the most commonly asked networking/system-design interview questions, so it's worth structuring cleanly: (1) URL parsing — the browser breaks the URL into scheme, domain, path, and query. (2) DNS resolution — the browser checks its cache, then the OS cache, then queries a recursive resolver, which (if needed) walks root → TLD → authoritative name servers to resolve the domain to an IP address, caching the result per its TTL. (3) TCP connection — the browser opens a TCP connection to the server's IP on port 80/443 via the three-way handshake (SYN, SYN-ACK, ACK). (4) TLS handshake (for HTTPS) — the client and server negotiate encryption, the server presents its certificate, the browser validates it against a trusted CA, and both sides derive session keys (TLS 1.3 does this in one round trip). (5) HTTP request/response — the browser sends an HTTP request (method, headers, cookies); the server processes it and returns a response with status code and body. (6) Rendering — the browser parses HTML, builds the DOM, applies CSS, executes JavaScript, and fires off additional requests for embedded resources (images, scripts), often in parallel over HTTP/2 or HTTP/3 multiplexed streams. A strong answer mentions caching and connection reuse at each stage, since that's usually the interviewer's real follow-up.",
+      "sources": [
+        {
+          "title": "What Happens When You Type a URL? (Step-by-Step Explanation) - Design Gurus",
+          "url": "https://www.designgurus.io/blog/when-you-type-url",
+          "domain": "designgurus.io"
+        },
+        {
+          "title": "What happens when you type a URL into a browser - Educative",
+          "url": "https://www.educative.io/blog/what-happens-when-we-type-a-url",
+          "domain": "educative.io"
+        },
+        {
+          "title": "What Happens When You Type in a URL - DEV Community",
+          "url": "https://dev.to/wsvincent/what-happens-when-you-type-in-a-url-283d",
+          "domain": "dev.to"
+        }
+      ],
+      "id": 11
+    },
+    {
+      "question": "Explain the TCP three-way handshake and why a connection needs to be established this way before data transfer.",
+      "difficulty": "Medium",
+      "answer": "The three-way handshake synchronizes both sides on initial sequence numbers before any application data flows, which is what makes TCP's reliable, ordered delivery possible. Steps: (1) SYN — the client sends a segment with the SYN flag set and an initial sequence number (ISN), signaling intent to open a connection. (2) SYN-ACK — the server responds with its own SYN (its own ISN) and an ACK acknowledging the client's ISN+1, confirming it received the request and proposing its own starting sequence number. (3) ACK — the client acknowledges the server's ISN+1, and the connection moves to the ESTABLISHED state. Why three steps and not two: a two-way handshake can't confirm that both sides agree on both directions' initial sequence numbers, and it's vulnerable to old, duplicate connection-initiation segments from a previous session confusing the new one — the extra step lets both sides prove they've actually seen the other's ISN. This same handshake is why establishing a TCP connection has an inherent latency cost of at least one round trip before any data (or a TLS handshake, if HTTPS) can begin.",
+      "sources": [
+        {
+          "title": "Top 20 TCP/IP Protocol Interview Questions and Answers - NetworkKings",
+          "url": "https://www.nwkings.com/tcp-ip-protocol-interview-questions-and-answers",
+          "domain": "nwkings.com"
+        },
+        {
+          "title": "TCP Interview Questions and Answers - Networker Interview",
+          "url": "http://networkerinterview.net/entries/tcp-2/tcp",
+          "domain": "networkerinterview.net"
+        },
+        {
+          "title": "Advanced TCP & UDP Interview Questions and Answers",
+          "url": "https://ajaykumawat.com/advanced-tcp-udp-interview-questions-and-answers/",
+          "domain": "ajaykumawat.com"
+        }
+      ],
+      "id": 12
+    },
+    {
+      "question": "What is the difference between flow control and congestion control in TCP?",
+      "difficulty": "Medium",
+      "answer": "Both mechanisms throttle how fast a sender transmits, but they solve different problems and use different windows. Flow control protects the receiver: it prevents a fast sender from overwhelming a slow receiver's buffer. The receiver advertises a receive window (rwnd) in every ACK, telling the sender exactly how many more bytes it's willing to buffer right now; if that window hits zero, the sender must pause (with a persist timer periodically probing for a non-zero window again). Congestion control protects the network: it prevents the sender from overwhelming the routers/links along the path, which the sender can't see directly. The sender maintains its own congestion window (cwnd), grown or shrunk based on signals of network congestion — typically packet loss or duplicate ACKs — using algorithms like slow start and AIMD (additive increase, multiplicative decrease). At any moment, the actual amount of unacknowledged data TCP allows in flight is the minimum of cwnd and rwnd, since either the receiver or the network could be the bottleneck.",
+      "sources": [
+        {
+          "title": "Flow Control vs. Congestion Control in TCP - Baeldung on Computer Science",
+          "url": "https://www.baeldung.com/cs/tcp-flow-control-vs-congestion-control",
+          "domain": "baeldung.com"
+        },
+        {
+          "title": "TCP (Transmission Control Protocol) Congestion Control - Noction",
+          "url": "https://www.noction.com/blog/tcp-transmission-control-protocol-congestion-control",
+          "domain": "noction.com"
+        }
+      ],
+      "id": 13
+    },
+    {
+      "question": "Explain the DNS resolution process, including the difference between recursive and iterative queries.",
+      "difficulty": "Medium",
+      "answer": "In a recursive query, the client (usually a stub resolver in the OS) asks a recursive resolver for a full answer and expects that resolver to do all the work — walking the DNS hierarchy on the client's behalf — and return either the final IP address or an error. In an iterative query, the resolver asks a series of servers, and each server responds with either the answer or a referral to the next, more specific server to ask (rather than doing the lookup itself). In practice, the client-to-resolver query is recursive, while the resolver-to-authoritative-server queries are iterative: the recursive resolver first asks a root server, which doesn't know the answer but refers it to the TLD server (e.g., for .com); the resolver then asks that TLD server, which refers it to the domain's authoritative name server; finally the resolver queries the authoritative server directly for the A/AAAA record and returns that answer to the client. Results are cached at each level according to the record's TTL, so most real-world lookups are answered from cache and never touch the root/TLD servers at all.",
+      "sources": [
+        {
+          "title": "What Is DNS (Domain Name System)? - IBM",
+          "url": "https://www.ibm.com/think/topics/dns",
+          "domain": "ibm.com"
+        },
+        {
+          "title": "15 DNS Interview Questions and Answers - CLIMB",
+          "url": "https://climbtheladder.com/dns-interview-questions/",
+          "domain": "climbtheladder.com"
+        },
+        {
+          "title": "How DNS Works: A Guide to Understanding the Internet's Address Book - freeCodeCamp",
+          "url": "https://www.freecodecamp.org/news/how-dns-works-the-internets-address-book/",
+          "domain": "freecodecamp.org"
+        }
+      ],
+      "id": 14
+    },
+    {
+      "question": "What is NAT, and why is it used in home and enterprise networks?",
+      "difficulty": "Medium",
+      "answer": "NAT (Network Address Translation) rewrites the source (or destination) IP address — and usually port number — of packets as they cross the boundary between a private network and the public internet, typically on a router or firewall. Devices on the LAN use private, non-routable addresses (the RFC 1918 ranges: 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16); NAT translates outbound traffic to use the router's single public IP, and reverses the translation on the way back using a state table it maintains per connection. Two main reasons it's used: (1) IPv4 address conservation — there are only ~4.3 billion IPv4 addresses, nowhere near enough for every device, so PAT (Port Address Translation, the most common form) lets thousands of internal devices share one public IP by distinguishing them via source port; (2) a side-effect security benefit — internal IP addresses are hidden from the outside world, making it harder for external attackers to directly address specific internal machines (though NAT is not a substitute for a real firewall). The trade-off, especially relevant in interviews: NAT breaks true end-to-end connectivity, which is why peer-to-peer protocols like WebRTC need STUN/TURN/ICE to work around it.",
+      "sources": [
+        {
+          "title": "What Is Network Address Translation (NAT)? - Cisco",
+          "url": "https://www.cisco.com/site/us/en/learn/topics/networking/what-is-network-address-translation-nat.html",
+          "domain": "cisco.com"
+        },
+        {
+          "title": "What Is NAT? Network Address Translation Explained - TP-Link/Omada",
+          "url": "https://www.omadanetworks.com/us/blog/2607/what-is-nat-network-address-translation-explained/",
+          "domain": "omadanetworks.com"
+        }
+      ],
+      "id": 15
+    },
+    {
+      "question": "What is the difference between a Layer 2 switch and a Layer 3 switch/router?",
+      "difficulty": "Medium",
+      "answer": "A Layer 2 switch forwards Ethernet frames purely based on MAC addresses, using a MAC address table it builds by observing source addresses on each port; it has no concept of IP addresses or subnets, and all connected devices share the same broadcast domain (unless VLANs segment it). It's fast, cheap, and appropriate for connecting endpoints within a single LAN/VLAN. A Layer 3 switch adds IP routing capability on top of switching: it maintains a routing table and can forward packets between different VLANs/subnets by making decisions based on destination IP address, essentially combining a switch and a router in one device with hardware-accelerated (ASIC-based) routing, which is typically faster than a traditional software-based router. In practice: use a Layer 2 switch when you just need to connect devices within one broadcast domain; use a Layer 3 switch when you need inter-VLAN routing at high speed within a campus or data center, without a separate physical router hop. A common interview follow-up is inter-VLAN routing — a Layer 3 switch can route traffic between VLAN 10 and VLAN 20 directly, whereas a Layer 2-only switch would need to send that traffic out to an external router (\"router on a stick\").",
+      "sources": [
+        {
+          "title": "Difference between layer-2 and layer-3 switches - GeeksforGeeks",
+          "url": "https://www.geeksforgeeks.org/computer-networks/difference-between-layer-2-and-layer-3-switches/",
+          "domain": "geeksforgeeks.org"
+        },
+        {
+          "title": "Comparing Layer 3 and Layer 2 Switches - Cisco Meraki Documentation",
+          "url": "https://documentation.meraki.com/MS/Layer_3_Switching/Comparing_Layer_3_and_Layer_2_Switches",
+          "domain": "documentation.meraki.com"
+        }
+      ],
+      "id": 16
+    },
+    {
+      "question": "Explain how CIDR notation works. Given an IP address and a prefix length (e.g., 192.168.50.130/26), how would you determine the network address, broadcast address, and usable host range?",
+      "difficulty": "Medium",
+      "answer": "CIDR (Classless Inter-Domain Routing) notation specifies how many leading bits of an address form the network portion — e.g., /26 means the first 26 bits are network bits, leaving 6 bits (2^6 = 64 addresses) for hosts. For 192.168.50.130/26: a /26 mask is 255.255.255.192, and the 'block size' (increment) in the last octet is 256 − 192 = 64. The subnets in that octet fall on multiples of 64: 0, 64, 128, 192. Since 130 falls between 128 and 191, the host belongs to the 192.168.50.128/26 subnet. So: network address = 192.168.50.128, broadcast address = 192.168.50.191 (the last address before the next subnet boundary), and the usable host range is 192.168.50.129–192.168.50.190 (64 total addresses minus the network and broadcast addresses = 62 usable hosts). This 'magic number' method (256 − subnet mask octet = block size) is the fastest way to do this math live in an interview without needing to write out full binary.",
+      "sources": [
+        {
+          "title": "Subnetting Interview Questions for Network Engineers - SubnetLab",
+          "url": "https://subnetlab.com/subnetting-interview-questions-answers/",
+          "domain": "subnetlab.com"
+        },
+        {
+          "title": "50 Essential Subnetting Questions and Answers Guide - NitizSharma",
+          "url": "https://nitizsharma.com/questions-and-answers-for-subnetting/",
+          "domain": "nitizsharma.com"
+        }
+      ],
+      "id": 17
+    },
+    {
+      "question": "What is ARP, and how does it resolve an IP address to a MAC address on a local network?",
+      "difficulty": "Medium",
+      "answer": "ARP (Address Resolution Protocol) maps a known IPv4 address to the corresponding MAC address on a local network segment, because Ethernet frames need a destination MAC address, but applications and IP routing only know the destination IP. Process: (1) the sending device first checks its local ARP cache for an existing IP-to-MAC mapping; (2) if not found, it broadcasts an ARP request ('Who has 192.168.1.10? Tell 192.168.1.1') to every device on the LAN (destination MAC ff:ff:ff:ff:ff:ff); (3) every device receives it, but only the device owning that IP responds with a unicast ARP reply containing its MAC address; (4) the requester caches this mapping (with a TTL) for future use, avoiding repeated broadcasts. ARP is stateless and has no authentication — any device can claim to own any IP in a reply, which is exactly the weakness exploited by ARP spoofing attacks. A related concept worth mentioning: gratuitous ARP, where a device proactively announces its own IP-to-MAC mapping (used for duplicate IP detection and to update other devices' caches, e.g., during failover).",
+      "sources": [
+        {
+          "title": "How Address Resolution Protocol (ARP) Works - GeeksforGeeks",
+          "url": "https://www.geeksforgeeks.org/ethical-hacking/how-address-resolution-protocol-arp-works/",
+          "domain": "geeksforgeeks.org"
+        },
+        {
+          "title": "What's ARP? Address Resolution Protocol Explained - Splunk",
+          "url": "https://www.splunk.com/en_us/blog/learn/address-resolution-protocol-arp.html",
+          "domain": "splunk.com"
+        }
+      ],
+      "id": 18
+    },
+    {
+      "question": "What is the difference between a stateful firewall and a stateless firewall?",
+      "difficulty": "Medium",
+      "answer": "A stateless firewall filters each packet in isolation against a static rule set — source/destination IP, port, and protocol — with no memory of previous packets. It's fast and lightweight but can't distinguish a legitimate reply packet from an unsolicited one that happens to match the same rule, making it easier to fool with spoofed or crafted packets and unable to detect things like SYN floods that abuse connection state. A stateful firewall maintains a connection/state table tracking the status of each session (e.g., which stage of the TCP handshake it's in), so it can recognize that an incoming packet is a legitimate part of an already-established, administrator-approved outbound connection and allow it through, while blocking unsolicited inbound traffic even if it matches an otherwise-permitted port. This makes stateful firewalls more secure and is why nearly all modern firewalls (and NAT gateways, which need connection state anyway) are stateful by default. Stateless firewalls are now mostly used only for simple, high-throughput, low-security-requirement filtering (e.g., basic ACLs on a router).",
+      "sources": [
+        {
+          "title": "Stateful vs. Stateless Firewalls: What's the Difference? - CDW",
+          "url": "https://www.cdw.com/content/cdw/en/articles/security/stateful-versus-stateless-firewalls.html",
+          "domain": "cdw.com"
+        },
+        {
+          "title": "Stateful vs Stateless Firewall: What is the difference? - FS.com",
+          "url": "https://www.fs.com/blog/stateful-vs-stateless-firewalls-differences-explained-833.html",
+          "domain": "fs.com"
+        }
+      ],
+      "id": 19
+    },
+    {
+      "question": "What is a VPN, and how does it secure communication between a client and a remote network?",
+      "difficulty": "Medium",
+      "answer": "A VPN (Virtual Private Network) creates an encrypted tunnel between a client and a remote network (or between two networks, in a site-to-site VPN) over an untrusted network like the public internet, making traffic appear as if it's traveling over a private link. Mechanically, the original packet is encapsulated inside a new outer packet and encrypted, so intermediate routers only see the encrypted tunnel endpoints, not the original payload or (in tunnel mode) even the original headers. A common implementation is IPsec: the Internet Key Exchange (IKE) protocol negotiates a Security Association and a shared secret (often via Diffie-Hellman), then ESP (Encapsulating Security Payload) encrypts and authenticates the actual data. Alternatively, SSL/TLS-based VPNs tunnel traffic from a browser or client app to a specific application/network using standard TLS. VPNs provide confidentiality (encryption), integrity (tamper detection), and authentication (verifying both endpoints), and are commonly used to let remote employees securely reach internal corporate resources as if they were on the office LAN, or to connect two branch office networks (site-to-site) without exposing internal traffic on the public internet.",
+      "sources": [
+        {
+          "title": "What is the IPsec protocol? How IPsec VPNs work - NordVPN",
+          "url": "https://nordvpn.com/blog/what-is-ipsec/",
+          "domain": "nordvpn.com"
+        },
+        {
+          "title": "IPsec VPN Explained | How IPsec works | IPsec vs SSL - GoodAccess",
+          "url": "https://www.goodaccess.com/blog/ipsec-vpn/",
+          "domain": "goodaccess.com"
+        }
+      ],
+      "id": 20
+    },
+    {
+      "question": "Describe the TLS/SSL handshake process and how it establishes an encrypted, authenticated connection.",
+      "difficulty": "Medium",
+      "answer": "The TLS handshake (TLS 1.3, the current standard per RFC 8446) establishes a secure channel in as little as one round trip. Roughly: (1) Client Hello — the client sends supported TLS versions, cipher suites, and a key share for the key exchange. (2) Server Hello — the server picks a cipher suite, sends its own key share, and returns its X.509 certificate along with a signature proving it holds the corresponding private key. (3) Certificate verification — the client validates the certificate chain up to a trusted root CA in its trust store, confirming it's actually talking to the legitimate server. (4) Key derivation — both sides use the exchanged key material (via (Elliptic Curve) Diffie-Hellman) to independently derive the same symmetric session keys, without ever transmitting the keys themselves — this is what provides forward secrecy, since each session's keys are ephemeral. (5) Finished — both sides confirm the handshake integrity, and from this point all application data (the actual HTTP request/response) is encrypted with the fast symmetric session keys, since asymmetric crypto is used only for the handshake, not for bulk data. TLS 1.3 cut this from the 2 round trips required in TLS 1.2 down to 1 RTT, and supports 0-RTT resumption for returning clients — a common interview follow-up.",
+      "sources": [
+        {
+          "title": "HTTP vs HTTPS in Tech Interviews - Pasquale Pillitteri",
+          "url": "https://pasqualepillitteri.it/en/news/1852/http-vs-https-tech-interview-tls-handshake",
+          "domain": "pasqualepillitteri.it"
+        },
+        {
+          "title": "HTTP/2 vs HTTP/3 and QUIC: What Changes for Your Server in 2026",
+          "url": "https://panelica.com/blog/http2-vs-http3-quic-what-changes-for-your-server-2026",
+          "domain": "panelica.com"
+        }
+      ],
+      "id": 21
+    },
+    {
+      "question": "What is the difference between Layer 4 and Layer 7 load balancing?",
+      "difficulty": "Medium",
+      "answer": "A Layer 4 load balancer operates at the transport layer, making routing decisions based only on IP address and TCP/UDP port — it doesn't inspect the payload at all, just forwards packets/connections to a backend using an algorithm like round robin or least connections. It's fast and protocol-agnostic but 'dumb' in the sense that it can't make decisions based on the content of a request. A Layer 7 load balancer operates at the application layer: it terminates the connection, can decrypt TLS, and actually reads the HTTP request — headers, URL path, cookies, method — to make much more granular routing decisions (e.g., route /api/ to one backend pool and /static/ to a CDN-backed pool, or implement sticky sessions based on a cookie). This intelligence costs more CPU/latency than L4, but enables features like content-based routing, request rewriting, and application-aware health checks. In practice, most production systems layer both: an L3/L4 tier (often via anycast/ECMP) handles raw traffic distribution at the edge, with an L7 tier behind it doing smart, application-aware routing.",
+      "sources": [
+        {
+          "title": "Layer 7 Load Balancer vs Layer 4: Key Differences Explained - A10 Networks",
+          "url": "https://www.a10networks.com/glossary/how-do-layer-4-and-layer-7-load-balancing-differ/",
+          "domain": "a10networks.com"
+        },
+        {
+          "title": "What Is Layer 4 Load Balancing? - F5",
+          "url": "https://www.f5.com/glossary/layer-4-load-balancing",
+          "domain": "f5.com"
+        }
+      ],
+      "id": 22
+    },
+    {
+      "question": "What is the difference between unicast, broadcast, and multicast communication?",
+      "difficulty": "Medium",
+      "answer": "Unicast is one-to-one communication: a single sender transmits to a single, specific destination address (this is the most common form of traffic — a normal HTTP request-response, for example). Broadcast is one-to-all: a packet is sent to every device within a local broadcast domain (e.g., an ARP request, or DHCP discovery), using a special broadcast address; routers do not forward broadcast traffic between networks by default, which limits its scope and blast radius. Multicast is one-to-many, but only to interested receivers: a sender transmits a single stream to a multicast group address, and the network (using protocols like IGMP for group membership and multicast routing) replicates the stream only to the specific hosts that have joined that group — this is much more bandwidth-efficient than unicasting the same stream individually to each receiver, and used for things like live video/audio distribution or stock-price feeds. A useful mnemonic for interviews: unicast doesn't scale to many receivers (linear bandwidth cost per receiver), broadcast wastes bandwidth by reaching everyone regardless of interest, and multicast is the efficient middle ground for one-to-many delivery to an interested subset.",
+      "sources": [
+        {
+          "title": "Difference between Unicast, Broadcast and Multicast in Computer Network - GeeksforGeeks",
+          "url": "https://www.geeksforgeeks.org/computer-networks/difference-between-unicast-broadcast-and-multicast-in-computer-network/",
+          "domain": "geeksforgeeks.org"
+        },
+        {
+          "title": "Introducing Multicast - NetworkAcademy.IO",
+          "url": "https://www.networkacademy.io/ccie-enterprise/multicast/introducing-multicast",
+          "domain": "networkacademy.io"
+        }
+      ],
+      "id": 23
+    },
+    {
+      "question": "Explain how a TCP connection is gracefully terminated (the FIN/ACK sequence), and why it differs from connection setup.",
+      "difficulty": "Medium",
+      "answer": "TCP connection setup needs only three steps (SYN, SYN-ACK, ACK) because both directions are being opened together in one coordinated exchange. Termination needs four steps because TCP is full-duplex, and each direction of the stream must be closed independently: (1) the side initiating close sends a FIN and enters FIN_WAIT_1; (2) the other side acknowledges with an ACK and enters CLOSE_WAIT — but it may still have more data to send, since only the initiator's send direction has closed so far; (3) once that side is also done sending, it sends its own FIN and enters LAST_ACK; (4) the original initiator acknowledges that FIN with a final ACK and enters TIME_WAIT before fully closing. This is why it's called a 'four-way' handshake — it's really two independent two-way FIN/ACK exchanges, one per direction, which can't always be combined into fewer steps because the server may need extra time between steps 2 and 3 to finish sending remaining data. (Note: in practice, steps 2 and 3 are sometimes combined into a single FIN-ACK segment if the server has no more data to send, making it look like a three-step close, but the four distinct logical steps are always what the protocol defines.)",
+      "sources": [
+        {
+          "title": "Why TCP Connect Termination Need 4-Way-Handshake? - GeeksforGeeks",
+          "url": "https://www.geeksforgeeks.org/computer-networks/why-tcp-connect-termination-need-4-way-handshake/",
+          "domain": "geeksforgeeks.org"
+        },
+        {
+          "title": "TCP four-way handshake - Ebyte",
+          "url": "https://ebyteiot.com/blogs/ebyte-iot-blog/tcp-four-way-handshake",
+          "domain": "ebyteiot.com"
+        }
+      ],
+      "id": 24
+    },
+    {
+      "question": "What is the difference between a forward proxy and a reverse proxy, and where might each be used in an architecture?",
+      "difficulty": "Medium",
+      "answer": "The distinguishing question is: whose side is the proxy on? A forward proxy sits in front of clients and acts on their behalf — the destination server sees the proxy's IP, not the original client's. It's typically configured explicitly on the client (browser proxy settings, or a corporate network's egress proxy) and is used to hide client identity, enforce content-filtering/access policies, cache frequently requested external content, or log outbound traffic — e.g., a company routing all employee web traffic through a proxy to block unsafe sites. A reverse proxy sits in front of servers and acts on their behalf — clients think they're talking directly to the destination, but they're actually hitting the reverse proxy first, which then forwards the request to one of possibly many backend servers. It's used for load balancing across backend instances, TLS termination (so backend servers don't each need to manage certificates), caching, compression, and hiding backend server topology/IPs from the internet for security. Nginx, HAProxy, and Cloudflare are commonly deployed as reverse proxies; the same software (like Nginx) can technically be configured to run as either type.",
+      "sources": [
+        {
+          "title": "Forward proxy vs. reverse proxy: What's the difference? - TheServerSide",
+          "url": "https://www.theserverside.com/feature/Forward-proxy-vs-reverse-proxy-Whats-the-difference",
+          "domain": "theserverside.com"
+        },
+        {
+          "title": "Proxy vs Reverse Proxy (Explained with Examples) - AlgoMaster",
+          "url": "https://blog.algomaster.io/p/proxy-vs-reverse-proxy-explained",
+          "domain": "blog.algomaster.io"
+        }
+      ],
+      "id": 25
+    },
+    {
+      "question": "Explain TCP congestion control in detail: slow start, congestion avoidance, fast retransmit, and fast recovery. How does the congestion window evolve during each phase?",
+      "difficulty": "Hard",
+      "answer": "TCP's congestion window (cwnd) — maintained only by the sender, unlike the receiver-advertised flow-control window — governs how many unacknowledged bytes can be in flight, and evolves through distinct phases: (1) Slow start — the connection begins with cwnd = 1 MSS (maximum segment size) and doubles roughly every RTT (exponential growth) as each ACK confirms delivery, quickly probing for available bandwidth, until cwnd reaches a threshold (ssthresh) or loss is detected. (2) Congestion avoidance — once past ssthresh, growth switches to linear (additive increase, typically +1 MSS per RTT) to probe more cautiously, since aggressive exponential growth risks overshooting the network's actual capacity. (3) Loss detection and fast retransmit — if the sender receives three duplicate ACKs (indicating a segment was lost but later segments arrived out of order), it retransmits the missing segment immediately rather than waiting for a full retransmission timeout, since a timeout is much slower to detect. (4) Fast recovery — after a fast retransmit, instead of collapsing all the way back to slow start (cwnd = 1), TCP (Reno/NewReno/CUBIC-style) halves cwnd (sets ssthresh = cwnd/2, cwnd = ssthresh) and resumes congestion avoidance from there, on the assumption that a single loss from duplicate ACKs (as opposed to a full timeout) means the network is only mildly congested, not catastrophically so. A full retransmission timeout (no ACK at all, no duplicate ACK signal) is treated as a stronger congestion signal and does reset cwnd back to 1 MSS with a fresh slow start. This overall additive-increase/multiplicative-decrease (AIMD) pattern is what makes TCP flows converge to fairly share available bandwidth.",
+      "sources": [
+        {
+          "title": "TCP (Transmission Control Protocol) Congestion Control - Noction",
+          "url": "https://www.noction.com/blog/tcp-transmission-control-protocol-congestion-control",
+          "domain": "noction.com"
+        },
+        {
+          "title": "Flow Control vs. Congestion Control in TCP - Baeldung on Computer Science",
+          "url": "https://www.baeldung.com/cs/tcp-flow-control-vs-congestion-control",
+          "domain": "baeldung.com"
+        },
+        {
+          "title": "Advanced TCP & UDP Interview Questions and Answers",
+          "url": "https://ajaykumawat.com/advanced-tcp-udp-interview-questions-and-answers/",
+          "domain": "ajaykumawat.com"
+        }
+      ],
+      "id": 26
+    },
+    {
+      "question": "What causes a connection to enter the TCP TIME_WAIT state, and why can a large number of TIME_WAIT connections become a real problem on a busy production server?",
+      "difficulty": "Hard",
+      "answer": "TIME_WAIT is entered by whichever side sends the final ACK in the four-way close sequence (typically the active closer). It persists for 2×MSL (Maximum Segment Lifetime — commonly ~30-60 seconds combined, depending on OS defaults) for two reasons: (1) to guarantee the final ACK actually reaches the peer — if it's lost, the peer will retransmit its FIN, and the connection needs to still be around to respond, rather than that stray FIN being mistaken for a new connection attempt; (2) to ensure any old, delayed duplicate packets from this connection fully drain from the network before the same (source IP, source port, destination IP, destination port) 4-tuple could be reused for a new connection — preventing stale data from a prior connection from being misinterpreted as valid data in a new one. The production problem: a high-throughput server making many short-lived outbound connections (e.g., a proxy or load balancer opening a new connection per backend request) can accumulate huge numbers of sockets stuck in TIME_WAIT, consuming ephemeral port numbers and kernel socket-table memory, eventually leading to port exhaustion where new outbound connections can't be created at all. Common mitigations: enable connection reuse/keep-alive so fewer new connections are opened, tune the OS's TIME_WAIT reuse settings (e.g., `net.ipv4.tcp_tw_reuse` on Linux), use SO_REUSEADDR/SO_REUSEPORT, or offload connection churn to a pooling layer like a reverse proxy or load balancer.",
+      "sources": [
+        {
+          "title": "Introduction to TCP four-way handshake - CDEBYTE",
+          "url": "https://www.cdebyte.com/news/1097",
+          "domain": "cdebyte.com"
+        },
+        {
+          "title": "How Does TCP Connection Termination Work With FIN Packets - Ebyte IoT",
+          "url": "https://ebyteiot.com/blogs/ebyte-iot-blog/how-does-tcp-connection-termination-work-with-fin-packets-4-way-handshake-amp-troubleshooting-guide",
+          "domain": "ebyteiot.com"
+        }
+      ],
+      "id": 27
+    },
+    {
+      "question": "Compare OSPF and BGP. What problem does each protocol solve, and why wouldn't you use one in place of the other?",
+      "difficulty": "Hard",
+      "answer": "OSPF (Open Shortest Path First) is an interior gateway protocol (IGP) designed for routing within a single administrative domain — a campus, data center, or single organization's WAN. It's a link-state protocol: every router builds a complete map of the network topology by flooding link-state advertisements, then independently computes shortest paths using Dijkstra's algorithm. It converges quickly and scales well within one organization, but it assumes all participating routers trust each other and share a consistent view of the network — an assumption that breaks down across organizational boundaries. BGP (Border Gateway Protocol) is the exterior gateway protocol (EGP) that connects separate autonomous systems (ASes) — it's literally the protocol that holds the global internet together, deciding how traffic flows between ISPs, cloud providers, and enterprises. Rather than optimizing purely for shortest path, BGP is policy-driven: it selects routes based on business relationships, AS-path length, and configurable attributes, because different networks may want to prefer certain peers, avoid certain transit providers, or enforce commercial agreements — concerns OSPF has no concept of. You wouldn't run OSPF across the internet because it doesn't scale to millions of routes or support policy-based route selection between untrusted parties, and you wouldn't run BGP for pure intra-campus routing because its convergence is much slower and its complexity/overhead is unnecessary when all routers are under one administrator's control. In practice, many enterprises run OSPF (or another IGP) internally and BGP only where they connect to their upstream ISPs or peer with other networks.",
+      "sources": [
+        {
+          "title": "Network Engineer Interview Questions & Answers - Teal",
+          "url": "https://www.tealhq.com/career-paths/network-engineer-interview-questions",
+          "domain": "tealhq.com"
+        },
+        {
+          "title": "Cisco Network Engineer Interview Questions and Answers",
+          "url": "https://www.live-work.immigration.govt.nz/+55498872/nresignd/asubstitutee/jcommencez/cisco+network+engineer+interview+questions+and+answers.pdf",
+          "domain": "live-work.immigration.govt.nz"
+        }
+      ],
+      "id": 28
+    },
+    {
+      "question": "Explain how HTTP/2 multiplexing addresses head-of-line blocking at the application layer, and why HTTP/3 (QUIC) still improves further on HTTP/2 despite this.",
+      "difficulty": "Hard",
+      "answer": "HTTP/1.1 suffers from application-layer head-of-line blocking: each TCP connection can only carry one request/response at a time (without pipelining, which is rarely used), so browsers open multiple parallel TCP connections just to load a page's many resources concurrently. HTTP/2 solves this at the application layer via multiplexing: it breaks requests and responses into binary frames tagged with a stream ID, interleaving many logical streams over a single TCP connection, so multiple resources can be in flight simultaneously without needing multiple connections. However, HTTP/2 still runs on top of TCP, and TCP guarantees strictly ordered, in-sequence byte delivery to the application — so if a single TCP segment is lost, every stream multiplexed on that connection stalls waiting for retransmission and reordering, even though logically the lost data may belong to only one of many streams. This is transport-layer head-of-line blocking, and HTTP/2 cannot solve it because it inherits TCP's ordering guarantee. HTTP/3 fixes this by replacing TCP with QUIC, built on UDP: QUIC implements its own reliability and multiplexing where each stream has independent loss recovery, so a lost packet on stream A only stalls stream A — other streams keep flowing. QUIC also integrates the TLS 1.3 handshake into connection establishment (reducing setup to 1 RTT, or 0-RTT for resumed connections) and uses a Connection ID instead of the traditional IP:port 4-tuple, allowing a connection to survive network changes (e.g., switching from Wi-Fi to cellular) without reconnecting — something impossible for TCP-based HTTP/2.",
+      "sources": [
+        {
+          "title": "HTTP/2 vs HTTP/3 and QUIC: What Changes for Your Server in 2026",
+          "url": "https://panelica.com/blog/http2-vs-http3-quic-what-changes-for-your-server-2026",
+          "domain": "panelica.com"
+        },
+        {
+          "title": "HTTP/2 vs. HTTP/3 - LogicMonitor/Catchpoint",
+          "url": "https://www.catchpoint.com/http3-vs-http2",
+          "domain": "catchpoint.com"
+        },
+        {
+          "title": "What Are QUIC and HTTP/3? - F5",
+          "url": "https://www.f5.com/glossary/quic-http3",
+          "domain": "f5.com"
+        }
+      ],
+      "id": 29
+    },
+    {
+      "question": "What is ARP spoofing/poisoning, how does it enable a man-in-the-middle attack on a LAN, and what techniques can mitigate it?",
+      "difficulty": "Hard",
+      "answer": "ARP has no authentication — any device on a LAN can send an ARP reply claiming ownership of any IP address, and other hosts will trust and cache it without verification. In ARP spoofing (poisoning), an attacker sends forged, unsolicited ARP replies telling the victim(s) that the attacker's MAC address corresponds to the default gateway's IP (and often the reverse to the gateway too). Victims update their ARP cache with the attacker's MAC for that IP, so traffic intended for the gateway now flows through the attacker's machine first — a classic man-in-the-middle setup, letting the attacker passively read traffic, and even actively modify or drop packets, before optionally forwarding them on to the real gateway to keep the connection looking normal. Mitigations: (1) Dynamic ARP Inspection (DAI) on managed switches, which validates ARP packets against a trusted binding table (often built from DHCP snooping records) and drops mismatched ones; (2) static ARP entries for critical infrastructure like gateways, though this doesn't scale; (3) port security features limiting which MAC addresses are allowed on a switch port; (4) network segmentation (VLANs) to shrink the blast radius of any single broadcast domain; (5) encryption at higher layers (TLS) so even if traffic is intercepted, its contents remain protected — ARP spoofing enables interception, but doesn't automatically defeat encryption.",
+      "sources": [
+        {
+          "title": "Top 100 Network Security Interview Questions for Network Engineers (2026)",
+          "url": "https://www.thenetworkdna.com/2026/05/top-100-network-security-interview.html",
+          "domain": "thenetworkdna.com"
+        },
+        {
+          "title": "Address Resolution Protocol (ARP): How It Works in Networking - Paramount",
+          "url": "https://paramountassure.com/glossary/address-resolution-protocol-arp-how-it-works-in-networking-paramount/",
+          "domain": "paramountassure.com"
+        },
+        {
+          "title": "ARP spoofing - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/ARP_spoofing",
+          "domain": "en.wikipedia.org"
+        }
+      ],
+      "id": 30
+    },
+    {
+      "question": "Describe a SYN flood attack and explain how SYN cookies allow a server to defend against it without breaking the normal handshake.",
+      "difficulty": "Hard",
+      "answer": "A SYN flood exploits the TCP three-way handshake: an attacker sends a large volume of SYN packets, often with spoofed source IPs, and never completes the handshake with the final ACK. A naive server allocates connection state (a slot in its backlog queue) as soon as it sends a SYN-ACK, so a flood of half-open connections can exhaust that queue, preventing legitimate clients from connecting — a denial of service. SYN cookies solve this by making the server stateless during the vulnerable half-open period: instead of storing connection state after receiving a SYN, the server encodes the essential connection information (a hash of source/destination IP and port, a timestamp, and negotiated options) directly into the initial sequence number it sends back in the SYN-ACK, and doesn't allocate any real state yet. If the client's final ACK returns with an expected acknowledgment number matching that encoded cookie, the server reconstructs the connection state from the cookie itself and only then commits real resources — meaning spoofed or never-completed handshakes cost the server almost nothing beyond generating a reply packet. The trade-off: SYN cookies can't preserve certain TCP options (like window scaling, in some implementations) across the cookie encoding, so they're typically enabled only when the backlog queue is actually under pressure, not as the default handshake path.",
+      "sources": [
+        {
+          "title": "Top 100 Network Security Interview Questions for Network Engineers (2026) - The Network DNA",
+          "url": "https://www.thenetworkdna.com/2026/05/top-100-network-security-interview.html",
+          "domain": "thenetworkdna.com"
+        },
+        {
+          "title": "Method for preventing denial of service attacks using transmission control protocol state transition",
+          "url": "https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/8925068",
+          "domain": "image-ppubs.uspto.gov"
+        }
+      ],
+      "id": 31
+    },
+    {
+      "question": "Users report intermittent slowness accessing an internal application. Walk through how you would systematically isolate whether the issue is DNS, routing, the transport layer, or the application server itself.",
+      "difficulty": "Hard",
+      "answer": "This calls for a structured troubleshooting methodology rather than random guessing — the OSI model gives a good framework, applied via a divide-and-conquer approach for efficiency: (1) Scope the problem — is it one user, one location, or everyone? Intermittent vs. constant? This alone often points at a specific layer (e.g., 'everyone in one office' suggests local network/physical, 'everyone everywhere but only sometimes' suggests server-side or upstream network congestion). (2) Test connectivity at the network layer — can affected clients ping the server's IP directly? If ping succeeds consistently, Layers 1-3 are likely fine, so the issue is probably at Transport layer or above; if ping itself is intermittent, suspect routing, a flaky link, or an overloaded intermediate hop, and use traceroute to find where latency/loss actually appears along the path. (3) Test DNS separately from IP connectivity — resolve the hostname directly (nslookup/dig) and compare its response time and returned IP against expectations; DNS issues often masquerade as general 'slowness' because a slow or occasionally-failing resolver adds latency before any connection even starts. (4) Test the transport/application layer directly — connect to the specific port (e.g., `telnet host 443` or `curl -w`) to separate 'TCP connects fine but the app is slow to respond' from 'TCP itself is having trouble' (e.g., retransmissions visible via packet capture, or TIME_WAIT/port exhaustion on either end). (5) Check the server itself — CPU, memory, connection pool saturation, slow database queries, or GC pauses, since 'intermittent' slowness is a classic symptom of resource contention or periodic backend jobs rather than a pure network problem. Correlating timestamps of the reported slowness against server-side logs/metrics, and packet captures at multiple points along the path, is what actually pinpoints the layer at fault rather than assuming.",
+      "sources": [
+        {
+          "title": "Network Troubleshooting & Performance Optimization: OSI Model Systematic Approach - InventiveHQ",
+          "url": "https://inventivehq.com/blog/network-troubleshooting-workflow",
+          "domain": "inventivehq.com"
+        },
+        {
+          "title": "How to use the OSI Model for Network Troubleshooting - Petri IT Knowledgebase",
+          "url": "https://petri.com/csc_how_to_use_the_osi_model_to_troubleshoot_networks/",
+          "domain": "petri.com"
+        },
+        {
+          "title": "Structured Troubleshooting Approaches - Cisco Press",
+          "url": "https://www.ciscopress.com/articles/article.asp?p=2273070&seqNum=2",
+          "domain": "ciscopress.com"
+        }
+      ],
+      "id": 32
+    },
+    {
+      "question": "Explain how anycast routing combined with BGP is used in practice to absorb and mitigate large-scale DDoS attacks across a distributed network.",
+      "difficulty": "Hard",
+      "answer": "Anycast lets the same IP address be announced from many geographically distributed servers/PoPs simultaneously; BGP's normal shortest-AS-path route selection means each client's traffic is automatically routed to whichever announcing location is topologically 'closest' from the internet's perspective (not necessarily geographically closest, but closest in terms of BGP path). For DDoS mitigation, this is powerful because it turns one concentrated target into many distributed absorption points: instead of all attack traffic converging on a single data center's single IP, the traffic naturally spreads across every PoP announcing that anycast address, since each attacking source's packets are routed to whichever PoP is nearest to it topologically. This dilutes the volumetric load so no single location has to absorb the full attack, and it lets a provider isolate and scrub traffic destined for one region without affecting others. Beyond baseline anycast diffusion, operators use additional BGP-based techniques during an active attack: BGP blackholing / RTBH (Remotely Triggered Black Hole) — announcing the victim's specific IP with a community tag that instructs upstream ISPs to drop all traffic destined for it, which stops the attack (at the cost of also dropping legitimate traffic to that IP, used as a last resort); and upstream scrubbing centers (e.g., Cloudflare, Akamai, AWS Shield), where BGP is used to reroute suspicious traffic through cleaning centers that filter attack packets before returning legitimate traffic to the origin. This is exactly why major CDNs sit in front of origin infrastructure — they provide both the anycast diffusion and the scrubbing capacity that a single-origin deployment can't achieve on its own.",
+      "sources": [
+        {
+          "title": "Top 100 Network Security Interview Questions for Network Engineers (2026) - The Network DNA",
+          "url": "https://www.thenetworkdna.com/2026/05/top-100-network-security-interview.html",
+          "domain": "thenetworkdna.com"
+        },
+        {
+          "title": "CDN System Design: How Content Delivery Networks Work - Ajit Singh",
+          "url": "https://singhajit.com/cdn-system-design/",
+          "domain": "singhajit.com"
+        }
+      ],
+      "id": 33
+    },
+    {
+      "question": "What is Path MTU Discovery, and what problems can arise from IP fragmentation or MTU mismatches between hops in a network?",
+      "difficulty": "Hard",
+      "answer": "Path MTU Discovery (PMTUD) is the mechanism by which a sending host determines the smallest MTU (Maximum Transmission Unit) along the entire path to a destination, so it can size its packets to avoid fragmentation. The host sets the 'Don't Fragment' (DF) bit and sends packets at increasing size; if an intermediate router finds a packet too large for the next hop's link MTU, it drops the packet and sends back an ICMP 'Destination Unreachable — Fragmentation Needed' message (Type 3, Code 4) containing the next-hop MTU, and the sender adjusts subsequent packet sizes accordingly. The core real-world problem, documented in RFC 2923, is 'PMTUD black holes': many firewalls and misconfigured routers block ICMP messages outright (often for perceived security reasons), so the sender never receives the 'Fragmentation Needed' notification — it just sees the packet silently disappear. The practical symptom is maddening to debug: small requests work fine, `ping` succeeds, but any transfer requiring a packet larger than the actual path MTU (a large HTTP response, a TLS handshake with a big certificate, a file download) hangs indefinitely, because retransmissions keep hitting the same silent drop. Fixes include: allowing ICMP 'Fragmentation Needed' messages through firewalls, and TCP MSS clamping, where a router/firewall actively rewrites the Maximum Segment Size in the SYN packet's TCP options to a value that guarantees packets will fit the actual path MTU — commonly needed on VPN tunnels and overlay networks (like GRE or IPsec) where the tunnel encapsulation overhead effectively shrinks the usable MTU below the link's nominal 1500 bytes.",
+      "sources": [
+        {
+          "title": "RFC 2923: TCP Problems with Path MTU Discovery - IETF",
+          "url": "https://www.rfc-editor.org/rfc/rfc2923.html",
+          "domain": "rfc-editor.org"
+        },
+        {
+          "title": "How to Understand Path MTU Discovery Using ICMP - OneUptime",
+          "url": "https://oneuptime.com/blog/post/2026-03-20-path-mtu-discovery-icmp/view",
+          "domain": "oneuptime.com"
+        }
+      ],
+      "id": 34
+    },
+    {
+      "question": "For a real-time system like VoIP or online gaming, why might an engineer choose UDP with a custom reliability layer over TCP, and what trade-offs does that decision involve?",
+      "difficulty": "Hard",
+      "answer": "TCP's core guarantee — reliable, in-order delivery — is exactly the wrong trade-off for real-time media. If a packet is lost, TCP blocks and retransmits, and every later packet (even ones that arrived successfully) is held back until the missing one is recovered, because the application must see bytes in strict order. For a voice call or a fast-paced multiplayer game, a retransmitted packet often arrives too late to be useful at all: the moment it represented (a fraction of a second of audio, or a player's position 100ms ago) has already passed, so blocking to wait for it just adds latency and jitter without improving the experience — a few milliseconds of silence or a skipped frame is far less disruptive than a multi-second freeze. UDP has no such head-of-line blocking: an application can simply drop a late/lost packet and keep processing newer ones. The trade-off is that all reliability, ordering, and congestion control that an application actually needs must now be built at the application layer: VoIP systems (RTP/SRTP) use jitter buffers and packet-loss concealment (interpolating audio to mask small gaps) rather than retransmission; multiplayer games typically use server-authoritative state with client-side prediction, delta compression to reduce bandwidth, and selective retransmission only for critical events (not every position update). This is more engineering work than 'just use TCP,' but it's exactly what modern protocols like QUIC/WebRTC do — building tunable reliability on top of UDP so applications get low latency where it matters most and reliability only where it's actually needed.",
+      "sources": [
+        {
+          "title": "UDP vs. TCP in Multiplayer Gaming: State Synchronization and Lag Compensation",
+          "url": "https://systemdr.systemdrd.com/p/udp-vs-tcp-in-multiplayer-gaming",
+          "domain": "systemdr.systemdrd.com"
+        },
+        {
+          "title": "UDP vs TCP for VoIP: Protocols Explained - OnSIP",
+          "url": "https://www.onsip.com/voip-resources/voip-fundamentals/udp-versus-tcp-for-voip",
+          "domain": "onsip.com"
+        },
+        {
+          "title": "TCP vs UDP: When to Use Each Transport Protocol",
+          "url": "https://www.speedtesthq.com/guides/fundamentals/tcp-vs-udp",
+          "domain": "speedtesthq.com"
+        }
+      ],
+      "id": 35
+    },
+    {
+      "question": "What are the common network topologies (bus, star, ring, mesh), and what is a key trade-off of each?",
+      "difficulty": "Easy",
+      "answer": "Network topology describes the physical or logical arrangement of nodes and links. Bus: all devices share a single backbone cable; it's cheap and simple to install, but a break anywhere in the cable takes down the whole segment, and only one device can transmit at a time without collisions — largely obsolete today. Star: every device connects to a central hub or switch; failures in one link only affect that device, making it easy to troubleshoot and the dominant topology in modern LANs, but the central device is a single point of failure and requires extra hardware. Ring: each device connects to exactly two neighbors forming a loop, often using token-passing to avoid collisions, giving predictable performance, but a single broken link or device can disrupt the entire ring (unless a dual/counter-rotating ring is used, as in legacy Token Ring or SONET). Mesh: every device connects to every (or many) other devices, giving excellent fault tolerance and redundancy since traffic can reroute around failures, but it's expensive and complex to cable and maintain at scale — most large networks today use a physical star (or spine-leaf, a hybrid) topology rather than a true mesh, precisely because of that cabling cost.",
+      "sources": [
+        {
+          "title": "6 Best Network Topologies Explained - Pros & Cons - Comparitech",
+          "url": "https://www.comparitech.com/net-admin/network-topologies-advantages-disadvantages/",
+          "domain": "comparitech.com"
+        },
+        {
+          "title": "Network Topologies — Star, Mesh, Ring & Hybrid Designs - NetworkersHome",
+          "url": "https://www.networkershome.com/fundamentals/networking/network-topologies-star-mesh-ring-hybrid/",
+          "domain": "networkershome.com"
+        },
+        {
+          "title": "Bus, ring, star or mesh: Which topology is right for you? - Control Design",
+          "url": "https://www.controldesign.com/connections/data-acquisition-monitoring/article/21438562/bus-ring-star-or-mesh-which-topology-is-right-for-you",
+          "domain": "controldesign.com"
+        }
+      ],
+      "id": 36
+    },
+    {
+      "question": "What is the difference between circuit switching and packet switching?",
+      "difficulty": "Easy",
+      "answer": "Circuit switching establishes a dedicated, exclusive physical path between two endpoints for the entire duration of the communication before any data is sent — traditional telephone (PSTN) calls work this way. This guarantees constant, predictable bandwidth and latency, but wastes capacity when the connection is idle (the reserved path can't be used by anyone else even during silence), and it's costly and inflexible to scale. Packet switching, which is what the internet and virtually all modern data networks use, breaks data into independently addressed packets that are routed dynamically — different packets between the same two endpoints may even take different paths and be reassembled at the destination. This is far more efficient, since bandwidth is shared dynamically among many users and only consumed when there's actually data to send, and it's more fault-tolerant since traffic can reroute around a failed link. The trade-off is higher and more variable latency (jitter), since packets queue at each hop and there's no dedicated capacity guarantee — this is exactly why real-time voice traditionally preferred circuit switching, and why modern VoIP needs QoS and jitter buffers to compensate for packet switching's variability.",
+      "sources": [
+        {
+          "title": "Difference between Circuit Switching and Packet Switching - GeeksforGeeks",
+          "url": "https://www.geeksforgeeks.org/computer-networks/difference-between-circuit-switching-and-packet-switching/",
+          "domain": "geeksforgeeks.org"
+        },
+        {
+          "title": "Circuit Switching vs Packet Switching: An Overview - NinjaOne",
+          "url": "https://www.ninjaone.com/blog/circuit-switching-vs-packet-switching/",
+          "domain": "ninjaone.com"
+        },
+        {
+          "title": "Circuit Switching vs Packet Switching: Key Differences Explained - Vedantu",
+          "url": "https://www.vedantu.com/jee-main/physics-difference-between-circuit-switching-and-packet-switching",
+          "domain": "vedantu.com"
+        }
+      ],
+      "id": 37
+    },
+    {
+      "question": "What is DHCP, and what problem does it solve for a device joining a network?",
+      "difficulty": "Easy",
+      "answer": "DHCP (Dynamic Host Configuration Protocol) automatically assigns a device an IP address (along with subnet mask, default gateway, and DNS server addresses) when it joins a network, instead of requiring an administrator to manually configure every device. The problem it solves is scale and error-proneness: manually assigning IPs across dozens, hundreds, or thousands of devices is slow and highly prone to conflicts (two devices accidentally getting the same IP), especially with devices that constantly join and leave a network, like laptops and phones on a WiFi network. A DHCP server maintains a pool (scope) of available addresses and leases one to each requesting client for a configurable period, automatically reclaiming it when the lease expires or the device leaves, so addresses are recycled efficiently as devices come and go.",
+      "sources": [
+        {
+          "title": "IMAP vs POP3 vs SMTP: What is the Difference - GeeksforGeeks",
+          "url": "https://www.geeksforgeeks.org/computer-networks/imap-vs-pop3-vs-smtp/",
+          "domain": "geeksforgeeks.org"
+        },
+        {
+          "title": "CCNA NAT/PAT Lab — Static, Dynamic & Overload Configuration - NetworkersHome",
+          "url": "https://www.networkershome.com/fundamentals/ccna-study-guide/ccna-nat-pat-lab/",
+          "domain": "networkershome.com"
+        }
+      ],
+      "id": 38
+    },
+    {
+      "question": "What are SMTP, POP3, and IMAP used for, and how do they differ from each other?",
+      "difficulty": "Easy",
+      "answer": "These are the three core protocols for moving email. SMTP (Simple Mail Transfer Protocol, port 25/587) is the only one used for sending — it's a push protocol that transfers a message from a client to its mail server, and from server to server, until it reaches the recipient's mail server. POP3 (Post Office Protocol, port 110) and IMAP (Internet Message Access Protocol, port 143) are both used for retrieving already-received mail, and the real 'versus' comparison in interviews is between these two, not against SMTP. POP3 is designed around downloading messages to a single device and, by default, removing them from the server afterward — simple and low-resource, but means your inbox isn't consistent across multiple devices. IMAP keeps messages stored on the server and syncs read/unread status, folders, and flags across every device that connects, which is why it's the default for virtually all modern webmail and mobile clients. In short: SMTP is the outbox, and IMAP vs. POP3 is really a choice about whether your mailbox lives on the server (IMAP) or gets downloaded locally (POP3).",
+      "sources": [
+        {
+          "title": "IMAP vs POP3 vs SMTP: The Differences Explained - WP Mail SMTP",
+          "url": "https://wpmailsmtp.com/imap-vs-pop3-vs-smtp/",
+          "domain": "wpmailsmtp.com"
+        },
+        {
+          "title": "IMAP vs POP3 vs SMTP: What is the Difference - GeeksforGeeks",
+          "url": "https://www.geeksforgeeks.org/computer-networks/imap-vs-pop3-vs-smtp/",
+          "domain": "geeksforgeeks.org"
+        },
+        {
+          "title": "IMAP vs. POP3 vs. SMTP: What Are the Differences? - phoenixNAP",
+          "url": "https://phoenixnap.com/kb/imap-vs-pop3-vs-smtp",
+          "domain": "phoenixnap.com"
+        }
+      ],
+      "id": 39
+    },
+    {
+      "question": "What is a network socket, and what information uniquely identifies one?",
+      "difficulty": "Easy",
+      "answer": "A socket is a software endpoint for network communication — the interface an application uses to send and receive data over the network via the operating system's TCP/IP stack. A socket is uniquely identified by a combination of the protocol (TCP or UDP), the local IP address and port, and — for a connected TCP socket — the remote IP address and port as well; this full combination is often called the 5-tuple (protocol, source IP, source port, destination IP, destination port). This is why a server listening on port 443 can handle thousands of simultaneous client connections on the same port: each individual connection is a distinct socket because the client IP and/or client (ephemeral) port differs, even though the server's local IP:port stays constant. In code, creating a socket, then calling bind() (to fix a local address/port), and either listen()/accept() (server) or connect() (client) is the standard flow — a client typically doesn't need to explicitly bind, since the OS picks an available ephemeral source port automatically.",
+      "sources": [
+        {
+          "title": "4.4. The Socket Interface — Computer Systems Fundamentals - JMU",
+          "url": "https://w3.cs.jmu.edu/kirkpams/OpenCSF/Books/csf/html/Sockets.html",
+          "domain": "w3.cs.jmu.edu"
+        },
+        {
+          "title": "Socket Programming - Dartmouth CS",
+          "url": "https://www.cs.dartmouth.edu/~campbell/cs60/socketprogramming.html",
+          "domain": "cs.dartmouth.edu"
+        }
+      ],
+      "id": 40
+    },
+    {
+      "question": "What is the key structural difference between an IPv4 address and an IPv6 address?",
+      "difficulty": "Easy",
+      "answer": "IPv4 addresses are 32 bits, written as four decimal numbers 0-255 separated by dots (e.g., 192.168.1.1), giving roughly 4.3 billion possible addresses — a space that has already been exhausted at the allocation level, which is why NAT is so widely used to let many devices share one public IPv4 address. IPv6 addresses are 128 bits, written as eight groups of four hexadecimal digits separated by colons (e.g., 2001:0db8:85a3:0000:0000:8a2e:0370:7334), giving an astronomically larger address space (~3.4×10^38 addresses) intended to give every device its own globally unique address without needing NAT. IPv6 also compresses notation — leading zeros in a group can be dropped, and one contiguous run of all-zero groups can be replaced with a double colon (::) once per address — and it simplifies the packet header (removing IPv4's built-in fragmentation fields, for instance, pushing fragmentation to an extension header instead) to make routing more efficient. Because the two are not directly interoperable at the packet level, real networks typically run both simultaneously (dual-stack) or use tunneling/NAT64-style translation during the ongoing, decades-long transition.",
+      "sources": [
+        {
+          "title": "IPv4 vs IPv6 - Difference Between Internet Protocol Versions - AWS",
+          "url": "https://aws.amazon.com/compare/the-difference-between-ipv4-and-ipv6/",
+          "domain": "aws.amazon.com"
+        },
+        {
+          "title": "Difference Between IPv4 and IPv6 - GeeksforGeeks",
+          "url": "https://www.geeksforgeeks.org/computer-networks/differences-between-ipv4-and-ipv6/",
+          "domain": "geeksforgeeks.org"
+        },
+        {
+          "title": "IPv6 address - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/IPv6_address",
+          "domain": "en.wikipedia.org"
+        }
+      ],
+      "id": 41
+    },
+    {
+      "question": "What does the ping utility do, and which underlying protocol does it rely on?",
+      "difficulty": "Easy",
+      "answer": "Ping tests basic reachability and measures round-trip latency to a remote host. It works by sending an ICMP Echo Request (Type 8) packet to the target; if the target is reachable and willing to respond, it replies with an ICMP Echo Reply (Type 0), and ping reports the round-trip time (RTT) in milliseconds along with packet loss statistics across multiple pings. Ping relies entirely on ICMP (Internet Control Message Protocol), which sits at the network layer alongside IP — it carries no application data and isn't a service any application listens on, which is why ping can succeed even if a web server or database on that host is completely down. Important caveats for interviews: ping measures latency and connectivity, not bandwidth or throughput — a fast download link can still show high ping if the path has queuing delay, and vice versa; and a failed ping doesn't necessarily mean the host is down, since many firewalls and hosts deliberately block or deprioritize ICMP traffic for security reasons.",
+      "sources": [
+        {
+          "title": "Latency vs Throughput vs Bandwidth - AlgoMaster.io",
+          "url": "https://algomaster.io/learn/computer-networks/latency-vs-throughput-vs-bandwidth",
+          "domain": "algomaster.io"
+        },
+        {
+          "title": "The ping Command: Reading Every Line of Output - Pulsetic",
+          "url": "https://pulsetic.com/blog/ping-command/",
+          "domain": "pulsetic.com"
+        },
+        {
+          "title": "Understanding Network Latency: Ping, RTT, and What Good Numbers Look Like - ToolPlex",
+          "url": "https://toolplex.dev/articles/network-latency-guide/",
+          "domain": "toolplex.dev"
+        }
+      ],
+      "id": 42
+    },
+    {
+      "question": "What is the difference between bandwidth, latency, and throughput?",
+      "difficulty": "Easy",
+      "answer": "Bandwidth is the theoretical maximum capacity of a link (e.g., '1 Gbps') — it's a ceiling, not a measurement of actual traffic. Latency is the time it takes data to travel from source to destination (often measured as round-trip time, RTT), dominated by physical distance, propagation delay, and queuing at each hop — it's independent of how much data you're sending. Throughput is the actual amount of data successfully transferred per unit time under real conditions, which is always less than or equal to the theoretical bandwidth, since it's affected by latency, packet loss, protocol overhead, and congestion. A classic illustration: a satellite link can have very high bandwidth but such high latency (hundreds of milliseconds each way) that small, frequent requests — like loading a web page with many round trips — feel painfully slow even though a single large file transfer runs at near-full bandwidth. This is why, for typical web/API traffic made of small requests, reducing latency usually improves perceived performance far more than adding bandwidth.",
+      "sources": [
+        {
+          "title": "Latency vs Throughput vs Bandwidth - AlgoMaster.io",
+          "url": "https://algomaster.io/learn/computer-networks/latency-vs-throughput-vs-bandwidth",
+          "domain": "algomaster.io"
+        },
+        {
+          "title": "Understanding Network Latency: Ping, RTT, and What Good Numbers Look Like - ToolPlex",
+          "url": "https://toolplex.dev/articles/network-latency-guide/",
+          "domain": "toolplex.dev"
+        }
+      ],
+      "id": 43
+    },
+    {
+      "question": "What is a VLAN, and why would an organization use one instead of a single flat network?",
+      "difficulty": "Easy",
+      "answer": "A VLAN (Virtual LAN) logically partitions a single physical switched network into multiple separate broadcast domains, so that devices assigned to different VLANs can't directly see each other's broadcast/multicast traffic even though they're plugged into the same physical switches. Organizations use VLANs for several reasons: (1) security and isolation — putting, say, finance workstations, guest WiFi, and IoT devices on separate VLANs limits the blast radius if one segment is compromised, and traffic between VLANs must pass through a router or Layer 3 switch where firewall policies can be enforced; (2) reduced broadcast traffic — a flat network with hundreds of devices generates a lot of broadcast noise (ARP, DHCP) that every device has to process, while VLANs shrink each broadcast domain; (3) flexible logical grouping independent of physical location — devices in different buildings or floors can be grouped into the same VLAN based on department or function rather than which switch port they happen to be plugged into. Traffic between VLANs requires routing (either a router-on-a-stick or a Layer 3 switch), which is exactly the boundary where inter-VLAN security policy gets enforced.",
+      "sources": [
+        {
+          "title": "Comparing Layer 3 and Layer 2 Switches - Cisco Meraki Documentation",
+          "url": "https://documentation.meraki.com/MS/Layer_3_Switching/Comparing_Layer_3_and_Layer_2_Switches",
+          "domain": "documentation.meraki.com"
+        },
+        {
+          "title": "CCNA NAT/PAT Lab - NetworkersHome",
+          "url": "https://www.networkershome.com/fundamentals/ccna-study-guide/ccna-nat-pat-lab/",
+          "domain": "networkershome.com"
+        }
+      ],
+      "id": 44
+    },
+    {
+      "question": "What is the difference between FTP and SFTP?",
+      "difficulty": "Easy",
+      "answer": "FTP (File Transfer Protocol) is a legacy protocol that transmits everything — including usernames and passwords — in plain text, and uses two separate connections: a control channel (typically port 21) for commands, and a separate data channel for the actual file transfer, which makes it awkward to route through firewalls and NAT because the data channel's port is negotiated dynamically. SFTP (SSH File Transfer Protocol) is a completely different protocol built as a subsystem of SSH, not an extension of FTP — it runs entirely over a single encrypted SSH connection (typically port 22), so authentication, commands, and file data are all protected by SSH's encryption and can use SSH key-based authentication instead of just passwords. Because SFTP uses one port for everything, it's dramatically simpler to allow through a firewall than FTP's two-channel design. For any new implementation handling sensitive data, SFTP is the standard modern choice; plain FTP should be treated as a legacy exception at best (FTPS — FTP plus TLS — is a middle-ground option that keeps FTP's two-channel architecture but encrypts it, mainly used when a partner integration specifically requires FTP-shaped commands).",
+      "sources": [
+        {
+          "title": "SFTP vs FTP - Understanding the Difference - Sharetru",
+          "url": "https://www.sharetru.com/blog/sftp-vs-ftp-understanding-the-difference",
+          "domain": "sharetru.com"
+        },
+        {
+          "title": "FTP vs FTPS vs SFTP: The Differences That Actually Matter - Files.com",
+          "url": "https://www.exavault.com/blog/difference-between-ftp-ftps-and-sftp",
+          "domain": "exavault.com"
+        },
+        {
+          "title": "SFTP vs. FTPS: What are the key differences? - SolarWinds",
+          "url": "https://www.solarwinds.com/resources/it-glossary/sftp-vs-ftps",
+          "domain": "solarwinds.com"
+        }
+      ],
+      "id": 45
+    },
+    {
+      "question": "Explain the DHCP DORA process (Discover, Offer, Request, Acknowledge) step by step.",
+      "difficulty": "Medium",
+      "answer": "DORA describes the four-message exchange a device uses to obtain an IP lease from a DHCP server. (1) Discover — the client, having no IP address yet, broadcasts a DHCPDISCOVER message (source 0.0.0.0, destination 255.255.255.255) to find any DHCP servers on the local network segment. (2) Offer — each DHCP server that receives the broadcast and has an available address responds with a DHCPOFFER, proposing an IP address along with lease terms (subnet mask, gateway, DNS servers, lease duration); since this is still broadcast (the client has no IP yet to unicast to), the client may receive multiple offers if several DHCP servers exist. (3) Request — the client picks one offer (typically the first one received) and broadcasts a DHCPREQUEST explicitly naming which server's offer it's accepting; broadcasting this (rather than unicasting to just that server) also tells the other DHCP servers that their offers were declined, so they can release those addresses back to their pools. (4) Acknowledge — the chosen server responds with a DHCPACK, finalizing the lease and confirming the configuration; the client can now use that IP address. If the server can no longer honor the requested address (e.g., it was just given to someone else), it instead sends a DHCPNAK, forcing the client to restart the process from Discover.",
+      "sources": [
+        {
+          "title": "Glassdoor Interview Question: Explain DNS / DHCP Working (DORA Process)",
+          "url": "https://www.glassdoor.sg/Interview/1-Explain-DNS-2-DHCP-Working-DORA-Process-3-TCP-IP-Questions-TCP-Three-way-handshake-4-How-does-HTTPS-work-Mainly-QTN_6131157.htm",
+          "domain": "glassdoor.sg"
+        },
+        {
+          "title": "Glassdoor Interview Question: DHCP DORA Process",
+          "url": "https://www.glassdoor.com/Interview/DHCP-DORA-Process-QTN_2502826.htm",
+          "domain": "glassdoor.com"
+        }
+      ],
+      "id": 46
+    },
+    {
+      "question": "What is Spanning Tree Protocol (STP), and what problem does it solve in a switched network with redundant links?",
+      "difficulty": "Medium",
+      "answer": "STP (IEEE 802.1D) prevents Layer 2 loops in switched networks that have redundant physical links between switches — links that are deliberately added for fault tolerance, but which, without STP, would cause broadcast storms: since switches simply flood frames with unknown/broadcast destinations out every port, a loop lets the same frame circulate endlessly, exponentially multiplying traffic and quickly saturating the network. STP solves this by having switches exchange BPDU (Bridge Protocol Data Unit) messages to elect a 'root bridge' (the reference point for the topology), then compute the shortest path from every other switch to the root, and put every port into one of several states — forwarding (actively passing traffic) or blocking (logically disabled to prevent a loop, but still listening for topology changes) — so that exactly one loop-free active path exists between any two switches at any time. If an active link fails, STP recalculates the topology and can transition a previously blocked port into forwarding to restore connectivity, giving redundancy without an actual loop being active simultaneously. Modern networks typically run faster variants like RSTP (Rapid STP, 802.1w), which converges in seconds instead of STP's original 30-50 seconds.",
+      "sources": [
+        {
+          "title": "Top Spanning Tree Protocol Interview Questions - ClimbTheLadder",
+          "url": "https://climbtheladder.com/spanning-tree-protocol-interview-questions/",
+          "domain": "climbtheladder.com"
+        },
+        {
+          "title": "CCNA Interview Questions on STP - WebAsha",
+          "url": "https://www.webasha.com/blog/ccna-interview-questions-on-stp-346",
+          "domain": "webasha.com"
+        }
+      ],
+      "id": 47
+    },
+    {
+      "question": "Explain how traceroute determines the path packets take to a destination, and what ICMP messages it depends on.",
+      "difficulty": "Medium",
+      "answer": "Traceroute exploits the IP TTL (Time To Live) field, which every router decrements by one as it forwards a packet, discarding the packet once TTL hits zero. Traceroute sends a series of probe packets with progressively increasing TTL values starting at 1: the first probe (TTL=1) dies at the very first router, which — per RFC 792 — replies with an ICMP Time Exceeded (Type 11) message containing its own source address, revealing hop #1. The next probe (TTL=2) survives the first router but dies at the second, revealing hop #2, and so on, until a probe finally reaches the actual destination. On Unix/Linux, traceroute traditionally sends UDP packets to a high, typically-unused port (starting around 33434); when the destination itself receives a probe, since nothing is listening on that port, it replies with an ICMP Port Unreachable (Type 3, Code 3) message instead of Time Exceeded — this different message type is exactly how traceroute knows it has reached the final destination and can stop. Windows tracert instead uses ICMP Echo Requests by default, so the destination replies with a normal ICMP Echo Reply. An important caveat: results can show timeouts (*) at intermediate hops even when the path is fine, because many routers deprioritize or deliberately rate-limit ICMP generation — a missing hop in the trace doesn't necessarily mean that hop or the path is broken.",
+      "sources": [
+        {
+          "title": "How to Understand ICMP Time Exceeded Messages - OneUptime",
+          "url": "https://oneuptime.com/blog/post/2026-03-20-icmp-time-exceeded-messages/view",
+          "domain": "oneuptime.com"
+        },
+        {
+          "title": "UDP vs ICMP vs TCP Traceroute: When to Use Each Protocol - TraceMapper",
+          "url": "https://tracemapper.com/blog/udp-vs-icmp-vs-tcp-traceroute",
+          "domain": "tracemapper.com"
+        },
+        {
+          "title": "How traceroute Really Works: TTL and ICMP Time Exceeded - ReasonCore",
+          "url": "https://reasoncore.dev/post/how-traceroute-really-works-ttl-and-icmp-time-exceeded",
+          "domain": "reasoncore.dev"
+        }
+      ],
+      "id": 48
+    },
+    {
+      "question": "What is the difference between symmetric and asymmetric routing, and why can asymmetric routing cause problems for stateful firewalls?",
+      "difficulty": "Medium",
+      "answer": "In symmetric routing, traffic from A to B and the return traffic from B to A both traverse the same path (through the same devices, in reverse). In asymmetric routing, the forward and return paths differ — for example, outbound traffic exits through one gateway/ISP link while the reply comes back through a different one, which can legitimately happen in multi-homed networks, BGP-influenced data center routing, or networks with unequal-cost load balancing. The network layer itself tolerates asymmetric routing fine — IP doesn't care which path a packet takes as long as it arrives. The problem is stateful firewalls: they build a connection-tracking table by observing the full handshake of a session, and they expect to see both directions of traffic pass through the same device to correctly track and permit the connection. If the return traffic takes a path that bypasses the firewall that saw the initial request, the firewall never observes a complete handshake, so its state table entry can time out or never get properly established, and legitimate traffic gets dropped — a notoriously confusing failure mode because the network layer 'works' (routes exist) but application connections mysteriously fail or hang. Common fixes include policy-based routing to force symmetric paths for firewalled traffic, relaxing strict reverse-path filtering, or architecting BGP/routing policy in data centers so firewalled flows stay symmetric.",
+      "sources": [
+        {
+          "title": "How to Troubleshoot Asymmetric Routing Issues - OneUptime",
+          "url": "https://oneuptime.com/blog/post/2026-03-20-troubleshoot-asymmetric-routing/view",
+          "domain": "oneuptime.com"
+        },
+        {
+          "title": "Troubleshooting Asymmetric Routing - pfSense Documentation",
+          "url": "https://docs.netgate.com/pfsense/en/latest/troubleshooting/asymmetric-routing.html",
+          "domain": "docs.netgate.com"
+        }
+      ],
+      "id": 49
+    },
+    {
+      "question": "Explain Nagle's algorithm and TCP delayed ACK, and why combining them can hurt latency-sensitive applications.",
+      "difficulty": "Medium",
+      "answer": "Nagle's algorithm is a sender-side optimization: if there's unacknowledged data already in flight, TCP buffers any small subsequent writes and waits either for an ACK of the outstanding data or enough data to fill a full segment, rather than sending many tiny packets — this reduces overhead from many small packets on high-latency or bandwidth-constrained links. TCP delayed ACK is a receiver-side optimization: instead of acknowledging every single segment immediately, the receiver waits briefly (typically up to ~200-500ms, or until it has data to piggyback the ACK on) hoping to combine multiple acknowledgments or bundle the ACK with an actual reply, reducing pure-ACK overhead. Individually, both are reasonable efficiency optimizations designed in the early 1980s by different groups. The problem is their interaction: if an application sends a small chunk of data, then waits for a response before sending more, Nagle's algorithm on the sender holds that data waiting for an ACK, but the receiver's delayed ACK is simultaneously waiting for more data (or a timeout) before acknowledging — neither side moves until the delayed-ACK timer eventually expires, producing a consistent, maddening ~200ms stall on every request/response round trip. This is a well-documented, real production issue (famously affecting things like small RPC calls or interactive protocols); the standard fix is to disable Nagle's algorithm on the sender via the TCP_NODELAY socket option for latency-sensitive request/response traffic, since it's traditionally easier to toggle than delayed ACK.",
+      "sources": [
+        {
+          "title": "TCP Performance problems caused by interaction between Nagle's Algorithm and Delayed ACK - Stuart Cheshire",
+          "url": "https://www.stuartcheshire.org/papers/nagledelayedack/",
+          "domain": "stuartcheshire.org"
+        },
+        {
+          "title": "Nagle's algorithm - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Nagle's_algorithm",
+          "domain": "en.wikipedia.org"
+        },
+        {
+          "title": "TCP delayed acknowledgment - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/TCP_delayed_acknowledgment",
+          "domain": "en.wikipedia.org"
+        }
+      ],
+      "id": 50
+    },
+    {
+      "question": "What is TCP keepalive, and why is it needed even though TCP is a \"reliable,\" connection-oriented protocol?",
+      "difficulty": "Medium",
+      "answer": "TCP's reliability guarantees (retransmission, ordering) only apply to data actually being sent — TCP has no built-in mechanism to detect that a peer has silently disappeared (crashed, lost power, or had its route drop) while the connection is sitting idle with no data flowing. TCP keepalive (enabled per-socket via SO_KEEPALIVE) fixes this gap: after a connection has been idle for a configurable period, the OS kernel sends a small, dataless probe segment to the peer; if the peer responds (even with an ACK), the connection is confirmed alive and the idle timer resets. If no response arrives after a set number of retries, the connection is declared dead and the application is notified (e.g., with an ETIMEDOUT error) the next time it tries to use the socket. This matters in real deployments because idle TCP connections are also commonly killed silently by middleboxes — firewalls, NAT gateways, and load balancers that have their own (often shorter) idle-connection timeouts — so keepalives both detect genuinely dead peers and can prevent those middleboxes from reaping a connection that's still wanted, by keeping it visibly 'active.' It's especially important for long-lived connections like database connections, message broker links, and persistent API clients, where an application might otherwise write to a socket it thinks is open and get an error only much later.",
+      "sources": [
+        {
+          "title": "How to Configure TCP Keepalive Settings on Linux - OneUptime",
+          "url": "https://oneuptime.com/blog/post/2026-03-20-configure-tcp-keepalive-linux/view",
+          "domain": "oneuptime.com"
+        },
+        {
+          "title": "TCP Keepalive HOWTO - The Linux Documentation Project",
+          "url": "https://tldp.org/HOWTO/TCP-Keepalive-HOWTO/overview.html",
+          "domain": "tldp.org"
+        },
+        {
+          "title": "TCP keepalive for a better PostgreSQL experience - CYBERTEC",
+          "url": "https://www.cybertec-postgresql.com/en/tcp-keepalive-for-a-better-postgresql-experience/",
+          "domain": "cybertec-postgresql.com"
+        }
+      ],
+      "id": 51
+    },
+    {
+      "question": "Explain how a CDN reduces latency for end users and offloads traffic from the origin server.",
+      "difficulty": "Medium",
+      "answer": "A CDN (Content Delivery Network) operates a distributed network of edge servers (PoPs) positioned geographically close to end users, and it reduces latency primarily by shortening the physical/network distance data has to travel: instead of every user's request crossing continents to reach a single origin server, DNS or anycast routing directs each user to a nearby edge node, cutting round-trip time significantly (this matters enormously for latency-dominated interactions, per the bandwidth-vs-latency distinction). For content that doesn't change per request — static assets like images, CSS, JS, and even cacheable API responses — the CDN edge node caches a copy after the first request and serves subsequent requests for the same content directly from that edge, entirely avoiding the origin server. This offloads the origin dramatically: instead of every single user's request hitting the backend, only 'cache miss' requests (the first request for a resource, or a request after the cache entry expires) actually reach it. The interaction between the CDN and origin uses standard HTTP caching headers — Cache-Control, ETag, Last-Modified — to decide freshness and to let the CDN do cheap conditional revalidation (a 304 Not Modified) instead of re-fetching the full response. CDNs also provide TLS termination at the edge (cutting handshake latency), compression, and — as a security side-benefit — absorb and diffuse volumetric DDoS traffic across many PoPs rather than letting it concentrate on one origin.",
+      "sources": [
+        {
+          "title": "CDN System Design: How Content Delivery Networks Work - Ajit Singh",
+          "url": "https://singhajit.com/cdn-system-design/",
+          "domain": "singhajit.com"
+        },
+        {
+          "title": "Learn how Browsers, CDNs, and Servers make caching decisions - Medium",
+          "url": "https://medium.com/@vinaykumarbr07/learn-how-browsers-cdns-and-servers-make-caching-decisions-f9247b66593a",
+          "domain": "medium.com"
+        },
+        {
+          "title": "CDN Interview Questions - TechPrep",
+          "url": "https://www.techprep.app/blog/cdn-interview-questions",
+          "domain": "techprep.app"
+        }
+      ],
+      "id": 52
+    },
+    {
+      "question": "Compare round robin, least connections, and consistent hashing as load balancing strategies. When would you specifically choose consistent hashing?",
+      "difficulty": "Medium",
+      "answer": "Round robin cycles through backend servers in order, sending each new request to the next server in the list — simple and works well when requests are roughly uniform in cost and servers are equally capable, but it ignores actual server load, so a slow request or an overloaded server still keeps getting its 'fair share' of new traffic. Least connections routes each new request to whichever backend currently has the fewest active connections — this adapts better to uneven request costs or server capacity differences, since a server bogged down with long-running requests naturally receives fewer new ones. Consistent hashing takes a fundamentally different approach: instead of picking 'the best server right now,' it deterministically maps both requests (via some key, like a user ID or cache key) and servers onto positions on a hash ring, and each request is routed to the next server clockwise from its position on the ring. You'd specifically choose consistent hashing when you need the same key to reliably land on the same backend across requests — for example, routing a user's requests to the same application server that holds their in-memory session state, or routing a cache key to the same cache node so you don't get needless cache misses. Its key advantage over naive hashing (like key % N servers) is what happens when the server pool changes: with modulo hashing, adding or removing even one server remaps almost every key to a different server, causing a cache-wide stampede; with consistent hashing, only the keys that fell in the affected region of the ring need to move, minimizing redistribution.",
+      "sources": [
+        {
+          "title": "Consistent Hashing - Hello Interview",
+          "url": "https://www.hellointerview.com/learn/system-design/core-concepts/consistent-hashing",
+          "domain": "hellointerview.com"
+        },
+        {
+          "title": "Consistent Hashing: Why It Matters - SystemDR",
+          "url": "https://systemdr.systemdrd.com/p/consistent-hashing-why-it-matters",
+          "domain": "systemdr.systemdrd.com"
+        }
+      ],
+      "id": 53
+    },
+    {
+      "question": "How do WebSockets differ from a traditional HTTP request/response cycle or long polling?",
+      "difficulty": "Medium",
+      "answer": "Standard HTTP is strictly request-response: the client must always initiate, and the server can never push data unprompted. Long polling works around this by having the client send a request that the server deliberately holds open — not responding immediately — until it actually has data to send or a timeout is reached; the client then immediately issues a new request, giving the illusion of push. It works over completely standard HTTP infrastructure (any proxy or load balancer that speaks HTTP handles it fine), but every 'poll' pays the overhead of a full HTTP request (headers, cookies, and potentially a new TLS handshake) and ties up a server-side connection/thread for the duration of the hold. WebSockets solve this properly at the protocol level: the connection begins as a normal HTTP request with an Upgrade: websocket header, and if the server accepts (responding with HTTP 101 Switching Protocols), the same underlying TCP connection is repurposed for the WebSocket protocol — a persistent, full-duplex channel where either side can send framed messages at any time with minimal overhead (as little as 2-6 bytes of framing per message, versus a full HTTP header block for every long-poll request). The trade-off: WebSockets require explicit infrastructure support (proxies/load balancers must be configured to forward the Upgrade handshake and handle long-lived connections/sticky routing), whereas long polling needs no special infrastructure — which is why libraries like Socket.IO still fall back to long polling behind restrictive corporate firewalls or proxies that block WebSocket upgrades.",
+      "sources": [
+        {
+          "title": "WebSocket vs Long Polling: Performance & When to Use - WebSocket.org",
+          "url": "https://websocket.org/comparisons/long-polling/",
+          "domain": "websocket.org"
+        },
+        {
+          "title": "Long Polling vs WebSockets: Choosing the Right Transport for Real-Time Feeds - GetStream",
+          "url": "https://getstream.io/blog/long-polling-vs-websockets/",
+          "domain": "getstream.io"
+        },
+        {
+          "title": "How Do Websockets Work? - Kevin Sookocheff",
+          "url": "https://sookocheff.com/post/networking/how-do-websockets-work/",
+          "domain": "sookocheff.com"
+        }
+      ],
+      "id": 54
+    },
+    {
+      "question": "What is 802.1Q VLAN tagging, and how does a trunk port carry traffic for multiple VLANs over a single physical link?",
+      "difficulty": "Medium",
+      "answer": "802.1Q is the IEEE standard that defines how to tag Ethernet frames with VLAN membership information, inserting a 4-byte tag into the frame header that includes a 12-bit VLAN ID (supporting VLANs 1-4094). A regular 'access port' on a switch is assigned to exactly one VLAN and sends/receives untagged frames — the switch implicitly knows which VLAN that traffic belongs to based on the port itself. A 'trunk port,' by contrast, is configured to carry traffic for multiple VLANs simultaneously over a single physical link — typically used between switches, or between a switch and a router/firewall doing inter-VLAN routing. As frames cross a trunk, the switch inserts the 802.1Q tag identifying which VLAN each frame belongs to before sending it, and the switch on the receiving end reads that tag to know which VLAN (and therefore which set of ports/broadcast domain) the frame should be forwarded into, then typically strips the tag again before delivering it to an access port. This is what lets, say, a single physical cable between two switches carry isolated traffic for Sales, Engineering, and Guest VLANs simultaneously without those VLANs needing separate physical cabling, while still keeping their broadcast domains fully separate at Layer 2.",
+      "sources": [
+        {
+          "title": "CCNA NAT/PAT Lab — Static, Dynamic & Overload Configuration - NetworkersHome",
+          "url": "https://www.networkershome.com/fundamentals/ccna-study-guide/ccna-nat-pat-lab/",
+          "domain": "networkershome.com"
+        },
+        {
+          "title": "Difference between layer-2 and layer-3 switches - GeeksforGeeks",
+          "url": "https://www.geeksforgeeks.org/computer-networks/difference-between-layer-2-and-layer-3-switches/",
+          "domain": "geeksforgeeks.org"
+        }
+      ],
+      "id": 55
+    },
+    {
+      "question": "Explain the difference between static NAT, dynamic NAT, and PAT (NAT overload/port address translation).",
+      "difficulty": "Medium",
+      "answer": "Static NAT creates a fixed, permanent one-to-one mapping between a specific private IP and a specific public IP — configured manually and always present in the NAT table regardless of traffic, which is necessary for servers that need to be consistently reachable from the outside (e.g., mapping a public IP to an internal web server so inbound connections can find it). Dynamic NAT also maps one private IP to one public IP, but pulls from a pool of available public addresses and only creates the mapping when a device actually needs to communicate outward — the mapping is temporary and gets purged after a timeout, and there's still a 1:1 relationship, so you need roughly as many public IPs in the pool as simultaneously active internal devices. PAT (Port Address Translation), also called NAT overload, is what almost every home router and most enterprise edge routers actually use: it allows many internal devices to share a single public IP by additionally rewriting the source port for each connection, so the router distinguishes returning traffic for different internal hosts by which port it arrives on rather than needing a separate public IP per host — this is what makes IPv4 address conservation actually practical at scale, since one public IP can support tens of thousands of simultaneous PAT sessions (differentiated by port). The key limitation of dynamic NAT/PAT versus static: they're designed for outbound-initiated connections, so hosting an inbound-reachable service (like a game server) behind PAT alone doesn't work without a static mapping or port forwarding rule.",
+      "sources": [
+        {
+          "title": "NAT Overload (PAT) - NetworkAcademy.IO",
+          "url": "https://www.networkacademy.io/ccna/network-services/nat-overload-pat",
+          "domain": "networkacademy.io"
+        },
+        {
+          "title": "NAT and PAT: a complete explanation - CiscoZine",
+          "url": "https://www.ciscozine.com/nat-and-pat-a-complete-explanation/",
+          "domain": "ciscozine.com"
+        },
+        {
+          "title": "Port Address Translation vs Network Address Translation - Lightyear",
+          "url": "https://lightyear.ai/tips/port-address-translation-versus-network-address-translation",
+          "domain": "lightyear.ai"
+        }
+      ],
+      "id": 56
+    },
+    {
+      "question": "What do the HTTP Cache-Control and ETag headers do, and how do they affect caching behavior in browsers and CDNs?",
+      "difficulty": "Medium",
+      "answer": "Cache-Control controls freshness — how long a response can be reused without checking back with the origin at all. Directives include max-age (how long the browser can cache it), s-maxage (a separate, often longer, lifetime for shared caches like CDNs), public/private (whether shared caches are allowed to store it, important for personalized content), no-store (never cache at all — for sensitive data), and no-cache (confusingly, this actually means 'you can store it, but must revalidate before every use,' not 'don't cache'). ETag controls validation — it's an opaque token identifying a specific version of the resource's content. Once a cached response's max-age expires, instead of blindly re-downloading the full resource, the client sends a conditional request with an If-None-Match header containing the stored ETag; if the server's current ETag matches, it replies with a lightweight 304 Not Modified (no body), and the client keeps using its cached copy — saving bandwidth versus a full re-download while still guaranteeing correctness. In practice, browsers, CDNs, and any reverse proxies in the chain each apply the same Cache-Control rules independently, which is why s-maxage (shared caches) and max-age (private/browser cache) are often set differently — a common pattern is a hashed, immutable filename with Cache-Control: public, max-age=31536000, immutable for static assets (never needs revalidation since the URL itself changes on update), versus a short max-age plus an ETag validator for frequently-updated content like HTML pages or API responses.",
+      "sources": [
+        {
+          "title": "Cache-Control header - HTTP - MDN Web Docs",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Cache-Control",
+          "domain": "developer.mozilla.org"
+        },
+        {
+          "title": "What is Cache-Control and How HTTP Cache Headers Work - Imperva",
+          "url": "https://www.imperva.com/learn/performance/cache-control/",
+          "domain": "imperva.com"
+        },
+        {
+          "title": "The practical guide to HTTP caching headers: Cache-Control, ETag, and 304s - Accreditly",
+          "url": "https://accreditly.io/articles/the-practical-guide-to-http-caching-headers-cache-control-etag-and-304s",
+          "domain": "accreditly.io"
+        }
+      ],
+      "id": 57
+    },
+    {
+      "question": "What is IGMP, and what role does it play in IP multicast group membership?",
+      "difficulty": "Medium",
+      "answer": "IGMP (Internet Group Management Protocol) is the signaling protocol that IPv4 hosts and their local routers use to establish and manage multicast group membership on a network segment — it operates at the network layer, similarly to ICMP. When a host wants to receive a multicast stream (say, a live video feed sent to a Class D address in the 224.0.0.0-239.255.255.255 range), it sends an IGMP Membership Report announcing interest in that specific group; the local multicast router tracks which groups have interested members on each attached network and only forwards multicast traffic for groups that actually have subscribers there, rather than flooding it everywhere — this is what makes multicast efficient compared to broadcasting to everyone. Routers periodically send IGMP Membership Queries to check whether members are still present, and (from IGMPv2 onward) hosts can send an explicit Leave Group message to unsubscribe promptly rather than waiting for a query timeout. On switched LANs, IGMP snooping lets switches (which normally have no Layer 3 awareness) listen in on this IGMP traffic to learn which specific ports have multicast subscribers, so they can forward multicast frames only to those ports instead of flooding every port on the VLAN. Note that IGMP itself is IPv4-specific; IPv6 uses the analogous Multicast Listener Discovery (MLD) protocol instead.",
+      "sources": [
+        {
+          "title": "Internet Group Management Protocol - IGMP - GeeksforGeeks",
+          "url": "https://www.geeksforgeeks.org/computer-networks/what-is-igmpinternet-group-management-protocol/",
+          "domain": "geeksforgeeks.org"
+        },
+        {
+          "title": "IGMP Explained: Optimize Multicast for Streaming & Gaming - Lenovo",
+          "url": "https://www.lenovo.com/us/en/glossary/what-is-igmp/",
+          "domain": "lenovo.com"
+        },
+        {
+          "title": "What Is Internet Group Management Protocol? - AEANET",
+          "url": "https://www.aeanet.org/what-is-internet-group-management-protocol/",
+          "domain": "aeanet.org"
+        }
+      ],
+      "id": 58
+    },
+    {
+      "question": "What security risks exist on open/public WiFi, and how does WPA3 improve on WPA2 in addressing them?",
+      "difficulty": "Medium",
+      "answer": "Open (unencrypted) public WiFi and even password-protected WPA2 networks carry real risks: on a fully open network, anyone within range can passively capture all unencrypted traffic; and on WPA2 networks, the four-way handshake used during authentication was found vulnerable to KRACK (Key Reinstallation Attack, 2017), where an attacker manipulates and replays handshake messages to trick a device into reinstalling an already-used encryption key, potentially allowing traffic decryption or injection. Separately, WPA2's pre-shared key (PSK) handshake can be captured by anyone in range and then cracked offline via dictionary/brute-force attacks against weak passwords, entirely without needing to be connected to the network. WPA3 addresses these specifically: it replaces WPA2's handshake with SAE (Simultaneous Authentication of Equals, also called the Dragonfly handshake), which is designed to be resistant to offline dictionary attacks — an attacker who captures the handshake can't productively brute-force it offline the way they could with WPA2. WPA3 also adds forward secrecy, meaning that even if a password is later compromised, previously captured encrypted sessions can't be retroactively decrypted (protecting against 'harvest now, decrypt later' attacks), and it introduces individualized data encryption for open networks (via Opportunistic Wireless Encryption), meaning even unauthenticated public WiFi traffic gets per-device encryption rather than being sent in the clear. Since 2020, WPA3 support has been mandatory for the Wi-Fi Alliance's certification, though many networks still run WPA2/WPA3 'transitional' mode for backward compatibility with older client devices.",
+      "sources": [
+        {
+          "title": "WPA2 vs WPA3 (Full 2026 Comparison & Differences) - StationX",
+          "url": "https://www.stationx.net/wpa2-vs-wpa3/",
+          "domain": "stationx.net"
+        },
+        {
+          "title": "WPA2 vs. WPA3: Key Differences & Security Improvements - SecureW2",
+          "url": "https://securew2.com/blog/wpa3-vs-wpa2",
+          "domain": "securew2.com"
+        },
+        {
+          "title": "WiFi Security in 2026: WEP to WPA3 and What to Set Today",
+          "url": "https://whatismylocation.org/blog/wifi-security-wpa3",
+          "domain": "whatismylocation.org"
+        }
+      ],
+      "id": 59
+    },
+    {
+      "question": "What is the difference between a DoS attack and a DDoS attack, and what makes DDoS attacks harder to mitigate?",
+      "difficulty": "Medium",
+      "answer": "A DoS (Denial of Service) attack originates from a single source — one machine flooding a target with traffic or exploiting a protocol weakness to exhaust its resources and make it unavailable to legitimate users. A DDoS (Distributed Denial of Service) attack is the same goal achieved from many sources simultaneously — typically thousands of compromised devices forming a botnet, all directed by an attacker's command-and-control infrastructure. DDoS is harder to mitigate for several concrete reasons: (1) you can't simply block one IP address, since traffic legitimately arrives from thousands of different, geographically distributed source addresses that individually look like normal users; (2) the aggregate traffic volume a botnet can generate vastly exceeds what any single-source DoS attack could produce, since it's the sum of bandwidth across every compromised device; (3) distinguishing malicious from legitimate traffic becomes much harder at scale — application-layer DDoS attacks (like HTTP floods) can mimic real user request patterns closely enough that simple rate-limiting per IP is ineffective when each IP is only sending a modest, individually 'reasonable' amount of traffic. Effective DDoS mitigation typically requires infrastructure specifically built for this — anycast-distributed scrubbing centers, traffic pattern analysis to detect botnet behavior at aggregate scale, and upstream ISP/CDN collaboration — rather than something a single origin server or basic firewall can reliably handle on its own.",
+      "sources": [
+        {
+          "title": "DDoS Attack vs DoS Attack: Key Differences Explained - SentinelOne",
+          "url": "https://www.sentinelone.com/cybersecurity-101/threat-intelligence/ddos-attack-vs-dos-attack/",
+          "domain": "sentinelone.com"
+        },
+        {
+          "title": "Difference between DOS and DDOS Attack - GeeksforGeeks",
+          "url": "https://www.geeksforgeeks.org/difference-between-dos-and-ddos-attack/",
+          "domain": "geeksforgeeks.org"
+        },
+        {
+          "title": "DoS vs DDoS: What's the difference? - Wiz",
+          "url": "https://www.wiz.io/academy/detection-and-response/dos-vs-ddos",
+          "domain": "wiz.io"
+        }
+      ],
+      "id": 60
+    },
+    {
+      "question": "Explain how STUN, TURN, and ICE work together to establish peer-to-peer connectivity through NAT, such as in a WebRTC call.",
+      "difficulty": "Hard",
+      "answer": "Two devices behind separate NATs generally can't just connect to each other directly, because neither has a publicly routable address that the other can dial — each only knows its own private LAN IP. STUN (Session Traversal Utilities for NAT) solves the simpler part of this: a client sends a request to a public STUN server, which observes the source IP:port that the packet actually arrived from (after the client's NAT rewrote it) and reports that back to the client — this is the client's 'server-reflexive' public address, discovering what the outside world sees. This works well for 'full-cone' or moderately restrictive NATs where the mapping is predictable, but fails for symmetric NAT (common on corporate networks and mobile carriers), where the NAT assigns a different external port for every distinct destination, making the address learned from a STUN server useless for connecting to a different peer. TURN (Traversal Using Relays around NAT) is the fallback for exactly that case: a TURN server acts as a relay that both peers connect to and send traffic through, guaranteeing connectivity at the cost of higher latency and bandwidth cost (all media now flows through a third-party relay instead of directly between peers). ICE (Interactive Connectivity Establishment) is the overall framework that ties this together: each peer gathers a set of address 'candidates' — its local LAN address, its STUN-discovered server-reflexive address, and a TURN relay address as a last resort — exchanges these candidates with the other peer (via a signaling channel, not part of ICE itself), and then performs connectivity checks across all candidate pairs, picking the best one that actually works (preferring direct host-to-host, then STUN-assisted, then falling back to TURN relay only if nothing better succeeds). This is exactly the mechanism WebRTC uses to establish audio/video connections directly between browsers whenever possible.",
+      "sources": [
+        {
+          "title": "NAT, STUN, TURN, ICE and WebRTC - Forasoft",
+          "url": "https://www.forasoft.com/learn/video-streaming/articles-streaming/nat-stun-turn-ice-webrtc",
+          "domain": "forasoft.com"
+        },
+        {
+          "title": "STUN vs TURN vs ICE - SignalWire",
+          "url": "https://signalwire.com/docs/platform/voice/stun-vs-turn-vs-ice",
+          "domain": "signalwire.com"
+        },
+        {
+          "title": "NAT Traversal: How It Works - DEV Community",
+          "url": "https://dev.to/alakkadshaw/nat-traversal-how-it-works-4dnc",
+          "domain": "dev.to"
+        }
+      ],
+      "id": 61
+    },
+    {
+      "question": "What is BGP hijacking, and how does RPKI/Route Origin Validation help mitigate it?",
+      "difficulty": "Hard",
+      "answer": "BGP hijacking occurs when an autonomous system (AS) announces IP prefixes it doesn't actually own or have authorization to route — either maliciously or through misconfiguration — causing other networks that receive and trust that announcement to send traffic for those IP addresses toward the hijacking AS instead of the legitimate owner. Because BGP is fundamentally a trust-based protocol with no built-in verification of who's actually authorized to announce a given prefix, a hijack can succeed simply because the false announcement looks like a normal (often shorter, more specific) route, and BGP's path-selection logic will often prefer it. Consequences range from traffic being silently blackholed (denial of service) to being actively intercepted and inspected or modified before being forwarded on to the real destination (a man-in-the-middle at internet scale) — this has happened in real, documented incidents affecting major providers. RPKI (Resource Public Key Infrastructure) mitigates this by letting the legitimate holder of an IP prefix cryptographically sign a ROA (Route Origin Authorization) — a statement asserting 'AS X is authorized to originate this prefix' — published in a trusted RPKI repository. Routers performing Route Origin Validation (ROV) can check incoming BGP announcements against these signed ROAs and classify each as Valid, Invalid, or Unknown (no ROA published); networks can then configure policy to reject or deprioritize routes marked Invalid, meaning a hijacker announcing someone else's prefix without a matching, correctly-signed ROA gets automatically filtered out by any router doing ROV — though the protection is only as strong as how widely ROV has actually been deployed across the internet's networks, since RPKI doesn't prevent a hijack announcement from propagating through networks that don't perform validation.",
+      "sources": [
+        {
+          "title": "What is BGP Hijacking? - DeepStrike",
+          "url": "https://deepstrike.io/blog/what-is-bgp-hijacking",
+          "domain": "deepstrike.io"
+        },
+        {
+          "title": "BGP Hijacking Explained - SpeedTestHQ",
+          "url": "https://speedtesthq.com/guides/fundamentals/bgp-hijacking-explained",
+          "domain": "speedtesthq.com"
+        },
+        {
+          "title": "BGP Monitoring: BGP Hijacking - LogicMonitor",
+          "url": "https://www.logicmonitor.com/deep-dive/bgp-monitoring/bgp-hijacking",
+          "domain": "logicmonitor.com"
+        }
+      ],
+      "id": 62
+    },
+    {
+      "question": "Explain route summarization and VLSM (Variable Length Subnet Masking), and why they matter in large-scale network design.",
+      "difficulty": "Hard",
+      "answer": "VLSM is the practice of using different subnet mask lengths within the same overall network, rather than one fixed mask everywhere (Fixed-Length Subnet Masking). This lets a network designer size each subnet to actually match its real host requirement — a branch office LAN needing 60 hosts gets a /26 (64 addresses), while a point-to-point WAN link between two routers, needing only 2 addresses, gets a /30 — instead of wastefully applying the same large subnet everywhere. Classful routing protocols (like RIPv1) couldn't support this, since they only advertised one mask per network class; VLSM requires classless routing protocols like OSPF, EIGRP, or BGP that carry the subnet mask alongside each route advertisement. Route summarization (supernetting) is essentially the inverse operation at the routing-table level: instead of a router advertising many individual specific routes to its neighbors, it advertises one summarized, less-specific route that covers a contiguous block of those subnets — for example, advertising 192.168.0.0/22 instead of four separate /24 routes. This matters enormously at scale because routing table size directly impacts router memory, CPU for route computation, and the bandwidth/processing cost of routing update exchanges — a large ISP or enterprise network with thousands of subnets would produce unmanageable table sizes and slow convergence without summarization; VLSM is what makes efficient, hierarchical address allocation possible in the first place, and route summarization is what turns that hierarchical structure into compact routing tables. The two work together: careful VLSM design (allocating contiguous address blocks by region/site in a planned, hierarchical way) is what makes clean summarization at higher levels of the network actually possible.",
+      "sources": [
+        {
+          "title": "VLSM Explained: How It Optimizes IP Address Allocation - PatSnap Eureka",
+          "url": "https://eureka.patsnap.com/blog/computer-science/vlsm-guide-networking/",
+          "domain": "eureka.patsnap.com"
+        },
+        {
+          "title": "VLSM(Variable Length Subnet Masks) - R.K.Mishra",
+          "url": "https://sites.google.com/site/therkmishra/cisco/vlsm-variable-length-subnet-marks",
+          "domain": "sites.google.com"
+        },
+        {
+          "title": "What is Variable Length Subnet Mask (VLSM)? - TechTarget",
+          "url": "https://www.techtarget.com/searchnetworking/definition/variable-length-subnet-mask",
+          "domain": "techtarget.com"
+        }
+      ],
+      "id": 63
+    },
+    {
+      "question": "What is the bandwidth-delay product, and why does it matter when tuning TCP window sizes on high-latency, high-bandwidth links?",
+      "difficulty": "Hard",
+      "answer": "The bandwidth-delay product (BDP) is the amount of data that can be 'in flight' on a network path at any given moment: BDP = bandwidth × round-trip time. For example, a 1 Gbps link with a 100ms RTT has a BDP of about 12.5 MB — that's how much data would need to be unacknowledged and in transit simultaneously to keep the link fully utilized. TCP's original window field is only 16 bits, capping the receive window at 65,535 bytes (64 KB) — fine for the low-latency LANs TCP was designed for in the 1980s, but on a modern high-bandwidth, high-latency ('long fat network') path, that 64 KB ceiling is far smaller than the BDP. When the TCP window is smaller than the path's BDP, the sender exhausts its allowed in-flight data and must stall, waiting for ACKs before sending more — meaning the connection can never actually use the full available bandwidth no matter how fast the link theoretically is, since it's throttled by round-trip latency rather than link capacity. This is exactly why a single large file transfer across a fast intercontinental or satellite link can feel like dial-up: the bottleneck isn't bandwidth, it's window size relative to RTT. The fix, standardized in RFC 1323, is TCP window scaling — a negotiated option (agreed during the SYN handshake, and fixed for the life of the connection) that multiplies the advertised window by a scale factor, allowing effective windows up to roughly 1 GB. In practice, tuning for BDP means ensuring window scaling is enabled and that OS send/receive buffers are sized at least as large as the calculated BDP — undersized buffers leave bandwidth unused, while oversized buffers waste memory and can contribute to bufferbloat (excess queuing delay) under load.",
+      "sources": [
+        {
+          "title": "Understanding TCP Window Sizing and the Bandwidth-Delay Product - InventiveHQ",
+          "url": "https://inventivehq.com/blog/understanding-tcp-window-sizing-bandwidth-delay-product",
+          "domain": "inventivehq.com"
+        },
+        {
+          "title": "Bandwidth Delay Product - NetworkLessons",
+          "url": "https://networklessons.com/cisco/ccnp-route/bandwidth-delay-product",
+          "domain": "networklessons.com"
+        },
+        {
+          "title": "TCP Window Size Calculator - BDP & Throughput - InventiveHQ",
+          "url": "https://inventivehq.com/tools/network/tcp-window-size-calculator",
+          "domain": "inventivehq.com"
+        }
+      ],
+      "id": 64
+    },
+    {
+      "question": "How does consistent hashing minimize data or session redistribution when nodes are added or removed from a distributed caching or load-balancing layer, compared to naive modulo-based hashing?",
+      "difficulty": "Hard",
+      "answer": "Naive hashing assigns a key to a server using key_hash % N, where N is the current number of servers. The problem is that N appears directly in the formula: if you add or remove even a single server, N changes, and the modulo result for nearly every key changes along with it — meaning almost all keys suddenly map to a different server than before. For a distributed cache, this is catastrophic: it effectively invalidates the entire cache at once (a 'cache stampede'), sending a flood of requests to the origin/database simultaneously as every key needs to be refetched into its new location. Consistent hashing solves this by decoupling key placement from N. Both servers and keys are hashed onto positions on a fixed, circular hash space (a 'ring' — typically 0 to 2^32-1), and each key is assigned to the first server encountered going clockwise from the key's position on the ring. When a server is added, it only takes over the portion of the ring between itself and the next server counter-clockwise — meaning only the keys that fall in that specific arc need to move, while every other key's server assignment is completely unaffected. Removing a server has the same localized effect in reverse: only the keys it was responsible for get reassigned to the next server clockwise. In a system with N servers, adding or removing one server under consistent hashing only remaps roughly 1/N of all keys, versus nearly all keys under modulo hashing. In practice, implementations also use 'virtual nodes' — hashing each physical server to multiple points on the ring — to smooth out load distribution and avoid one server unluckily owning a disproportionately large arc.",
+      "sources": [
+        {
+          "title": "Consistent Hashing - Hello Interview",
+          "url": "https://www.hellointerview.com/learn/system-design/core-concepts/consistent-hashing",
+          "domain": "hellointerview.com"
+        },
+        {
+          "title": "Consistent Hashing: Why It Matters - SystemDR",
+          "url": "https://systemdr.systemdrd.com/p/consistent-hashing-why-it-matters",
+          "domain": "systemdr.systemdrd.com"
+        }
+      ],
+      "id": 65
+    },
+    {
+      "question": "What is microsegmentation in a zero-trust network architecture, and how does it differ from a traditional perimeter-based security model?",
+      "difficulty": "Hard",
+      "answer": "Traditional perimeter security operates on an implicit-trust model: a firewall guards the boundary between 'inside' (trusted) and 'outside' (untrusted), and once traffic is inside the network, it generally moves freely between internal systems with minimal inspection — the network is effectively flat from a security-policy standpoint. This breaks down badly against modern threats and modern architectures: if an attacker compromises even one internal system (via phishing, a vulnerable service, etc.), they can move laterally across the internal network largely unimpeded, since internal ('east-west') traffic was never designed to pass through the same scrutiny as traffic crossing the perimeter. It's also a poor fit for cloud/container environments, where IP addresses are ephemeral, workloads span multiple clouds, and there often isn't a clean network 'perimeter' to defend in the first place. Zero trust rejects the idea that anything should be implicitly trusted based on network location — every request, regardless of whether it originates inside or outside the traditional boundary, must be explicitly authenticated and authorized. Microsegmentation is the mechanism that enforces this at the network level: rather than one large trusted zone, it creates fine-grained security boundaries — often around individual workloads, VMs, containers, or even specific services — with explicit policies dictating exactly which other workloads each one is allowed to communicate with, enforced independent of physical network topology (often via software agents, cloud security groups, or SDN rather than traditional network-address-based firewall rules). The practical benefit is blast-radius containment: even if an attacker compromises one workload, microsegmentation policy prevents them from freely reaching every other system on the network, limiting lateral movement to only the explicitly permitted paths.",
+      "sources": [
+        {
+          "title": "Microsegmentation explained - IBM",
+          "url": "https://www.ibm.com/think/insights/microsegmentation-lateral-movement",
+          "domain": "ibm.com"
+        },
+        {
+          "title": "Microsegmentation vs. Zero Trust: What's the Difference? - RedRiver",
+          "url": "https://redriver.com/security/microsegmentation-zero-trust",
+          "domain": "redriver.com"
+        },
+        {
+          "title": "What is Microsegmentation & Zero Trust Security? - Nutanix",
+          "url": "https://www.nutanix.com/info/what-is-microsegmentation",
+          "domain": "nutanix.com"
+        }
+      ],
+      "id": 66
+    },
+    {
+      "question": "How can session hijacking occur over a network, and what mechanisms (secure cookies, TLS, token rotation) mitigate it?",
+      "difficulty": "Hard",
+      "answer": "After a user authenticates, a web application typically issues a session token (a cookie, JWT, or similar bearer credential) that proves authentication for subsequent requests — whoever possesses that token is treated as that authenticated user, without needing to re-supply a password. Session hijacking is the theft or forging of that token so an attacker can impersonate the victim without ever needing their credentials. Common vectors include: session sniffing — passively capturing unencrypted traffic on a shared network (like open WiFi) to extract the token in transit; cross-site scripting (XSS) — injecting malicious JavaScript into a vulnerable page that reads and exfiltrates the victim's cookie/token, which is currently one of the most common real-world vectors, especially against tokens stored in localStorage (which JavaScript can always read) rather than cookies; session fixation — tricking a victim into using a session ID the attacker already knows before they authenticate, so the attacker's pre-chosen ID becomes valid once login succeeds; and info-stealing malware that scrapes browser cookies directly off a compromised device. Mitigations map to these vectors: TLS/HTTPS encrypts traffic end-to-end, defeating passive network sniffing (though it does nothing once a token is already stolen by other means); the Secure cookie flag ensures the cookie is only ever transmitted over HTTPS; the HttpOnly flag prevents JavaScript from reading the cookie at all, directly blocking XSS-based cookie theft (though tokens deliberately exposed to JavaScript, like many JWT implementations, don't get this protection); regenerating the session ID immediately after login defeats session fixation; and short token lifetimes combined with rotation (issuing a new token periodically, or on sensitive actions, and invalidating the old one) limit how long a stolen token remains useful even if theft does occur. No single mechanism is complete on its own — defense in depth across transport security, cookie flags, and token lifecycle management is what actually closes the various hijacking vectors.",
+      "sources": [
+        {
+          "title": "What is Session Hijacking | Types, Detection & Prevention - Imperva",
+          "url": "https://www.imperva.com/learn/application-security/session-hijacking/",
+          "domain": "imperva.com"
+        },
+        {
+          "title": "Session hijacking attack - OWASP Foundation",
+          "url": "https://owasp.org/www-community/attacks/Session_hijacking_attack",
+          "domain": "owasp.org"
+        },
+        {
+          "title": "Session Hijacking: How It Works & How to Stop It - Obsidian Security",
+          "url": "https://www.obsidiansecurity.com/blog/session-hijacking-how-it-works-how-to-stop-it",
+          "domain": "obsidiansecurity.com"
+        }
+      ],
+      "id": 67
+    },
+    {
+      "question": "Explain how SDN (Software-Defined Networking) separates the control plane from the data plane, and what problems this architecture solves compared to traditional networking.",
+      "difficulty": "Hard",
+      "answer": "In traditional networking, every switch and router is a self-contained device combining two functions: the data plane (the actual hardware-accelerated forwarding of packets/frames from an input port to an output port, based on locally stored tables) and the control plane (the logic that decides what those forwarding rules should be — computed independently by each device via routing protocols like OSPF or BGP, or spanning-tree calculations). Because control-plane logic runs independently and locally on every single device, making network-wide policy changes means touching many devices individually, and the network's overall behavior emerges indirectly from many separate, device-local decisions rather than being centrally specified. SDN restructures this by physically separating the two: 'dumb' forwarding devices (switches) retain only the data plane, executing forwarding rules exactly as instructed, while the control plane logic is centralized in a software-based SDN controller that has visibility into and authority over the entire network. The controller communicates with switches via a standardized southbound protocol — OpenFlow being the original and most widely known — to install, modify, and remove flow rules in each switch's forwarding table. This solves several real problems: (1) centralized, programmatic control means network-wide policy changes can be pushed from one place instead of reconfiguring every device individually; (2) it enables rapid, automated response to changing conditions (traffic engineering, load-based rerouting) without manual reconfiguration; (3) it decouples forwarding hardware from control logic, allowing cheaper, simpler, vendor-neutral switches since the intelligence lives in software at the controller. The trade-off is that the controller becomes a critical, centralized dependency — a compromised or unavailable controller has much broader blast radius than a single traditional router failing, which is a genuine security and resilience consideration in SDN deployments.",
+      "sources": [
+        {
+          "title": "The basics of SDN and the OpenFlow Network Architecture - NoviFlow",
+          "url": "https://noviflow.com/the-basics-of-sdn-and-the-openflow-network-architecture/",
+          "domain": "noviflow.com"
+        },
+        {
+          "title": "What is OpenFlow? A Guide to Software-Defined Networking",
+          "url": "https://brandergroup.net/2023/12/what-is-openflow-a-guide-to-software-defined-networking/",
+          "domain": "brandergroup.net"
+        },
+        {
+          "title": "Software-Defined Networking Using OpenFlow: Protocols, Applications and Architectural Design Choices - MDPI",
+          "url": "https://www.mdpi.com/1999-5903/6/2/302",
+          "domain": "mdpi.com"
+        }
+      ],
+      "id": 68
+    },
+    {
+      "question": "What is a jitter buffer, and how does it compensate for variable network delay in VoIP or real-time streaming applications?",
+      "difficulty": "Hard",
+      "answer": "Jitter is the variation in packet arrival delay — because IP networks are best-effort, packets carrying successive chunks of a voice or video stream can each take slightly different amounts of time to arrive, arriving out of their original sending order or bunched together unevenly, even though they were transmitted at a steady, even rate. If those packets were played out to the listener the instant they arrived, this unevenness would produce choppy, robotic-sounding audio or stuttering video. A jitter buffer sits at the receiving end and absorbs this variability: it holds incoming packets briefly, reorders any that arrived out of sequence, and then releases them to the playback device at a smooth, steady rate rather than the network's uneven delivery rate — deliberately trading a small amount of added end-to-end delay for a much smoother, more consistent playback experience. There are two general designs: a static (fixed) jitter buffer holds packets for a constant amount of time regardless of current conditions — simple, but not ideal for links with fluctuating jitter; a dynamic (adaptive) jitter buffer continuously monitors observed jitter and adjusts its buffering depth on the fly, shrinking when the network is stable (minimizing added delay) and growing when jitter increases (avoiding dropped/late packets). This adjustment involves a real trade-off: a larger buffer better tolerates jitter and reduces the odds of a packet arriving too late to be used (which gets discarded, causing an audible gap), but it also adds more fixed latency to the call — for interactive voice, total one-way delay much above ~150ms starts to noticeably hurt conversational quality, so jitter buffer sizing has to balance smoothness against added latency rather than simply maximizing buffer depth.",
+      "sources": [
+        {
+          "title": "Understanding Jitter in Packet Voice Networks (Cisco IOS Platforms) - Cisco",
+          "url": "https://www.cisco.com/c/en/us/support/docs/voice/voice-quality/18902-jitter-packet-voice.html",
+          "domain": "cisco.com"
+        },
+        {
+          "title": "What is a Jitter Buffer and How It Works - Obkio",
+          "url": "https://obkio.com/blog/jitter-buffers/",
+          "domain": "obkio.com"
+        },
+        {
+          "title": "Jitter Buffer for Voice over IP - VOCAL Technologies",
+          "url": "https://vocal.com/voip/jitter-buffer-for-voice-over-ip/",
+          "domain": "vocal.com"
+        }
+      ],
+      "id": 69
+    },
+    {
+      "question": "What is MPLS, and how does label switching improve forwarding performance and enable traffic engineering compared to conventional hop-by-hop IP routing?",
+      "difficulty": "Hard",
+      "answer": "In conventional IP routing, every router along a packet's path independently performs a full destination-address lookup against its routing table to determine the next hop — this happens at every single hop, even though the packet is following essentially the same route the whole way. MPLS (Multiprotocol Label Switching) changes this: when a packet enters an MPLS network, an ingress Label Edge Router (LER) classifies it into a Forwarding Equivalence Class (FEC) — a group of packets that will be treated identically for forwarding purposes, typically based on destination and other criteria — and attaches a short, fixed-length label representing that FEC. From that point on, every intermediate Label Switch Router (LSR) makes its forwarding decision purely by looking up the label (a simple, fast table index operation) rather than re-parsing the full IP header and performing a longest-prefix-match lookup — the label is swapped for a new one at each hop until the egress LER pops the label and delivers the plain IP packet. Historically, this label-lookup speed was the primary motivation for MPLS (avoiding expensive IP lookups at every hop); with modern hardware-accelerated routers, raw forwarding speed is less of a differentiator, and MPLS today is used mainly for traffic engineering and service capabilities that hop-by-hop IP routing can't easily provide. Specifically, MPLS establishes explicit Label Switched Paths (LSPs) — a predetermined sequence of routers a given traffic class will follow — which lets network operators steer specific traffic along a chosen path (for load distribution, low-latency routing, or avoiding congested links) rather than simply following whatever the IGP's shortest-path calculation independently decides at each hop. This also underpins BGP/MPLS Layer 3 VPNs (letting a single provider's core network carry logically separate customer networks) and enables differentiated QoS treatment per label, both of which are difficult to achieve cleanly with pure destination-based IP routing.",
+      "sources": [
+        {
+          "title": "What is Multiprotocol Label Switching (MPLS)? - TechTarget",
+          "url": "https://www.techtarget.com/searchnetworking/definition/Multiprotocol-Label-Switching-MPLS",
+          "domain": "techtarget.com"
+        },
+        {
+          "title": "What is MPLS? (Multiprotocol Label Switching) - Zscaler",
+          "url": "https://www.zscaler.com/resources/security-terms-glossary/what-is-multiprotocol-label-switching",
+          "domain": "zscaler.com"
+        },
+        {
+          "title": "Multiprotocol Label Switching - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Multiprotocol_Label_Switching",
+          "domain": "en.wikipedia.org"
+        }
+      ],
+      "id": 70
+    }
+  ],
+  "sources": [
+    {
+      "title": "Top 100 Network Security Interview Questions for Network Engineers (2026)",
+      "url": "https://www.thenetworkdna.com/2026/05/top-100-network-security-interview.html",
+      "domain": "thenetworkdna.com",
+      "count": 3
+    },
+    {
+      "title": "CCNA NAT/PAT Lab — Static, Dynamic & Overload Configuration - NetworkersHome",
+      "url": "https://www.networkershome.com/fundamentals/ccna-study-guide/ccna-nat-pat-lab/",
+      "domain": "networkershome.com",
+      "count": 3
+    },
+    {
+      "title": "Networking Interview Questions and Answers - GeeksforGeeks",
+      "url": "https://www.geeksforgeeks.org/blogs/networking-interview-questions/",
+      "domain": "geeksforgeeks.org",
+      "count": 2
+    },
+    {
+      "title": "What is the OSI Model? The 7 Layers Explained – BMC Software",
+      "url": "https://www.bmc.com/blogs/osi-model-7-layers/",
+      "domain": "bmc.com",
+      "count": 2
+    },
+    {
+      "title": "What Is The OSI Model? - Cloudflare",
+      "url": "https://www.cloudflare.com/learning/ddos/glossary/open-systems-interconnection-model-osi/",
+      "domain": "cloudflare.com",
+      "count": 2
+    },
+    {
+      "title": "TCP vs UDP Ports Explained: Differences and Use Cases - Anavem",
+      "url": "https://anavem.com/explanations/tcp-vs-udp-ports-explained-key-differences-and-use-cases",
+      "domain": "anavem.com",
+      "count": 2
+    },
+    {
+      "title": "TCP vs UDP: When to Use Each Transport Protocol",
+      "url": "https://www.speedtesthq.com/guides/fundamentals/tcp-vs-udp",
+      "domain": "speedtesthq.com",
+      "count": 2
+    },
+    {
+      "title": "What Is DNS (Domain Name System)? - IBM",
+      "url": "https://www.ibm.com/think/topics/dns",
+      "domain": "ibm.com",
+      "count": 2
+    },
+    {
+      "title": "HTTP vs HTTPS in Tech Interviews: What to Answer Beyond 'It's Encrypted'",
+      "url": "https://pasqualepillitteri.it/en/news/1852/http-vs-https-tech-interview-tls-handshake",
+      "domain": "pasqualepillitteri.it",
+      "count": 2
+    },
+    {
+      "title": "Advanced TCP & UDP Interview Questions and Answers",
+      "url": "https://ajaykumawat.com/advanced-tcp-udp-interview-questions-and-answers/",
+      "domain": "ajaykumawat.com",
+      "count": 2
+    },
+    {
+      "title": "Flow Control vs. Congestion Control in TCP - Baeldung on Computer Science",
+      "url": "https://www.baeldung.com/cs/tcp-flow-control-vs-congestion-control",
+      "domain": "baeldung.com",
+      "count": 2
+    },
+    {
+      "title": "TCP (Transmission Control Protocol) Congestion Control - Noction",
+      "url": "https://www.noction.com/blog/tcp-transmission-control-protocol-congestion-control",
+      "domain": "noction.com",
+      "count": 2
+    },
+    {
+      "title": "Difference between layer-2 and layer-3 switches - GeeksforGeeks",
+      "url": "https://www.geeksforgeeks.org/computer-networks/difference-between-layer-2-and-layer-3-switches/",
+      "domain": "geeksforgeeks.org",
+      "count": 2
+    },
+    {
+      "title": "Comparing Layer 3 and Layer 2 Switches - Cisco Meraki Documentation",
+      "url": "https://documentation.meraki.com/MS/Layer_3_Switching/Comparing_Layer_3_and_Layer_2_Switches",
+      "domain": "documentation.meraki.com",
+      "count": 2
+    },
+    {
+      "title": "HTTP/2 vs HTTP/3 and QUIC: What Changes for Your Server in 2026",
+      "url": "https://panelica.com/blog/http2-vs-http3-quic-what-changes-for-your-server-2026",
+      "domain": "panelica.com",
+      "count": 2
+    },
+    {
+      "title": "CDN System Design: How Content Delivery Networks Work - Ajit Singh",
+      "url": "https://singhajit.com/cdn-system-design/",
+      "domain": "singhajit.com",
+      "count": 2
+    },
+    {
+      "title": "IMAP vs POP3 vs SMTP: What is the Difference - GeeksforGeeks",
+      "url": "https://www.geeksforgeeks.org/computer-networks/imap-vs-pop3-vs-smtp/",
+      "domain": "geeksforgeeks.org",
+      "count": 2
+    },
+    {
+      "title": "Latency vs Throughput vs Bandwidth - AlgoMaster.io",
+      "url": "https://algomaster.io/learn/computer-networks/latency-vs-throughput-vs-bandwidth",
+      "domain": "algomaster.io",
+      "count": 2
+    },
+    {
+      "title": "Understanding Network Latency: Ping, RTT, and What Good Numbers Look Like - ToolPlex",
+      "url": "https://toolplex.dev/articles/network-latency-guide/",
+      "domain": "toolplex.dev",
+      "count": 2
+    },
+    {
+      "title": "Consistent Hashing - Hello Interview",
+      "url": "https://www.hellointerview.com/learn/system-design/core-concepts/consistent-hashing",
+      "domain": "hellointerview.com",
+      "count": 2
+    },
+    {
+      "title": "Consistent Hashing: Why It Matters - SystemDR",
+      "url": "https://systemdr.systemdrd.com/p/consistent-hashing-why-it-matters",
+      "domain": "systemdr.systemdrd.com",
+      "count": 2
+    },
+    {
+      "title": "Top Computer Network Interview Questions [2025] | PrepInsta",
+      "url": "https://prepinsta.com/interview-preparation/technical-interview-questions/computer-network/",
+      "domain": "prepinsta.com",
+      "count": 1
+    },
+    {
+      "title": "What is OSI Model | 7 Layers Explained - GeeksforGeeks",
+      "url": "https://www.geeksforgeeks.org/computer-networks/open-systems-interconnection-model-osi/",
+      "domain": "geeksforgeeks.org",
+      "count": 1
+    },
+    {
+      "title": "OSI Model: Complete Guide to the 7 Network Layers - Codecademy",
+      "url": "https://www.codecademy.com/article/osi-model-complete-guide-to-the-7-network-layers",
+      "domain": "codecademy.com",
+      "count": 1
+    },
+    {
+      "title": "Best 45 Computer Networks Interview Questions (2026) - Bosscoder Academy",
+      "url": "https://www.bosscoderacademy.com/blog/computer-networks-interview-questions",
+      "domain": "bosscoderacademy.com",
+      "count": 1
+    },
+    {
+      "title": "70+ Top Networking Interview Questions (2026) - InterviewBit",
+      "url": "https://www.interviewbit.com/networking-interview-questions/",
+      "domain": "interviewbit.com",
+      "count": 1
+    },
+    {
+      "title": "Top 50 Networking Interview Questions and Answers in 2025 - Edureka",
+      "url": "https://www.edureka.co/blog/interview-questions/networking-interview-questions/",
+      "domain": "edureka.co",
+      "count": 1
+    },
+    {
+      "title": "15 server and networking interview questions and answers - TechTarget",
+      "url": "https://www.techtarget.com/whatis/feature/15-server-and-networking-interview-questions-and-answers",
+      "domain": "techtarget.com",
+      "count": 1
+    },
+    {
+      "title": "60 Networking Interview Questions with Sample Answers & PDF",
+      "url": "https://taggd.in/blogs/networking-interview-questions-answers-examples/",
+      "domain": "taggd.in",
+      "count": 1
+    },
+    {
+      "title": "Working of Domain Name System (DNS) Server - GeeksforGeeks",
+      "url": "https://www.geeksforgeeks.org/computer-networks/working-of-domain-name-system-dns-server/",
+      "domain": "geeksforgeeks.org",
+      "count": 1
+    },
+    {
+      "title": "Mastering Web Fundamentals: Top Interview Questions and Answers - DEV Community",
+      "url": "https://dev.to/lourdesyang1023/mastering-web-fundamentals-top-interview-questions-and-answers-http-tls-security-performance-30oo",
+      "domain": "dev.to",
+      "count": 1
+    },
+    {
+      "title": "Common Network Ports: What They Are and What They Do - NetworkCheckr",
+      "url": "https://networkcheckr.com/common-network-ports-explained/",
+      "domain": "networkcheckr.com",
+      "count": 1
+    },
+    {
+      "title": "What Happens When You Type a URL? (Step-by-Step Explanation) - Design Gurus",
+      "url": "https://www.designgurus.io/blog/when-you-type-url",
+      "domain": "designgurus.io",
+      "count": 1
+    },
+    {
+      "title": "What happens when you type a URL into a browser - Educative",
+      "url": "https://www.educative.io/blog/what-happens-when-we-type-a-url",
+      "domain": "educative.io",
+      "count": 1
+    },
+    {
+      "title": "What Happens When You Type in a URL - DEV Community",
+      "url": "https://dev.to/wsvincent/what-happens-when-you-type-in-a-url-283d",
+      "domain": "dev.to",
+      "count": 1
+    },
+    {
+      "title": "Top 20 TCP/IP Protocol Interview Questions and Answers - NetworkKings",
+      "url": "https://www.nwkings.com/tcp-ip-protocol-interview-questions-and-answers",
+      "domain": "nwkings.com",
+      "count": 1
+    },
+    {
+      "title": "TCP Interview Questions and Answers - Networker Interview",
+      "url": "http://networkerinterview.net/entries/tcp-2/tcp",
+      "domain": "networkerinterview.net",
+      "count": 1
+    },
+    {
+      "title": "15 DNS Interview Questions and Answers - CLIMB",
+      "url": "https://climbtheladder.com/dns-interview-questions/",
+      "domain": "climbtheladder.com",
+      "count": 1
+    },
+    {
+      "title": "How DNS Works: A Guide to Understanding the Internet's Address Book - freeCodeCamp",
+      "url": "https://www.freecodecamp.org/news/how-dns-works-the-internets-address-book/",
+      "domain": "freecodecamp.org",
+      "count": 1
+    },
+    {
+      "title": "What Is Network Address Translation (NAT)? - Cisco",
+      "url": "https://www.cisco.com/site/us/en/learn/topics/networking/what-is-network-address-translation-nat.html",
+      "domain": "cisco.com",
+      "count": 1
+    },
+    {
+      "title": "What Is NAT? Network Address Translation Explained - TP-Link/Omada",
+      "url": "https://www.omadanetworks.com/us/blog/2607/what-is-nat-network-address-translation-explained/",
+      "domain": "omadanetworks.com",
+      "count": 1
+    },
+    {
+      "title": "Subnetting Interview Questions for Network Engineers - SubnetLab",
+      "url": "https://subnetlab.com/subnetting-interview-questions-answers/",
+      "domain": "subnetlab.com",
+      "count": 1
+    },
+    {
+      "title": "50 Essential Subnetting Questions and Answers Guide - NitizSharma",
+      "url": "https://nitizsharma.com/questions-and-answers-for-subnetting/",
+      "domain": "nitizsharma.com",
+      "count": 1
+    },
+    {
+      "title": "How Address Resolution Protocol (ARP) Works - GeeksforGeeks",
+      "url": "https://www.geeksforgeeks.org/ethical-hacking/how-address-resolution-protocol-arp-works/",
+      "domain": "geeksforgeeks.org",
+      "count": 1
+    },
+    {
+      "title": "What's ARP? Address Resolution Protocol Explained - Splunk",
+      "url": "https://www.splunk.com/en_us/blog/learn/address-resolution-protocol-arp.html",
+      "domain": "splunk.com",
+      "count": 1
+    },
+    {
+      "title": "Stateful vs. Stateless Firewalls: What's the Difference? - CDW",
+      "url": "https://www.cdw.com/content/cdw/en/articles/security/stateful-versus-stateless-firewalls.html",
+      "domain": "cdw.com",
+      "count": 1
+    },
+    {
+      "title": "Stateful vs Stateless Firewall: What is the difference? - FS.com",
+      "url": "https://www.fs.com/blog/stateful-vs-stateless-firewalls-differences-explained-833.html",
+      "domain": "fs.com",
+      "count": 1
+    },
+    {
+      "title": "What is the IPsec protocol? How IPsec VPNs work - NordVPN",
+      "url": "https://nordvpn.com/blog/what-is-ipsec/",
+      "domain": "nordvpn.com",
+      "count": 1
+    },
+    {
+      "title": "IPsec VPN Explained | How IPsec works | IPsec vs SSL - GoodAccess",
+      "url": "https://www.goodaccess.com/blog/ipsec-vpn/",
+      "domain": "goodaccess.com",
+      "count": 1
+    },
+    {
+      "title": "Layer 7 Load Balancer vs Layer 4: Key Differences Explained - A10 Networks",
+      "url": "https://www.a10networks.com/glossary/how-do-layer-4-and-layer-7-load-balancing-differ/",
+      "domain": "a10networks.com",
+      "count": 1
+    },
+    {
+      "title": "What Is Layer 4 Load Balancing? - F5",
+      "url": "https://www.f5.com/glossary/layer-4-load-balancing",
+      "domain": "f5.com",
+      "count": 1
+    },
+    {
+      "title": "Difference between Unicast, Broadcast and Multicast in Computer Network - GeeksforGeeks",
+      "url": "https://www.geeksforgeeks.org/computer-networks/difference-between-unicast-broadcast-and-multicast-in-computer-network/",
+      "domain": "geeksforgeeks.org",
+      "count": 1
+    },
+    {
+      "title": "Introducing Multicast - NetworkAcademy.IO",
+      "url": "https://www.networkacademy.io/ccie-enterprise/multicast/introducing-multicast",
+      "domain": "networkacademy.io",
+      "count": 1
+    },
+    {
+      "title": "Why TCP Connect Termination Need 4-Way-Handshake? - GeeksforGeeks",
+      "url": "https://www.geeksforgeeks.org/computer-networks/why-tcp-connect-termination-need-4-way-handshake/",
+      "domain": "geeksforgeeks.org",
+      "count": 1
+    },
+    {
+      "title": "TCP four-way handshake - Ebyte",
+      "url": "https://ebyteiot.com/blogs/ebyte-iot-blog/tcp-four-way-handshake",
+      "domain": "ebyteiot.com",
+      "count": 1
+    },
+    {
+      "title": "Forward proxy vs. reverse proxy: What's the difference? - TheServerSide",
+      "url": "https://www.theserverside.com/feature/Forward-proxy-vs-reverse-proxy-Whats-the-difference",
+      "domain": "theserverside.com",
+      "count": 1
+    },
+    {
+      "title": "Proxy vs Reverse Proxy (Explained with Examples) - AlgoMaster",
+      "url": "https://blog.algomaster.io/p/proxy-vs-reverse-proxy-explained",
+      "domain": "blog.algomaster.io",
+      "count": 1
+    },
+    {
+      "title": "Introduction to TCP four-way handshake - CDEBYTE",
+      "url": "https://www.cdebyte.com/news/1097",
+      "domain": "cdebyte.com",
+      "count": 1
+    },
+    {
+      "title": "How Does TCP Connection Termination Work With FIN Packets - Ebyte IoT",
+      "url": "https://ebyteiot.com/blogs/ebyte-iot-blog/how-does-tcp-connection-termination-work-with-fin-packets-4-way-handshake-amp-troubleshooting-guide",
+      "domain": "ebyteiot.com",
+      "count": 1
+    },
+    {
+      "title": "Network Engineer Interview Questions & Answers - Teal",
+      "url": "https://www.tealhq.com/career-paths/network-engineer-interview-questions",
+      "domain": "tealhq.com",
+      "count": 1
+    },
+    {
+      "title": "Cisco Network Engineer Interview Questions and Answers",
+      "url": "https://www.live-work.immigration.govt.nz/+55498872/nresignd/asubstitutee/jcommencez/cisco+network+engineer+interview+questions+and+answers.pdf",
+      "domain": "live-work.immigration.govt.nz",
+      "count": 1
+    },
+    {
+      "title": "HTTP/2 vs. HTTP/3 - LogicMonitor/Catchpoint",
+      "url": "https://www.catchpoint.com/http3-vs-http2",
+      "domain": "catchpoint.com",
+      "count": 1
+    },
+    {
+      "title": "What Are QUIC and HTTP/3? - F5",
+      "url": "https://www.f5.com/glossary/quic-http3",
+      "domain": "f5.com",
+      "count": 1
+    },
+    {
+      "title": "Address Resolution Protocol (ARP): How It Works in Networking - Paramount",
+      "url": "https://paramountassure.com/glossary/address-resolution-protocol-arp-how-it-works-in-networking-paramount/",
+      "domain": "paramountassure.com",
+      "count": 1
+    },
+    {
+      "title": "ARP spoofing - Wikipedia",
+      "url": "https://en.wikipedia.org/wiki/ARP_spoofing",
+      "domain": "en.wikipedia.org",
+      "count": 1
+    },
+    {
+      "title": "Method for preventing denial of service attacks using transmission control protocol state transition",
+      "url": "https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/8925068",
+      "domain": "image-ppubs.uspto.gov",
+      "count": 1
+    },
+    {
+      "title": "Network Troubleshooting & Performance Optimization: OSI Model Systematic Approach - InventiveHQ",
+      "url": "https://inventivehq.com/blog/network-troubleshooting-workflow",
+      "domain": "inventivehq.com",
+      "count": 1
+    },
+    {
+      "title": "How to use the OSI Model for Network Troubleshooting - Petri IT Knowledgebase",
+      "url": "https://petri.com/csc_how_to_use_the_osi_model_to_troubleshoot_networks/",
+      "domain": "petri.com",
+      "count": 1
+    },
+    {
+      "title": "Structured Troubleshooting Approaches - Cisco Press",
+      "url": "https://www.ciscopress.com/articles/article.asp?p=2273070&seqNum=2",
+      "domain": "ciscopress.com",
+      "count": 1
+    },
+    {
+      "title": "RFC 2923: TCP Problems with Path MTU Discovery - IETF",
+      "url": "https://www.rfc-editor.org/rfc/rfc2923.html",
+      "domain": "rfc-editor.org",
+      "count": 1
+    },
+    {
+      "title": "How to Understand Path MTU Discovery Using ICMP - OneUptime",
+      "url": "https://oneuptime.com/blog/post/2026-03-20-path-mtu-discovery-icmp/view",
+      "domain": "oneuptime.com",
+      "count": 1
+    },
+    {
+      "title": "UDP vs. TCP in Multiplayer Gaming: State Synchronization and Lag Compensation",
+      "url": "https://systemdr.systemdrd.com/p/udp-vs-tcp-in-multiplayer-gaming",
+      "domain": "systemdr.systemdrd.com",
+      "count": 1
+    },
+    {
+      "title": "UDP vs TCP for VoIP: Protocols Explained - OnSIP",
+      "url": "https://www.onsip.com/voip-resources/voip-fundamentals/udp-versus-tcp-for-voip",
+      "domain": "onsip.com",
+      "count": 1
+    },
+    {
+      "title": "6 Best Network Topologies Explained - Pros & Cons - Comparitech",
+      "url": "https://www.comparitech.com/net-admin/network-topologies-advantages-disadvantages/",
+      "domain": "comparitech.com",
+      "count": 1
+    },
+    {
+      "title": "Network Topologies — Star, Mesh, Ring & Hybrid Designs - NetworkersHome",
+      "url": "https://www.networkershome.com/fundamentals/networking/network-topologies-star-mesh-ring-hybrid/",
+      "domain": "networkershome.com",
+      "count": 1
+    },
+    {
+      "title": "Bus, ring, star or mesh: Which topology is right for you? - Control Design",
+      "url": "https://www.controldesign.com/connections/data-acquisition-monitoring/article/21438562/bus-ring-star-or-mesh-which-topology-is-right-for-you",
+      "domain": "controldesign.com",
+      "count": 1
+    },
+    {
+      "title": "Difference between Circuit Switching and Packet Switching - GeeksforGeeks",
+      "url": "https://www.geeksforgeeks.org/computer-networks/difference-between-circuit-switching-and-packet-switching/",
+      "domain": "geeksforgeeks.org",
+      "count": 1
+    },
+    {
+      "title": "Circuit Switching vs Packet Switching: An Overview - NinjaOne",
+      "url": "https://www.ninjaone.com/blog/circuit-switching-vs-packet-switching/",
+      "domain": "ninjaone.com",
+      "count": 1
+    },
+    {
+      "title": "Circuit Switching vs Packet Switching: Key Differences Explained - Vedantu",
+      "url": "https://www.vedantu.com/jee-main/physics-difference-between-circuit-switching-and-packet-switching",
+      "domain": "vedantu.com",
+      "count": 1
+    },
+    {
+      "title": "IMAP vs POP3 vs SMTP: The Differences Explained - WP Mail SMTP",
+      "url": "https://wpmailsmtp.com/imap-vs-pop3-vs-smtp/",
+      "domain": "wpmailsmtp.com",
+      "count": 1
+    },
+    {
+      "title": "IMAP vs. POP3 vs. SMTP: What Are the Differences? - phoenixNAP",
+      "url": "https://phoenixnap.com/kb/imap-vs-pop3-vs-smtp",
+      "domain": "phoenixnap.com",
+      "count": 1
+    },
+    {
+      "title": "4.4. The Socket Interface — Computer Systems Fundamentals - JMU",
+      "url": "https://w3.cs.jmu.edu/kirkpams/OpenCSF/Books/csf/html/Sockets.html",
+      "domain": "w3.cs.jmu.edu",
+      "count": 1
+    },
+    {
+      "title": "Socket Programming - Dartmouth CS",
+      "url": "https://www.cs.dartmouth.edu/~campbell/cs60/socketprogramming.html",
+      "domain": "cs.dartmouth.edu",
+      "count": 1
+    },
+    {
+      "title": "IPv4 vs IPv6 - Difference Between Internet Protocol Versions - AWS",
+      "url": "https://aws.amazon.com/compare/the-difference-between-ipv4-and-ipv6/",
+      "domain": "aws.amazon.com",
+      "count": 1
+    },
+    {
+      "title": "Difference Between IPv4 and IPv6 - GeeksforGeeks",
+      "url": "https://www.geeksforgeeks.org/computer-networks/differences-between-ipv4-and-ipv6/",
+      "domain": "geeksforgeeks.org",
+      "count": 1
+    },
+    {
+      "title": "IPv6 address - Wikipedia",
+      "url": "https://en.wikipedia.org/wiki/IPv6_address",
+      "domain": "en.wikipedia.org",
+      "count": 1
+    },
+    {
+      "title": "The ping Command: Reading Every Line of Output - Pulsetic",
+      "url": "https://pulsetic.com/blog/ping-command/",
+      "domain": "pulsetic.com",
+      "count": 1
+    },
+    {
+      "title": "SFTP vs FTP - Understanding the Difference - Sharetru",
+      "url": "https://www.sharetru.com/blog/sftp-vs-ftp-understanding-the-difference",
+      "domain": "sharetru.com",
+      "count": 1
+    },
+    {
+      "title": "FTP vs FTPS vs SFTP: The Differences That Actually Matter - Files.com",
+      "url": "https://www.exavault.com/blog/difference-between-ftp-ftps-and-sftp",
+      "domain": "exavault.com",
+      "count": 1
+    },
+    {
+      "title": "SFTP vs. FTPS: What are the key differences? - SolarWinds",
+      "url": "https://www.solarwinds.com/resources/it-glossary/sftp-vs-ftps",
+      "domain": "solarwinds.com",
+      "count": 1
+    },
+    {
+      "title": "Glassdoor Interview Question: Explain DNS / DHCP Working (DORA Process)",
+      "url": "https://www.glassdoor.sg/Interview/1-Explain-DNS-2-DHCP-Working-DORA-Process-3-TCP-IP-Questions-TCP-Three-way-handshake-4-How-does-HTTPS-work-Mainly-QTN_6131157.htm",
+      "domain": "glassdoor.sg",
+      "count": 1
+    },
+    {
+      "title": "Glassdoor Interview Question: DHCP DORA Process",
+      "url": "https://www.glassdoor.com/Interview/DHCP-DORA-Process-QTN_2502826.htm",
+      "domain": "glassdoor.com",
+      "count": 1
+    },
+    {
+      "title": "Top Spanning Tree Protocol Interview Questions - ClimbTheLadder",
+      "url": "https://climbtheladder.com/spanning-tree-protocol-interview-questions/",
+      "domain": "climbtheladder.com",
+      "count": 1
+    },
+    {
+      "title": "CCNA Interview Questions on STP - WebAsha",
+      "url": "https://www.webasha.com/blog/ccna-interview-questions-on-stp-346",
+      "domain": "webasha.com",
+      "count": 1
+    },
+    {
+      "title": "How to Understand ICMP Time Exceeded Messages - OneUptime",
+      "url": "https://oneuptime.com/blog/post/2026-03-20-icmp-time-exceeded-messages/view",
+      "domain": "oneuptime.com",
+      "count": 1
+    },
+    {
+      "title": "UDP vs ICMP vs TCP Traceroute: When to Use Each Protocol - TraceMapper",
+      "url": "https://tracemapper.com/blog/udp-vs-icmp-vs-tcp-traceroute",
+      "domain": "tracemapper.com",
+      "count": 1
+    },
+    {
+      "title": "How traceroute Really Works: TTL and ICMP Time Exceeded - ReasonCore",
+      "url": "https://reasoncore.dev/post/how-traceroute-really-works-ttl-and-icmp-time-exceeded",
+      "domain": "reasoncore.dev",
+      "count": 1
+    },
+    {
+      "title": "How to Troubleshoot Asymmetric Routing Issues - OneUptime",
+      "url": "https://oneuptime.com/blog/post/2026-03-20-troubleshoot-asymmetric-routing/view",
+      "domain": "oneuptime.com",
+      "count": 1
+    },
+    {
+      "title": "Troubleshooting Asymmetric Routing - pfSense Documentation",
+      "url": "https://docs.netgate.com/pfsense/en/latest/troubleshooting/asymmetric-routing.html",
+      "domain": "docs.netgate.com",
+      "count": 1
+    },
+    {
+      "title": "TCP Performance problems caused by interaction between Nagle's Algorithm and Delayed ACK - Stuart Cheshire",
+      "url": "https://www.stuartcheshire.org/papers/nagledelayedack/",
+      "domain": "stuartcheshire.org",
+      "count": 1
+    },
+    {
+      "title": "Nagle's algorithm - Wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Nagle's_algorithm",
+      "domain": "en.wikipedia.org",
+      "count": 1
+    },
+    {
+      "title": "TCP delayed acknowledgment - Wikipedia",
+      "url": "https://en.wikipedia.org/wiki/TCP_delayed_acknowledgment",
+      "domain": "en.wikipedia.org",
+      "count": 1
+    },
+    {
+      "title": "How to Configure TCP Keepalive Settings on Linux - OneUptime",
+      "url": "https://oneuptime.com/blog/post/2026-03-20-configure-tcp-keepalive-linux/view",
+      "domain": "oneuptime.com",
+      "count": 1
+    },
+    {
+      "title": "TCP Keepalive HOWTO - The Linux Documentation Project",
+      "url": "https://tldp.org/HOWTO/TCP-Keepalive-HOWTO/overview.html",
+      "domain": "tldp.org",
+      "count": 1
+    },
+    {
+      "title": "TCP keepalive for a better PostgreSQL experience - CYBERTEC",
+      "url": "https://www.cybertec-postgresql.com/en/tcp-keepalive-for-a-better-postgresql-experience/",
+      "domain": "cybertec-postgresql.com",
+      "count": 1
+    },
+    {
+      "title": "Learn how Browsers, CDNs, and Servers make caching decisions - Medium",
+      "url": "https://medium.com/@vinaykumarbr07/learn-how-browsers-cdns-and-servers-make-caching-decisions-f9247b66593a",
+      "domain": "medium.com",
+      "count": 1
+    },
+    {
+      "title": "CDN Interview Questions - TechPrep",
+      "url": "https://www.techprep.app/blog/cdn-interview-questions",
+      "domain": "techprep.app",
+      "count": 1
+    },
+    {
+      "title": "WebSocket vs Long Polling: Performance & When to Use - WebSocket.org",
+      "url": "https://websocket.org/comparisons/long-polling/",
+      "domain": "websocket.org",
+      "count": 1
+    },
+    {
+      "title": "Long Polling vs WebSockets: Choosing the Right Transport for Real-Time Feeds - GetStream",
+      "url": "https://getstream.io/blog/long-polling-vs-websockets/",
+      "domain": "getstream.io",
+      "count": 1
+    },
+    {
+      "title": "How Do Websockets Work? - Kevin Sookocheff",
+      "url": "https://sookocheff.com/post/networking/how-do-websockets-work/",
+      "domain": "sookocheff.com",
+      "count": 1
+    },
+    {
+      "title": "NAT Overload (PAT) - NetworkAcademy.IO",
+      "url": "https://www.networkacademy.io/ccna/network-services/nat-overload-pat",
+      "domain": "networkacademy.io",
+      "count": 1
+    },
+    {
+      "title": "NAT and PAT: a complete explanation - CiscoZine",
+      "url": "https://www.ciscozine.com/nat-and-pat-a-complete-explanation/",
+      "domain": "ciscozine.com",
+      "count": 1
+    },
+    {
+      "title": "Port Address Translation vs Network Address Translation - Lightyear",
+      "url": "https://lightyear.ai/tips/port-address-translation-versus-network-address-translation",
+      "domain": "lightyear.ai",
+      "count": 1
+    },
+    {
+      "title": "Cache-Control header - HTTP - MDN Web Docs",
+      "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Cache-Control",
+      "domain": "developer.mozilla.org",
+      "count": 1
+    },
+    {
+      "title": "What is Cache-Control and How HTTP Cache Headers Work - Imperva",
+      "url": "https://www.imperva.com/learn/performance/cache-control/",
+      "domain": "imperva.com",
+      "count": 1
+    },
+    {
+      "title": "The practical guide to HTTP caching headers: Cache-Control, ETag, and 304s - Accreditly",
+      "url": "https://accreditly.io/articles/the-practical-guide-to-http-caching-headers-cache-control-etag-and-304s",
+      "domain": "accreditly.io",
+      "count": 1
+    },
+    {
+      "title": "Internet Group Management Protocol - IGMP - GeeksforGeeks",
+      "url": "https://www.geeksforgeeks.org/computer-networks/what-is-igmpinternet-group-management-protocol/",
+      "domain": "geeksforgeeks.org",
+      "count": 1
+    },
+    {
+      "title": "IGMP Explained: Optimize Multicast for Streaming & Gaming - Lenovo",
+      "url": "https://www.lenovo.com/us/en/glossary/what-is-igmp/",
+      "domain": "lenovo.com",
+      "count": 1
+    },
+    {
+      "title": "What Is Internet Group Management Protocol? - AEANET",
+      "url": "https://www.aeanet.org/what-is-internet-group-management-protocol/",
+      "domain": "aeanet.org",
+      "count": 1
+    },
+    {
+      "title": "WPA2 vs WPA3 (Full 2026 Comparison & Differences) - StationX",
+      "url": "https://www.stationx.net/wpa2-vs-wpa3/",
+      "domain": "stationx.net",
+      "count": 1
+    },
+    {
+      "title": "WPA2 vs. WPA3: Key Differences & Security Improvements - SecureW2",
+      "url": "https://securew2.com/blog/wpa3-vs-wpa2",
+      "domain": "securew2.com",
+      "count": 1
+    },
+    {
+      "title": "WiFi Security in 2026: WEP to WPA3 and What to Set Today",
+      "url": "https://whatismylocation.org/blog/wifi-security-wpa3",
+      "domain": "whatismylocation.org",
+      "count": 1
+    },
+    {
+      "title": "DDoS Attack vs DoS Attack: Key Differences Explained - SentinelOne",
+      "url": "https://www.sentinelone.com/cybersecurity-101/threat-intelligence/ddos-attack-vs-dos-attack/",
+      "domain": "sentinelone.com",
+      "count": 1
+    },
+    {
+      "title": "Difference between DOS and DDOS Attack - GeeksforGeeks",
+      "url": "https://www.geeksforgeeks.org/difference-between-dos-and-ddos-attack/",
+      "domain": "geeksforgeeks.org",
+      "count": 1
+    },
+    {
+      "title": "DoS vs DDoS: What's the difference? - Wiz",
+      "url": "https://www.wiz.io/academy/detection-and-response/dos-vs-ddos",
+      "domain": "wiz.io",
+      "count": 1
+    },
+    {
+      "title": "NAT, STUN, TURN, ICE and WebRTC - Forasoft",
+      "url": "https://www.forasoft.com/learn/video-streaming/articles-streaming/nat-stun-turn-ice-webrtc",
+      "domain": "forasoft.com",
+      "count": 1
+    },
+    {
+      "title": "STUN vs TURN vs ICE - SignalWire",
+      "url": "https://signalwire.com/docs/platform/voice/stun-vs-turn-vs-ice",
+      "domain": "signalwire.com",
+      "count": 1
+    },
+    {
+      "title": "NAT Traversal: How It Works - DEV Community",
+      "url": "https://dev.to/alakkadshaw/nat-traversal-how-it-works-4dnc",
+      "domain": "dev.to",
+      "count": 1
+    },
+    {
+      "title": "What is BGP Hijacking? - DeepStrike",
+      "url": "https://deepstrike.io/blog/what-is-bgp-hijacking",
+      "domain": "deepstrike.io",
+      "count": 1
+    },
+    {
+      "title": "BGP Hijacking Explained - SpeedTestHQ",
+      "url": "https://speedtesthq.com/guides/fundamentals/bgp-hijacking-explained",
+      "domain": "speedtesthq.com",
+      "count": 1
+    },
+    {
+      "title": "BGP Monitoring: BGP Hijacking - LogicMonitor",
+      "url": "https://www.logicmonitor.com/deep-dive/bgp-monitoring/bgp-hijacking",
+      "domain": "logicmonitor.com",
+      "count": 1
+    },
+    {
+      "title": "VLSM Explained: How It Optimizes IP Address Allocation - PatSnap Eureka",
+      "url": "https://eureka.patsnap.com/blog/computer-science/vlsm-guide-networking/",
+      "domain": "eureka.patsnap.com",
+      "count": 1
+    },
+    {
+      "title": "VLSM(Variable Length Subnet Masks) - R.K.Mishra",
+      "url": "https://sites.google.com/site/therkmishra/cisco/vlsm-variable-length-subnet-marks",
+      "domain": "sites.google.com",
+      "count": 1
+    },
+    {
+      "title": "What is Variable Length Subnet Mask (VLSM)? - TechTarget",
+      "url": "https://www.techtarget.com/searchnetworking/definition/variable-length-subnet-mask",
+      "domain": "techtarget.com",
+      "count": 1
+    },
+    {
+      "title": "Understanding TCP Window Sizing and the Bandwidth-Delay Product - InventiveHQ",
+      "url": "https://inventivehq.com/blog/understanding-tcp-window-sizing-bandwidth-delay-product",
+      "domain": "inventivehq.com",
+      "count": 1
+    },
+    {
+      "title": "Bandwidth Delay Product - NetworkLessons",
+      "url": "https://networklessons.com/cisco/ccnp-route/bandwidth-delay-product",
+      "domain": "networklessons.com",
+      "count": 1
+    },
+    {
+      "title": "TCP Window Size Calculator - BDP & Throughput - InventiveHQ",
+      "url": "https://inventivehq.com/tools/network/tcp-window-size-calculator",
+      "domain": "inventivehq.com",
+      "count": 1
+    },
+    {
+      "title": "Microsegmentation explained - IBM",
+      "url": "https://www.ibm.com/think/insights/microsegmentation-lateral-movement",
+      "domain": "ibm.com",
+      "count": 1
+    },
+    {
+      "title": "Microsegmentation vs. Zero Trust: What's the Difference? - RedRiver",
+      "url": "https://redriver.com/security/microsegmentation-zero-trust",
+      "domain": "redriver.com",
+      "count": 1
+    },
+    {
+      "title": "What is Microsegmentation & Zero Trust Security? - Nutanix",
+      "url": "https://www.nutanix.com/info/what-is-microsegmentation",
+      "domain": "nutanix.com",
+      "count": 1
+    },
+    {
+      "title": "What is Session Hijacking | Types, Detection & Prevention - Imperva",
+      "url": "https://www.imperva.com/learn/application-security/session-hijacking/",
+      "domain": "imperva.com",
+      "count": 1
+    },
+    {
+      "title": "Session hijacking attack - OWASP Foundation",
+      "url": "https://owasp.org/www-community/attacks/Session_hijacking_attack",
+      "domain": "owasp.org",
+      "count": 1
+    },
+    {
+      "title": "Session Hijacking: How It Works & How to Stop It - Obsidian Security",
+      "url": "https://www.obsidiansecurity.com/blog/session-hijacking-how-it-works-how-to-stop-it",
+      "domain": "obsidiansecurity.com",
+      "count": 1
+    },
+    {
+      "title": "The basics of SDN and the OpenFlow Network Architecture - NoviFlow",
+      "url": "https://noviflow.com/the-basics-of-sdn-and-the-openflow-network-architecture/",
+      "domain": "noviflow.com",
+      "count": 1
+    },
+    {
+      "title": "What is OpenFlow? A Guide to Software-Defined Networking",
+      "url": "https://brandergroup.net/2023/12/what-is-openflow-a-guide-to-software-defined-networking/",
+      "domain": "brandergroup.net",
+      "count": 1
+    },
+    {
+      "title": "Software-Defined Networking Using OpenFlow: Protocols, Applications and Architectural Design Choices - MDPI",
+      "url": "https://www.mdpi.com/1999-5903/6/2/302",
+      "domain": "mdpi.com",
+      "count": 1
+    },
+    {
+      "title": "Understanding Jitter in Packet Voice Networks (Cisco IOS Platforms) - Cisco",
+      "url": "https://www.cisco.com/c/en/us/support/docs/voice/voice-quality/18902-jitter-packet-voice.html",
+      "domain": "cisco.com",
+      "count": 1
+    },
+    {
+      "title": "What is a Jitter Buffer and How It Works - Obkio",
+      "url": "https://obkio.com/blog/jitter-buffers/",
+      "domain": "obkio.com",
+      "count": 1
+    },
+    {
+      "title": "Jitter Buffer for Voice over IP - VOCAL Technologies",
+      "url": "https://vocal.com/voip/jitter-buffer-for-voice-over-ip/",
+      "domain": "vocal.com",
+      "count": 1
+    },
+    {
+      "title": "What is Multiprotocol Label Switching (MPLS)? - TechTarget",
+      "url": "https://www.techtarget.com/searchnetworking/definition/Multiprotocol-Label-Switching-MPLS",
+      "domain": "techtarget.com",
+      "count": 1
+    },
+    {
+      "title": "What is MPLS? (Multiprotocol Label Switching) - Zscaler",
+      "url": "https://www.zscaler.com/resources/security-terms-glossary/what-is-multiprotocol-label-switching",
+      "domain": "zscaler.com",
+      "count": 1
+    },
+    {
+      "title": "Multiprotocol Label Switching - Wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Multiprotocol_Label_Switching",
+      "domain": "en.wikipedia.org",
+      "count": 1
+    }
+  ]
+}

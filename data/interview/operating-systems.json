@@ -1,0 +1,959 @@
+{
+  "slug": "operating-systems",
+  "name": "Operating Systems",
+  "headline": "Processes, Threads, Concurrency, Deadlocks, Virtual Memory & Kernel Architecture",
+  "description": "Core Operating Systems interview questions spanning process lifecycles, CPU scheduling algorithms, virtual memory paging, page fault handling, synchronization primitives, deadlocks, and system calls.",
+  "icon": "os",
+  "totalQuestions": 35,
+  "easyCount": 10,
+  "mediumCount": 15,
+  "hardCount": 10,
+  "questions": [
+    {
+      "question": "What is an operating system, and what are its core responsibilities?",
+      "difficulty": "Easy",
+      "answer": "An operating system (OS) is system software that sits between computer hardware and the applications/users, managing hardware resources and providing a controlled, stable environment in which programs execute. Without an OS, every application would need its own drivers, memory-management code, and I/O routines, so the OS abstracts this complexity behind standardized APIs (system calls).\n\nIts core responsibilities are usually grouped into: (1) Process management — creating, scheduling, and terminating processes/threads and switching the CPU between them; (2) Memory management — allocating RAM, implementing virtual memory, and protecting one process's memory from another; (3) File system management — organizing how data is stored, named, and retrieved on storage devices; (4) Device/I/O management — providing a uniform interface to disks, printers, network cards, etc., via drivers; (5) Security and access control — enforcing permissions and isolating processes from each other; and (6) Providing a user interface (CLI or GUI) and the system-call API applications use to request these services.\n\nIn short: the three things that separate an OS from ordinary software are resource allocation (deciding who gets CPU/RAM/I/O), isolation (keeping processes from corrupting each other), and abstraction (hiding hardware-specific details behind consistent interfaces). An interviewer usually wants you to name these responsibilities and briefly explain why each matters (e.g., without process isolation, one buggy program could crash the whole system).",
+      "sources": [
+        {
+          "title": "What is an Operating System? Definition, Functions, and Types",
+          "url": "https://www.thecoreitech.com/computer-basics/what-is-an-operating-system/",
+          "domain": "thecoreitech.com"
+        },
+        {
+          "title": "Core Functions of Operating Systems - Operating System Essentials",
+          "url": "https://oboe.com/learn/operating-system-essentials-1ejz89o/core-functions-of-operating-systems-operating-system-essentials-2",
+          "domain": "oboe.com"
+        }
+      ],
+      "id": 1
+    },
+    {
+      "question": "What is the difference between a process and a program?",
+      "difficulty": "Easy",
+      "answer": "A program is a passive entity — a static executable file sitting on disk (or in storage) that contains compiled code and data but isn't doing anything by itself. A process is an active entity — an instance of a program that is loaded into memory and being executed by the CPU, with its own program counter, register values, stack, heap, and OS-tracked state (represented internally by a Process Control Block).\n\nKey distinctions interviewers look for:\n- A single program can be launched multiple times, creating multiple independent processes (e.g., opening two terminal windows both running bash).\n- A process occupies system resources (memory, open file handles, CPU time) that a program on disk does not.\n- Process memory typically consists of code (text) + data + heap + stack, whereas the program on disk is essentially just the text/data sections before execution.\n\nA good way to phrase it in an interview: 'a program is the recipe; a process is the meal being cooked' — the program is static instructions, the process is the dynamic, stateful execution of those instructions.",
+      "sources": [
+        {
+          "title": "Lecture 3: processes, isolation, context switching (CS4410, Cornell)",
+          "url": "https://www.cs.cornell.edu/courses/cs4410/2018su/lectures/lec03-processes.html",
+          "domain": "cs.cornell.edu"
+        },
+        {
+          "title": "Process management in operating system | process states | PCB | FORK() | Zombie and Orphan process",
+          "url": "https://www.slideshare.net/slideshow/process-management-in-operating-system-process-states-pcb-fork-zombie-and-orphan-process/235120214",
+          "domain": "slideshare.net"
+        }
+      ],
+      "id": 2
+    },
+    {
+      "question": "What is the difference between a process and a thread?",
+      "difficulty": "Easy",
+      "answer": "A process is an independent unit of execution with its own private address space (code, data, heap, stack) and its own set of OS resources (file descriptors, memory maps), tracked by a Process Control Block (PCB). A thread is a lighter-weight unit of execution that lives inside a process and shares that process's address space, open files, and other resources with any sibling threads, but has its own program counter, register set, and stack — tracked by a Thread Control Block (TCB) that typically points back to its parent process's PCB.\n\nPractical implications interviewers expect you to know:\n- Threads within the same process can communicate through shared memory directly, which is faster than inter-process communication but requires synchronization (locks/semaphores) to avoid race conditions.\n- Creating a thread is cheaper than creating a process (no need to duplicate the address space), and context-switching between threads of the same process is cheaper than switching between processes (no need to swap page tables/TLB entries).\n- A crash in one thread can corrupt the whole process (since memory is shared), whereas a crash in one process doesn't directly affect another process's memory because of OS-enforced isolation.",
+      "sources": [
+        {
+          "title": "Thread Control Block in Operating System - GeeksforGeeks",
+          "url": "https://www.geeksforgeeks.org/operating-systems/thread-control-block-in-operating-system/",
+          "domain": "geeksforgeeks.org"
+        },
+        {
+          "title": "Lecture 3: processes, isolation, context switching (CS4410, Cornell)",
+          "url": "https://www.cs.cornell.edu/courses/cs4410/2018su/lectures/lec03-processes.html",
+          "domain": "cs.cornell.edu"
+        }
+      ],
+      "id": 3
+    },
+    {
+      "question": "What is the difference between user mode and kernel mode, and why does this separation exist?",
+      "difficulty": "Easy",
+      "answer": "Modern CPUs support at least two privilege levels. In user mode, a running program is restricted: it cannot directly execute privileged instructions, access arbitrary hardware, or read/write another process's memory. In kernel mode, the code (the OS kernel and its drivers) runs with full privileges — it can execute any instruction, access all memory, and directly control hardware devices.\n\nThe separation exists for protection and stability. If ordinary applications could execute privileged instructions freely, a buggy or malicious program could crash the entire machine, corrupt other processes' memory, or bypass security controls. The CPU enforces this boundary using a hardware 'privilege bit' (or mode bit); certain instructions and memory regions simply cannot be touched while that bit indicates user mode.\n\nApplications cross from user mode to kernel mode in a controlled way via a system call (e.g., read(), write(), fork()): the CPU traps into the kernel, the kernel validates the request and performs the privileged operation on the application's behalf, then control returns to user mode. This trap-based transition is also why system calls are more expensive than ordinary function calls — they involve a mode switch and often extra safety checks.",
+      "sources": [
+        {
+          "title": "Lecture 3: processes, isolation, context switching (CS4410, Cornell)",
+          "url": "https://www.cs.cornell.edu/courses/cs4410/2018su/lectures/lec03-processes.html",
+          "domain": "cs.cornell.edu"
+        },
+        {
+          "title": "Page Fault Handling - GeeksforGeeks",
+          "url": "https://www.geeksforgeeks.org/computer-organization-architecture/page-fault-handling/",
+          "domain": "geeksforgeeks.org"
+        }
+      ],
+      "id": 4
+    },
+    {
+      "question": "What is a Process Control Block (PCB), and what kind of information does it store?",
+      "difficulty": "Easy",
+      "answer": "A Process Control Block (PCB), sometimes called a process descriptor, is a kernel data structure the OS creates for every process to track everything it needs to manage that process. All active PCBs are typically organized in a process table, and the kernel moves PCBs between different queues (ready queue, waiting queue, etc.) based on the process's current state.\n\nTypical fields stored in a PCB include:\n- Process ID (PID) and parent process ID\n- Process state (new, ready, running, waiting, terminated)\n- Program counter (address of the next instruction to execute)\n- CPU register values (saved so execution can resume exactly where it left off)\n- CPU scheduling information (priority, scheduling queue pointers)\n- Memory management information (page tables, segment tables, base/limit registers)\n- List of open files and I/O status information\n- Accounting information (CPU time used, time limits, etc.)\n\nThe PCB is central to context switching: when the OS switches from one process to another, it saves the current process's CPU register state into its PCB and loads the next process's saved state from its PCB. Because it contains sensitive control information, the PCB itself lives in protected kernel memory that user-mode code cannot access directly.",
+      "sources": [
+        {
+          "title": "Process Control Block in OS - GeeksforGeeks",
+          "url": "https://www.geeksforgeeks.org/operating-systems/process-control-block-in-os/",
+          "domain": "geeksforgeeks.org"
+        },
+        {
+          "title": "Process Control Block | Baeldung on Computer Science",
+          "url": "https://www.baeldung.com/cs/process-control-block",
+          "domain": "baeldung.com"
+        }
+      ],
+      "id": 5
+    },
+    {
+      "question": "What are the typical states in a process's lifecycle (new, ready, running, waiting, terminated)?",
+      "difficulty": "Easy",
+      "answer": "A process moves through a well-defined set of states over its lifetime, tracked in its PCB:\n- New: the process is being created (memory is being allocated, PCB initialized) but hasn't been admitted to the ready queue yet.\n- Ready: the process has everything it needs to run and is waiting only for the CPU scheduler to assign it a CPU.\n- Running: the process is actively executing instructions on the CPU (on a single-core system, only one process can be in this state at a time).\n- Waiting (or Blocked): the process cannot continue until some event occurs, typically I/O completion (e.g., waiting on a disk read) or a synchronization signal (e.g., waiting on a semaphore).\n- Terminated (or Exit): the process has finished execution (or was killed); the OS reclaims its resources, though its PCB may briefly remain if the parent hasn't yet collected its exit status (a zombie).\n\nTransitions are driven by the scheduler and by events: Ready → Running when scheduled, Running → Ready when preempted (timer interrupt), Running → Waiting when it blocks on I/O, and Waiting → Ready once the event it was waiting for completes. Interviewers often ask you to draw this as a state diagram and explain what triggers each transition.",
+      "sources": [
+        {
+          "title": "Process Control Block in OS - GeeksforGeeks",
+          "url": "https://www.geeksforgeeks.org/operating-systems/process-control-block-in-os/",
+          "domain": "geeksforgeeks.org"
+        },
+        {
+          "title": "Process Table and Process Control Block (PCB) - GeeksforGeeks",
+          "url": "https://www.geeksforgeeks.org/operating-systems/process-table-and-process-control-block-pcb/",
+          "domain": "geeksforgeeks.org"
+        }
+      ],
+      "id": 6
+    },
+    {
+      "question": "What is a system call, and why can't user programs directly access hardware?",
+      "difficulty": "Easy",
+      "answer": "A system call is a controlled, well-defined entry point that lets a user-mode program request a service from the kernel — for example, reading a file (read()), creating a process (fork()), or allocating memory. When a program executes a system call, the CPU traps from user mode into kernel mode: the current instruction/registers are saved, the kernel validates the request and permissions, performs the privileged operation, and then returns control (and a result) back to the user-mode program.\n\nUser programs can't directly access hardware because doing so would break the isolation and safety guarantees the OS is supposed to provide. If any application could write directly to disk sectors, network hardware, or arbitrary physical memory, a bug or malicious program could corrupt data belonging to other processes, crash the system, or bypass security checks entirely. By funneling all hardware access through the kernel via system calls, the OS can enforce permissions (e.g., 'this process doesn't own that file'), serialize concurrent access to shared devices, and keep a single point of control for auditing and protection.\n\nThis is also why system calls are relatively expensive compared to ordinary function calls — the mode switch and kernel-side validation add overhead, which is why high-performance code tries to minimize the number of system calls it makes (e.g., batching I/O).",
+      "sources": [
+        {
+          "title": "Context Switching in Operating System - GeeksforGeeks",
+          "url": "https://www.geeksforgeeks.org/operating-systems/context-switch-in-operating-system/",
+          "domain": "geeksforgeeks.org"
+        },
+        {
+          "title": "Page Fault Handling - GeeksforGeeks",
+          "url": "https://www.geeksforgeeks.org/computer-organization-architecture/page-fault-handling/",
+          "domain": "geeksforgeeks.org"
+        }
+      ],
+      "id": 7
+    },
+    {
+      "question": "What is a context switch?",
+      "difficulty": "Easy",
+      "answer": "A context switch is the mechanism by which the CPU stops executing one process (or thread) and starts executing another, saving and restoring enough state so that each can later resume exactly where it left off. It's what makes multitasking possible on a CPU that can genuinely execute only one instruction stream per core at a time.\n\nAt a high level, a context switch happens like this: (1) some event occurs — a timer interrupt (time slice expired), a system call, or an I/O wait — that causes the OS to decide a switch is needed; (2) the OS saves the current process's CPU state (program counter, general-purpose registers, stack pointer, etc.) into that process's PCB; (3) the scheduler picks the next process to run; (4) the OS restores that process's previously saved state from its PCB into the CPU registers; (5) execution resumes in the new process as if it had never stopped.\n\nThe time spent doing this bookkeeping — during which the CPU isn't doing any 'useful' work for either process — is called context-switch overhead. It's one reason operating systems try to limit how often switches happen (e.g., choosing a sensible scheduling time quantum) since excessive switching hurts throughput even though it improves responsiveness.",
+      "sources": [
+        {
+          "title": "Context Switching in Operating System - GeeksforGeeks",
+          "url": "https://www.geeksforgeeks.org/operating-systems/context-switch-in-operating-system/",
+          "domain": "geeksforgeeks.org"
+        }
+      ],
+      "id": 8
+    },
+    {
+      "question": "What is the difference between a mutex and a semaphore?",
+      "difficulty": "Easy",
+      "answer": "A mutex (mutual exclusion object) is a locking primitive that allows exactly one thread to hold it at a time, and it has ownership: only the thread that locked the mutex is allowed to unlock it. It's used purely to protect a critical section so that only one thread can access a shared resource at once.\n\nA semaphore is a more general signaling mechanism, backed by an integer counter, with two atomic operations — wait() (decrements the counter, blocking if it goes negative) and signal() (increments the counter, potentially waking a waiter). Unlike a mutex, a semaphore has no concept of 'ownership' — any thread can call signal() on it, even one that never called wait(), which makes it useful for coordination/signaling between threads (e.g., 'thread A, wait until thread B has produced an item'), not just mutual exclusion.\n\nA binary semaphore (value restricted to 0 or 1) looks similar to a mutex but is not the same thing: because it lacks ownership semantics, a binary semaphore can be released by a thread that never acquired it, which a real mutex disallows. A counting semaphore (with an unrestricted domain) is used when you want to allow up to N threads to access a pool of N identical resources simultaneously — a mutex can only ever allow one.\n\nRule of thumb often quoted in interviews: use a mutex for protecting a critical section within a single process/thread group; use a semaphore when you need to coordinate access to a pool of resources or signal between different threads/processes.",
+      "sources": [
+        {
+          "title": "Mutex vs Semaphore - GeeksforGeeks",
+          "url": "https://www.geeksforgeeks.org/operating-systems/mutex-vs-semaphore/",
+          "domain": "geeksforgeeks.org"
+        },
+        {
+          "title": "Difference between Binary Semaphore and Mutex - GeeksforGeeks",
+          "url": "https://www.geeksforgeeks.org/operating-systems/difference-between-binary-semaphore-and-mutex/",
+          "domain": "geeksforgeeks.org"
+        }
+      ],
+      "id": 9
+    },
+    {
+      "question": "What is virtual memory, and why do operating systems use it?",
+      "difficulty": "Easy",
+      "answer": "Virtual memory is an abstraction that gives each process the illusion of having its own large, contiguous, private address space, even though the underlying physical RAM is smaller, shared among many processes, and often fragmented. The OS (with hardware help from the MMU) maintains a page table per process that maps virtual addresses the program uses to actual physical addresses in RAM (or to a location on disk if the data has been swapped out).\n\nOperating systems use virtual memory for several reasons:\n- Isolation/protection: each process's virtual address space is separate, so one process cannot accidentally (or maliciously) read or overwrite another process's memory.\n- Simplified programming model: programs can be written and compiled as if they had the entire address space to themselves, without needing to know about other running processes or exact physical memory layout.\n- Overcommitment: with demand paging, the OS can run programs whose combined memory needs exceed physical RAM by keeping only actively used pages in memory and the rest on disk, loading pages in on demand when they're accessed (a page fault).\n- Efficient memory use: physical memory can be allocated non-contiguously (in fixed-size pages), avoiding the external fragmentation problems of purely contiguous allocation.\n\nThe hardware cost of translating every virtual address to a physical one on every memory access is mitigated by the TLB (Translation Lookaside Buffer), a small hardware cache of recent virtual-to-physical translations.",
+      "sources": [
+        {
+          "title": "Paging vs. Segmentation - GeeksforGeeks",
+          "url": "https://www.geeksforgeeks.org/operating-systems/difference-between-paging-and-segmentation/",
+          "domain": "geeksforgeeks.org"
+        },
+        {
+          "title": "Paging vs Segmentation: Core Differences Explained - Enterprise Storage Forum",
+          "url": "https://www.enterprisestorageforum.com/hardware/paging-and-segmentation/",
+          "domain": "enterprisestorageforum.com"
+        }
+      ],
+      "id": 10
+    },
+    {
+      "question": "What is the difference between preemptive and non-preemptive scheduling? Give an example of each.",
+      "difficulty": "Medium",
+      "answer": "In non-preemptive scheduling, once the CPU is allocated to a process, that process keeps the CPU until it voluntarily gives it up — either by terminating or by blocking on an I/O/wait operation. The OS cannot forcibly interrupt a running process to give the CPU to someone else. First-Come-First-Served (FCFS) is the classic example: whichever process is at the head of the ready queue runs to completion (or until it blocks) before the next one starts. (Non-preemptive) Shortest-Job-First and non-preemptive Priority scheduling are other examples.\n\nIn preemptive scheduling, the OS can interrupt a running process — typically via a timer interrupt when its time slice expires, or when a higher-priority process becomes ready — and move it back to the ready state so another process can run. Round Robin is the classic example: each process gets a fixed time quantum, and when it expires the OS preempts the process and moves it to the back of the ready queue, giving the CPU to the next process. Shortest-Remaining-Time-First (the preemptive version of SJF) and preemptive Priority scheduling are other examples.\n\nTrade-off: preemptive scheduling gives much better responsiveness and fairness (no single process can monopolize the CPU, which also protects against denial-of-service from a runaway process), but it costs more in context-switch overhead and adds complexity because shared data structures accessed by an interrupted process must be protected from concurrent access. Non-preemptive scheduling is simpler and has lower overhead but risks poor responsiveness if a long process runs first (the convoy effect) and is unsuitable for interactive or real-time systems.",
+      "sources": [
+        {
+          "title": "Preemptive and Non-Preemptive Scheduling - GeeksforGeeks",
+          "url": "https://www.geeksforgeeks.org/preemptive-and-non-preemptive-scheduling/",
+          "domain": "geeksforgeeks.org"
+        },
+        {
+          "title": "Preemptive and Non-Preemptive Scheduling | Baeldung on Computer Science",
+          "url": "https://www.baeldung.com/cs/scheduling-types",
+          "domain": "baeldung.com"
+        }
+      ],
+      "id": 11
+    },
+    {
+      "question": "Compare FCFS, SJF, and Round Robin scheduling — what is the \"convoy effect,\" and how does time-quantum size affect Round Robin's performance?",
+      "difficulty": "Medium",
+      "answer": "FCFS (First-Come-First-Served) runs processes strictly in arrival order using a FIFO queue. It's simple and non-preemptive, but if a long CPU-bound process arrives first, every shorter process behind it must wait for it to finish — this is the convoy effect, and it drives up average waiting time even though no individual process is treated 'unfairly' by arrival order.\n\nSJF (Shortest-Job-First) picks the ready process with the smallest CPU burst time next. It is provably optimal for minimizing average waiting time when all jobs are available together, which is why it's the theoretical benchmark other algorithms are compared to. Its major practical flaw is that it requires knowing (or accurately predicting) each process's burst time in advance, which is generally impossible for arbitrary workloads; it can also starve long processes if short jobs keep arriving.\n\nRound Robin (RR) is preemptive: each process gets a fixed time quantum q, after which it's forcibly moved to the back of the ready queue and the next process runs. RR is much fairer and more responsive than FCFS for interactive workloads, and no process starves. Its performance is highly sensitive to the quantum size:\n- If q is very large (larger than most burst times), RR degenerates into FCFS, reintroducing the convoy effect and hurting responsiveness.\n- If q is very small, response time looks excellent, but context-switch overhead dominates — the CPU spends more time saving/restoring state than doing useful work, hurting throughput.\n- The common rule of thumb is to pick q large relative to the context-switch cost but small enough that a large majority (e.g., ~80%) of CPU bursts complete within one quantum, balancing responsiveness against overhead.",
+      "sources": [
+        {
+          "title": "Difference Between FCFS and SJF CPU Scheduling Algorithms - GeeksforGeeks",
+          "url": "https://www.geeksforgeeks.org/operating-systems/difference-between-fcfs-and-sjf-cpu-scheduling-algorithms/",
+          "domain": "geeksforgeeks.org"
+        },
+        {
+          "title": "CPU scheduling: FCFS, SJF, Round Robin with Gantt charts - Knowledge Gate AI",
+          "url": "https://www.knowledgegate.ai/blog/cpu-scheduling-algorithms-explained",
+          "domain": "knowledgegate.ai"
+        }
+      ],
+      "id": 12
+    },
+    {
+      "question": "What are the four necessary conditions for a deadlock to occur?",
+      "difficulty": "Medium",
+      "answer": "A deadlock is a state where a set of processes are each waiting for a resource held by another process in the set, so none of them can ever proceed. Four conditions must all hold simultaneously for a deadlock to be possible (removing any one of them prevents deadlock, which is the basis of most deadlock-prevention strategies):\n\n1. Mutual exclusion — at least one resource must be held in a non-shareable mode (only one process can use it at a time). If every resource could be shared freely, there'd be nothing to wait for.\n2. Hold and wait — a process must be holding at least one resource while simultaneously waiting to acquire additional resources held by other processes.\n3. No preemption — resources cannot be forcibly taken away from a process; they can only be released voluntarily by the process holding them once it finishes using them.\n4. Circular wait — there must exist a cycle of processes P1, P2, ..., Pn where P1 is waiting on a resource held by P2, P2 is waiting on one held by P3, and so on, with Pn waiting on one held by P1.\n\nIn an interview, it helps to note that prevention strategies attack one of these conditions directly (e.g., requiring processes to request all resources upfront breaks hold-and-wait; imposing a global resource ordering breaks circular wait), whereas avoidance strategies like the Banker's Algorithm allow all four conditions to be possible in principle but dynamically refuse allocations that would lead to an unsafe state.",
+      "sources": [
+        {
+          "title": "Handling Deadlocks - GeeksforGeeks",
+          "url": "https://origin.geeksforgeeks.org/operating-systems/handling-deadlocks/",
+          "domain": "origin.geeksforgeeks.org"
+        }
+      ],
+      "id": 13
+    },
+    {
+      "question": "What is a race condition, and what techniques can be used to prevent one?",
+      "difficulty": "Medium",
+      "answer": "A race condition occurs when two or more threads or processes access shared data concurrently, and the final outcome depends on the unpredictable timing/order of their execution rather than being deterministic. A classic example: two threads both execute `counter++` on a shared variable. That single line is actually three machine steps (read, increment, write); if both threads read the old value before either writes back, one increment is lost, and the final value is wrong depending on how their instructions happen to interleave.\n\n```cpp\nint counter = 0;\nmutex mtx;\nvoid increment() {\n    for (int i = 0; i < 1000000; i++) {\n        lock_guard<mutex> lock(mtx); // protects the critical section\n        counter++;\n    }\n}\n```\n\nCommon prevention techniques:\n- Mutual exclusion locks (mutexes) — wrap the shared-data access in a critical section guarded by a lock so only one thread executes it at a time (shown above).\n- Semaphores — similarly restrict concurrent access, useful when coordinating multiple resources or threads.\n- Atomic operations — hardware-supported instructions (e.g., compare-and-swap) that perform a read-modify-write as a single indivisible step, avoiding the need for a full lock for simple operations like counters.\n- Monitors / higher-level synchronized constructs — language-level abstractions (e.g., Java's `synchronized`) that bundle locking with the protected code.\n- Disabling interrupts (kernel-level only) — prevents the scheduler from preempting a process mid-critical-section, used sparingly since it blocks all other work on that CPU.\n\nA related and easily overlooked variant is the TOCTOU (Time-Of-Check to Time-Of-Use) race, where a program checks a condition (e.g., file permissions) and then acts on it, but the resource changes in between — this is a common source of real security vulnerabilities, not just correctness bugs.",
+      "sources": [
+        {
+          "title": "Implementing Race Condition in C++ - GeeksforGeeks",
+          "url": "https://www.geeksforgeeks.org/operating-systems/implementing-race-condition-in-c/",
+          "domain": "geeksforgeeks.org"
+        },
+        {
+          "title": "Race Condition Vulnerability - GeeksforGeeks",
+          "url": "https://www.geeksforgeeks.org/operating-systems/race-condition-vulnerability/",
+          "domain": "geeksforgeeks.org"
+        }
+      ],
+      "id": 14
+    },
+    {
+      "question": "What is the Banker's Algorithm, and what problem does it solve?",
+      "difficulty": "Medium",
+      "answer": "The Banker's Algorithm, developed by Dijkstra, is a deadlock-avoidance algorithm: instead of just detecting deadlock after it happens or rigidly preventing one of the four necessary conditions, it dynamically decides whether granting a resource request is safe before actually granting it — analogous to a banker who won't approve a loan that could leave them unable to satisfy other customers.\n\nEach process must declare in advance the maximum number of instances of each resource type it might ever need. The algorithm maintains data structures for Available (resources currently free), Allocation (what each process currently holds), and Need (Max − Allocation, i.e., what each process might still request). When a process requests resources, the algorithm tentatively grants the request and then runs a Safety Algorithm: it checks whether there exists at least one ordering of all processes in which each one could obtain its remaining Need from Available plus resources released by processes finishing earlier. If such a 'safe sequence' exists, the state is safe and the request is actually granted; if not, the request is denied (or the process must wait) even though no deadlock exists yet, because granting it could lead to one.\n\nLimitations often raised in interviews: it requires every process to know and declare its maximum resource needs upfront (unrealistic for many real workloads), it doesn't scale well as the number of processes/resource types grows, and it assumes processes behave honestly with respect to their declared maximums — a process that requests more than it declared can defeat the algorithm's guarantees.",
+      "sources": [
+        {
+          "title": "Banker's Algorithm - GeeksforGeeks",
+          "url": "https://www.geeksforgeeks.org/operating-systems/bankers-algorithm-in-operating-system-2/",
+          "domain": "geeksforgeeks.org"
+        },
+        {
+          "title": "Operating Systems II — Week 4. Deadlocks: Detection, Prevention & Avoidance",
+          "url": "https://medium.com/@ayoadeakin234/operating-systems-ii-week-4-59446abbba78",
+          "domain": "medium.com"
+        }
+      ],
+      "id": 15
+    },
+    {
+      "question": "What is the difference between paging and segmentation?",
+      "difficulty": "Medium",
+      "answer": "Paging and segmentation are both non-contiguous memory management schemes, but they divide a process's address space differently and have different fragmentation trade-offs.\n\nPaging divides physical memory into fixed-size frames and a process's virtual address space into equal-sized pages (matching the frame size); any page can be placed in any free frame, and a per-process page table maps virtual page numbers to physical frame numbers. Because pages are fixed-size, paging eliminates external fragmentation entirely (any free frame can hold any page), but it can suffer from internal fragmentation — if a process's last page isn't fully used, that leftover space within the page is wasted. Paging is transparent to the programmer; the OS/hardware manage it without the program needing to know about frame boundaries.\n\nSegmentation instead divides a process's address space into variable-sized, logically meaningful units — a code segment, a data segment, a stack segment, etc. — each tracked by a segment table entry (base + limit). Because segmentation maps more naturally to a program's logical structure, it can be useful for sharing and protection at a meaningful granularity (e.g., sharing a code segment read-only across processes). However, since segments are variable-sized, segmentation is prone to external fragmentation — as segments are allocated and freed, memory ends up with scattered free 'holes' too small individually to satisfy a new request, requiring compaction.\n\nMany modern systems use segmentation with paging: segments provide the logical, protection-oriented view, while each segment is internally paged so its physical allocation doesn't suffer external fragmentation — combining the benefits of both.",
+      "sources": [
+        {
+          "title": "Paging vs. Segmentation - GeeksforGeeks",
+          "url": "https://www.geeksforgeeks.org/operating-systems/difference-between-paging-and-segmentation/",
+          "domain": "geeksforgeeks.org"
+        },
+        {
+          "title": "Segmentation with Paging - GeeksforGeeks",
+          "url": "https://www.geeksforgeeks.org/operating-systems/segmentation-with-paging/",
+          "domain": "geeksforgeeks.org"
+        }
+      ],
+      "id": 16
+    },
+    {
+      "question": "What is demand paging, and what happens step-by-step when a page fault occurs?",
+      "difficulty": "Medium",
+      "answer": "Demand paging is a virtual memory strategy where pages of a process are loaded into physical memory only when they're actually accessed, rather than loading the entire program into RAM upfront. This lets the OS run programs whose total virtual memory footprint exceeds physical RAM, and it speeds up process startup since only the pages actually touched get loaded.\n\nStep-by-step page fault handling:\n1. The CPU generates a virtual address for an instruction or data access. The Memory Management Unit (MMU) checks whether the corresponding page is currently mapped in memory (via the TLB, then the page table).\n2. If the page is not present, the MMU raises a page fault — a hardware trap into the OS.\n3. The CPU switches from user mode to kernel mode, saving the current process's register state (program counter, etc.) so it can resume later.\n4. The OS validates the access: is this a legitimate reference to a page that should exist (just currently on disk), or an illegal access (segmentation violation, e.g., dereferencing a bad pointer)? Invalid accesses result in a signal (like SIGSEGV) being delivered to the process.\n5. For a valid fault, the OS finds a free physical frame (or selects a victim page to evict via a page-replacement algorithm like LRU or Clock if memory is full, writing it back to disk first if it's dirty).\n6. The OS issues a disk I/O request to read the needed page from the backing store (swap space or the executable file) into the chosen frame; the faulting process is put in a waiting state while this I/O completes, and the CPU is given to another ready process.\n7. Once the I/O completes, the OS updates the page table (and TLB) to reflect the new mapping, marks the page as present, and restores the faulting process to the ready queue.\n8. When the process is scheduled again, the faulting instruction is re-executed — this time it succeeds because the page is now resident in memory.\n\nFrequent page faults degrade performance sharply because disk access is orders of magnitude slower than RAM access; if this happens excessively, the system experiences thrashing.",
+      "sources": [
+        {
+          "title": "Demand Paging in Operating System - GeeksforGeeks",
+          "url": "https://www.geeksforgeeks.org/operating-systems/what-is-demand-paging-in-operating-system/",
+          "domain": "geeksforgeeks.org"
+        },
+        {
+          "title": "Page Fault Handling - GeeksforGeeks",
+          "url": "https://www.geeksforgeeks.org/computer-organization-architecture/page-fault-handling/",
+          "domain": "geeksforgeeks.org"
+        }
+      ],
+      "id": 17
+    },
+    {
+      "question": "What is the difference between internal and external fragmentation, and how is each typically mitigated?",
+      "difficulty": "Medium",
+      "answer": "Both are forms of wasted memory, but they arise differently and are mitigated differently.\n\nInternal fragmentation occurs when memory is allocated in fixed-size chunks (e.g., pages of 4KB) but a process doesn't need the full chunk — the unused space inside an allocated block is wasted and cannot be given to any other process, because it's 'trapped' inside a block that already belongs to someone else. This is the characteristic downside of paging and fixed-size partitioning: if a process needs 4097 bytes and the page size is 4096, it gets allocated 2 full pages (8192 bytes), wasting 4095 bytes internally. Mitigation: use smaller page sizes to reduce the average amount wasted per allocation (though smaller pages increase page-table overhead), or use variable-sized allocation schemes.\n\nExternal fragmentation occurs when memory is allocated in variable-sized chunks (as in segmentation or dynamic partitioning): over time, as processes are loaded and unloaded, free memory becomes broken into many small, scattered holes. Even if the total free memory is enough to satisfy a new request, no single hole may be large enough because the free space isn't contiguous. Mitigation techniques include:\n- Compaction — periodically relocating processes in memory to merge scattered free holes into one large contiguous block (expensive, since it requires pausing/relocating running processes).\n- Best-fit or worst-fit allocation strategies — choosing which free hole to use for a new request to minimize future fragmentation (though no allocation strategy eliminates it entirely).\n- Paging/segmentation with paging — since paging allocates in fixed, uniform units, it sidesteps external fragmentation altogether (at the cost of some internal fragmentation instead).\n\nA quick interview summary: internal fragmentation is wasted space inside an allocated block; external fragmentation is wasted space between allocated blocks.",
+      "sources": [
+        {
+          "title": "External Fragmentation in OS - GeeksforGeeks",
+          "url": "https://www.geeksforgeeks.org/operating-systems/external-fragmentation-in-os/",
+          "domain": "geeksforgeeks.org"
+        },
+        {
+          "title": "Internal Fragmentation vs. External Fragmentation in Paging | Baeldung on Computer Science",
+          "url": "https://www.baeldung.com/cs/internal-vs-external-fragmentation-paging",
+          "domain": "baeldung.com"
+        }
+      ],
+      "id": 18
+    },
+    {
+      "question": "What is thrashing, and what conditions cause it?",
+      "difficulty": "Medium",
+      "answer": "Thrashing is a condition where a system spends most of its time paging (swapping pages in and out of memory) rather than executing useful work, causing overall throughput to collapse even though the CPU and disk appear extremely busy. It's typically triggered when the combined 'working set' of actively running processes exceeds available physical memory.\n\nThe mechanism is a vicious cycle: when physical memory is over-committed, each process doesn't have enough resident pages to run efficiently, so it faults frequently. Each fault requires evicting some other page to make room — but because memory is so tight, the evicted page is often one that will be needed again very soon, causing another page fault shortly after. As more processes fault, CPU utilization appears to drop (since processes are blocked waiting on disk I/O), which can mislead a naive scheduler into admitting even more processes to 'keep the CPU busy' — worsening the problem further.\n\nConditions that cause thrashing: too many processes running simultaneously for the available RAM, a poor page-replacement policy that evicts pages that are still actively needed, or a scheduler that increases the degree of multiprogramming in response to low CPU utilization without realizing the low utilization is actually caused by excessive paging.\n\nMitigations: the working-set model (track each process's actively used pages over a recent time window and ensure it has enough frames to hold that set), page-fault-frequency control (monitor each process's fault rate and give it more frames if the rate is too high, fewer if too low), or simply reducing the degree of multiprogramming — suspending or swapping out entire processes until memory pressure eases.",
+      "sources": [
+        {
+          "title": "Page replacement and thrashing (CS 4410, Cornell)",
+          "url": "https://www.cs.cornell.edu/courses/cs4410/2017su/lectures/lec14-replacement.html",
+          "domain": "cs.cornell.edu"
+        },
+        {
+          "title": "lec15 thrashing (CS 4410, Cornell)",
+          "url": "https://www.cs.cornell.edu/courses/cs4410/2018su/lectures/lec15-thrashing.html",
+          "domain": "cs.cornell.edu"
+        }
+      ],
+      "id": 19
+    },
+    {
+      "question": "What is Belady's Anomaly, and which page-replacement algorithm is known to exhibit it?",
+      "difficulty": "Medium",
+      "answer": "Belady's Anomaly is the counterintuitive phenomenon where increasing the number of available page frames actually increases the number of page faults for certain reference strings, when using certain page-replacement algorithms — contrary to the natural assumption that more memory should never make performance worse.\n\nIt is most famously exhibited by the FIFO (First-In-First-Out) page-replacement algorithm. For example, with the reference string 3, 2, 1, 0, 3, 2, 4, 3, 2, 1, 0, 4, using FIFO with 3 frames produces 9 page faults, but using FIFO with 4 frames produces 10 page faults — more frames, more faults. This happens because FIFO's eviction choice depends only on how long a page has been resident, not on how recently or frequently it was actually used, so the set of pages resident in memory with n frames is not guaranteed to be a subset of the pages resident with n+1 frames.\n\nAlgorithms that don't exhibit Belady's Anomaly are called stack-based algorithms — LRU (Least Recently Used) and the theoretical Optimal (Belady's) algorithm are the classic examples. In a stack algorithm, the set of pages held in memory with n frames is always a subset of the set held with n+1 frames, which mathematically guarantees that adding more frames can never increase the fault count. This is one practical reason interviewers ask about it: it's evidence for why LRU (or its approximations, like the Clock algorithm) is generally preferred over plain FIFO in production systems, even though FIFO is simpler to implement.",
+      "sources": [
+        {
+          "title": "Belady's Anomaly in Page Replacement Algorithms - GeeksforGeeks",
+          "url": "https://www.geeksforgeeks.org/operating-systems/beladys-anomaly-in-page-replacement-algorithms/",
+          "domain": "geeksforgeeks.org"
+        },
+        {
+          "title": "Bélády's anomaly - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/B%C3%A9l%C3%A1dy's_anomaly",
+          "domain": "en.wikipedia.org"
+        }
+      ],
+      "id": 20
+    },
+    {
+      "question": "What is the difference between fork() and exec()? What happens to the process's memory and file descriptors in each?",
+      "difficulty": "Medium",
+      "answer": "fork() and exec() are the two building blocks Unix/Linux systems use together to launch a new program, and they do fundamentally different things.\n\nfork() creates a new process (the child) that is essentially a clone of the calling process (the parent) at the moment fork() was called. The child gets its own copy of the parent's address space (code, data, heap, stack) — conceptually a full duplicate, though in practice modern kernels use copy-on-write (COW) so the actual physical pages are shared and only copied lazily if either process writes to them. The child also inherits copies of the parent's open file descriptors, but critically these descriptor copies refer to the same underlying open file description in the kernel — so both processes share the same file offset; if the child reads from a file, the parent's next read continues from where the child left off. fork() returns twice: 0 in the child, and the child's PID in the parent.\n\nexec() (the exec family: execve, execvp, etc.) does not create a new process. Instead, it replaces the calling process's memory image — code, data, heap, and stack — with that of a new program, while keeping the same PID. Open file descriptors are preserved across exec() by default (unless explicitly marked close-on-exec), which is exactly how shell redirection works: a shell opens/dup2's the target file descriptors before calling exec(), so the new program inherits them transparently.\n\nThe classic pattern is fork() followed immediately by exec() in the child: fork() clones the process, and exec() then overwrites that clone's memory with a different program. Because exec() is about to wipe out the memory anyway, copy-on-write means the fork() in this pattern is cheap — the kernel never actually duplicates the pages, since they get discarded before either process modifies them.",
+      "sources": [
+        {
+          "title": "Fork and Exec (Swarthmore CS31)",
+          "url": "https://www.cs.swarthmore.edu/~kwebb/cs31/s15/bucs/fork_and_exec.html",
+          "domain": "cs.swarthmore.edu"
+        },
+        {
+          "title": "The Difference Between Fork(), Vfork(), Exec(), and Clone() — linuxvox.com",
+          "url": "https://linuxvox.com/blog/the-difference-between-fork-vfork-exec-and-clone/",
+          "domain": "linuxvox.com"
+        }
+      ],
+      "id": 21
+    },
+    {
+      "question": "What is a zombie process versus an orphan process, and how do you prevent processes from becoming zombies?",
+      "difficulty": "Medium",
+      "answer": "Both terms describe unusual states in the parent-child process relationship, but they're essentially opposites.\n\nA zombie process is one that has finished executing (called exit()) but whose entry is still kept in the process table because its parent hasn't yet collected its exit status via wait()/waitpid(). The zombie holds no CPU, memory, or open resources beyond its PID slot and exit code — it's 'dead but not yet reaped.' Zombies are a normal, transient part of the process lifecycle; they only become a real problem if a parent never calls wait() at all, in which case zombies accumulate indefinitely and can eventually exhaust the system's PID table, preventing new processes from being created.\n\nAn orphan process is a still-running (live) process whose parent has terminated before it did. Rather than being left dangling, the OS automatically 're-parents' orphans to the init process (PID 1, or systemd on modern Linux), which has a dedicated handler that periodically calls wait() on its adopted children to reap them once they finish. Orphans are generally harmless precisely because of this automatic adoption-and-reaping mechanism.\n\nTo prevent zombies from piling up, a well-behaved parent should:\n- Explicitly call wait() or waitpid() after forking, to collect the child's exit status once it terminates.\n- Register a SIGCHLD handler that calls wait() (or waitpid() in a loop) whenever a child exits, so reaping happens asynchronously rather than blocking.\n- On Linux, set the SIGCHLD disposition to SIG_IGN, which tells the kernel to automatically reap children without the parent needing to call wait() at all.\n- If a parent doesn't care about the child, it can double-fork (fork twice, letting the intermediate process exit immediately) so the grandchild becomes an orphan adopted by init, which reaps it automatically.",
+      "sources": [
+        {
+          "title": "Linux Has Zombies and Orphans and I Think That's Kind of Brilliant",
+          "url": "https://medium.com/@sayuj_chaps/linux-has-zombies-and-orphans-and-i-think-thats-kind-of-brilliant-40124de29cb5",
+          "domain": "medium.com"
+        },
+        {
+          "title": "Unix Processes: fork, exec, wait, and Everything In Between",
+          "url": "https://gpereira.dev/posts/unix-processes/",
+          "domain": "gpereira.dev"
+        }
+      ],
+      "id": 22
+    },
+    {
+      "question": "What is copy-on-write, and why is it used to make fork() efficient?",
+      "difficulty": "Medium",
+      "answer": "Copy-on-write (COW) is an optimization where, instead of immediately duplicating a resource when it's 'copied,' both the original and the copy share the same underlying physical data — the actual copy is deferred until one of them tries to modify it, at which point just that modified portion is duplicated.\n\nWhen fork() is called, conceptually the child process should get its own complete copy of the parent's entire address space. Doing that eagerly — copying every page of memory immediately — would be wasteful, especially since a very common pattern is to call exec() right after fork(), which immediately discards the child's memory image anyway. Instead, modern kernels (Linux, BSD, etc.) implement fork() with COW: after the fork, the parent and child's page tables both point to the same physical pages, but those pages are marked read-only. As long as neither process writes to a shared page, no actual copying happens — both processes are simply sharing memory read-only, which is extremely cheap (just duplicating page-table entries, not the underlying data). The moment either process attempts to write to one of these shared pages, the CPU generates a protection fault, and the kernel intervenes to allocate a new physical page, copy the data into it, update that process's page table entry, and let the write proceed — this final step is the actual 'copy on write.'\n\nThis makes fork() dramatically faster and more memory-efficient, particularly for large processes, because: (1) if exec() follows immediately, the memory gets replaced before anything is ever written, so essentially zero copying occurs; and (2) even for processes that don't immediately exec(), pages that are never modified by either parent or child (e.g., read-only code/text segments) are never duplicated at all — only pages that are actually written to incur the copy cost, and only at the moment they're written.",
+      "sources": [
+        {
+          "title": "Fork and Exec (Swarthmore CS31)",
+          "url": "https://www.cs.swarthmore.edu/~kwebb/cs31/s15/bucs/fork_and_exec.html",
+          "domain": "cs.swarthmore.edu"
+        },
+        {
+          "title": "The Difference Between Fork(), Vfork(), Exec(), and Clone() — linuxvox.com",
+          "url": "https://linuxvox.com/blog/the-difference-between-fork-vfork-exec-and-clone/",
+          "domain": "linuxvox.com"
+        }
+      ],
+      "id": 23
+    },
+    {
+      "question": "Explain the producer-consumer (bounded-buffer) problem and how semaphores are used to solve it.",
+      "difficulty": "Medium",
+      "answer": "The producer-consumer (bounded-buffer) problem models two kinds of processes/threads sharing a fixed-size buffer: producers generate data and place it in the buffer, and consumers remove data from the buffer to process it. Two correctness requirements must be maintained: a producer must never write into a full buffer (buffer overflow), and a consumer must never read from an empty buffer (buffer underflow) — and access to the shared buffer itself must be mutually exclusive to avoid race conditions.\n\nThe standard semaphore-based solution uses three semaphores:\n- `empty` (initialized to the buffer's capacity, n) — tracks the number of free slots; producers wait() on this before inserting.\n- `full` (initialized to 0) — tracks the number of occupied slots; consumers wait() on this before removing.\n- `mutex` (a binary semaphore initialized to 1) — protects the actual insertion/removal from the shared buffer, ensuring only one thread touches it at a time.\n\n```c\n// Producer\ndo {\n    // produce an item\n    wait(empty);   // block if buffer is full\n    wait(mutex);   // enter critical section\n    // insert item into buffer\n    signal(mutex); // leave critical section\n    signal(full);  // signal that a slot is now filled\n} while (true);\n\n// Consumer\ndo {\n    wait(full);    // block if buffer is empty\n    wait(mutex);   // enter critical section\n    // remove item from buffer\n    signal(mutex); // leave critical section\n    signal(empty); // signal that a slot is now free\n} while (true);\n```\n\nThe `empty`/`full` pair enforces the bounded-buffer capacity constraint (producers block once the buffer is full, consumers block once it's empty), while `mutex` prevents concurrent producers/consumers from corrupting the buffer's internal state during an actual insert/remove. A subtle but important detail: the order in which the semaphores are acquired matters — `wait(empty)`/`wait(full)` must be acquired before `wait(mutex)`, not after, otherwise a consumer that acquires `mutex` first could block indefinitely holding the lock while waiting on `full`, preventing a producer from ever entering to fill the buffer — a deadlock.",
+      "sources": [
+        {
+          "title": "Producer Consumer Solution using Semaphores - GeeksforGeeks",
+          "url": "https://www.geeksforgeeks.org/operating-systems/producer-consumer-problem-using-semaphores-set-1/",
+          "domain": "geeksforgeeks.org"
+        },
+        {
+          "title": "Tackling the bounded-buffer problem using Semaphores",
+          "url": "https://medium.com/@ashaymotiwala/tackling-the-bounded-buffer-problem-aka-producer-consumer-problem-using-semaphores-42b4b22f2448",
+          "domain": "medium.com"
+        }
+      ],
+      "id": 24
+    },
+    {
+      "question": "Compare the disk-scheduling algorithms SSTF, SCAN, and C-SCAN/LOOK — what are the trade-offs between them?",
+      "difficulty": "Medium",
+      "answer": "These algorithms all decide the order in which pending disk I/O requests are serviced, aiming to minimize total seek time (the time spent physically moving the disk arm across tracks).\n\nSSTF (Shortest Seek Time First) always services whichever pending request is closest to the disk head's current position. This minimizes seek time for the immediate next request and gives good average response time compared to naive FCFS, but it can cause starvation: a request for a track far from the head's current 'neighborhood' can be repeatedly passed over if closer requests keep arriving, and it also produces highly variable response times.\n\nSCAN (the 'elevator' algorithm) moves the head in one direction, servicing every pending request it passes, until it reaches the end of the disk, then reverses direction and does the same on the way back. This avoids SSTF's starvation problem and gives more uniform service, but tracks in the middle of the disk get serviced roughly twice as often as tracks near the edges (since the head passes the middle on every sweep, but the edges only once every other sweep).\n\nC-SCAN (Circular SCAN) also sweeps in one direction servicing requests, but instead of reversing at the end, it jumps back to the start of the disk (without servicing requests on the return trip) and starts a new sweep in the same direction. This makes wait times more uniform across all tracks, at the cost of that 'wasted' return jump.\n\nLOOK and C-LOOK are refinements of SCAN and C-SCAN respectively: instead of sweeping all the way to the physical end of the disk, the head only goes as far as the last pending request in that direction before reversing (LOOK) or jumping back (C-LOOK) — avoiding unnecessary travel to the ends of the disk when there are no requests waiting out there, which gives slightly better average seek time than plain SCAN/C-SCAN.\n\nInterview-level takeaway: SSTF optimizes locally (can starve), SCAN/C-SCAN optimize for fairness across the whole disk (some wasted movement), and LOOK/C-LOOK are the practical, slightly-optimized versions of SCAN/C-SCAN actually used because they don't waste time traveling to empty regions of the disk.",
+      "sources": [
+        {
+          "title": "LOOK Disk Scheduling Algorithm - GeeksforGeeks",
+          "url": "https://www.geeksforgeeks.org/operating-systems/look-disk-scheduling-algorithm/",
+          "domain": "geeksforgeeks.org"
+        },
+        {
+          "title": "Disk Scheduling Algorithms - GeeksforGeeks",
+          "url": "https://www.geeksforgeeks.org/operating-systems/disk-scheduling-algorithms/",
+          "domain": "geeksforgeeks.org"
+        }
+      ],
+      "id": 25
+    },
+    {
+      "question": "What is priority inversion, and how does priority inheritance solve it?",
+      "difficulty": "Hard",
+      "answer": "Priority inversion occurs when a high-priority task is indirectly blocked by a lower-priority task, because the low-priority task holds a lock (mutex/semaphore) that the high-priority task needs. In the simplest case this 'inversion' is bounded — the high-priority task just waits for the low-priority task to finish its critical section. But unbounded priority inversion happens when a medium-priority task, which needs neither the shared lock nor has any direct relationship to the high-priority task, preempts the low-priority lock-holder (because it outranks it) and runs indefinitely. Since the low-priority task never gets scheduled to finish its critical section and release the lock, the high-priority task can be blocked for an unbounded, unpredictable amount of time — effectively as if the medium-priority task had higher priority than the high-priority one.\n\nThis is famously what nearly doomed the Mars Pathfinder mission in 1997: a low-priority task holding a mutex on a shared information bus was preempted by medium-priority tasks, blocking a high-priority task long enough that a watchdog timer concluded the system had hung and triggered a full system reset — repeatedly, every few days after landing.\n\nPriority inheritance solves this by temporarily boosting the priority of the lock-holder to match the priority of the highest-priority task currently blocked waiting on that lock. In the scenario above, the moment the high-priority task blocks on the mutex held by the low-priority task, the low-priority task's priority is raised to match the high-priority task's — which means the medium-priority task can no longer preempt it. The low-priority task finishes its critical section quickly (now running at elevated priority), releases the lock, its priority drops back to normal, and the high-priority task can proceed. This bounds the maximum blocking time to the duration of one critical section rather than being unbounded. (An alternative approach, the priority ceiling protocol, pre-assigns each lock a 'ceiling' priority equal to the highest priority of any task that might ever use it, and boosts a task's priority to that ceiling the moment it acquires the lock — a more conservative but deadlock-avoiding variant.) The actual fix applied to Pathfinder was enabling priority inheritance on the relevant mutex via a VxWorks configuration flag.",
+      "sources": [
+        {
+          "title": "Mars Pathfinder: Priority Inversion Problem",
+          "url": "https://www.cse.chalmers.se/~risat/Report_MarsPathFinder.pdf",
+          "domain": "cse.chalmers.se"
+        },
+        {
+          "title": "What is Priority Inversion? Why You Care and What to Do About It | Timesys LinuxLink",
+          "url": "https://linuxlink.timesys.com/docs/priority_inversion",
+          "domain": "linuxlink.timesys.com"
+        }
+      ],
+      "id": 26
+    },
+    {
+      "question": "What is the difference between a spinlock and a mutex at an implementation level, and how do you decide which to use for a given critical section?",
+      "difficulty": "Hard",
+      "answer": "Both protect a critical section, but they handle contention completely differently at the implementation level.\n\nA spinlock is implemented with a busy-wait loop around an atomic instruction (e.g., an atomic compare-and-swap / LOCK CMPXCHG). When a thread tries to acquire a held spinlock, it doesn't yield the CPU — it just keeps spinning in a tight loop, repeatedly re-checking the lock, until it becomes free. This means acquiring an uncontended spinlock is extremely cheap (no syscall, just a few instructions), but a thread that's spinning burns 100% of a CPU core doing no useful work while it waits, and on a single-core system a spinning thread can never let the lock-holder run at all (so spinlocks are typically only used in contexts where preemption is disabled or on true multi-core systems where the holder is running on a different core).\n\nA mutex, by contrast, is typically implemented as a hybrid: it may spin briefly for very short waits (adaptive mutex), but if the lock isn't acquired quickly, it puts the calling thread to sleep (removes it from the run queue) and asks the OS to wake it up when the lock becomes available — this involves a system call and a context switch, which costs tens of nanoseconds to microseconds of overhead even when uncontended, and considerably more under real contention (a full context switch plus the OS's wait-queue bookkeeping). The upside is that a sleeping thread consumes no CPU while waiting, and many mutex implementations also support priority inheritance to avoid priority inversion, which spinlocks generally cannot do (a low-priority thread holding a spinlock while a high-priority thread spins can waste CPU indefinitely without a way to 'donate' priority).\n\nRule of thumb for choosing: use a spinlock when the critical section is extremely short (comparable to or shorter than the cost of a context switch, e.g., tens to low-hundreds of nanoseconds) and contention is low, particularly in kernel code or low-level concurrent data structures where sleeping isn't an option or is too expensive relative to the work being protected. Use a mutex when the critical section may take longer, when contention is unpredictable or high, or in user-space application code where wasting CPU by spinning is unacceptable and priority-inheritance correctness matters more than the last few nanoseconds of lock-acquisition latency.",
+      "sources": [
+        {
+          "title": "Differences Between Mutex and Spinlock | Baeldung on Computer Science",
+          "url": "https://www.baeldung.com/cs/mutex-vs-spinlock-concurrent-parallel-distributed-programming",
+          "domain": "baeldung.com"
+        },
+        {
+          "title": "Spinlocks vs. Mutexes: When to Spin and When to Sleep",
+          "url": "https://howtech.substack.com/p/spinlocks-vs-mutexes-when-to-spin",
+          "domain": "howtech.substack.com"
+        }
+      ],
+      "id": 27
+    },
+    {
+      "question": "What is a TLB (Translation Lookaside Buffer), what happens on a TLB miss, and how does TLB behavior affect the cost of a context switch between different processes?",
+      "difficulty": "Hard",
+      "answer": "The Translation Lookaside Buffer (TLB) is a small, fast hardware cache — situated in or near the Memory Management Unit (MMU) — that stores recently used virtual-page-number-to-physical-frame-number translations. Without it, every single memory access a program makes would require walking the (potentially multi-level) page table in main memory just to translate the address, effectively doubling or worse the cost of every memory reference. Because programs exhibit strong spatial and temporal locality, a small TLB can achieve a very high hit rate (often 98%+), making address translation nearly free most of the time.\n\nOn a TLB hit, the CPU gets the physical frame number directly from the TLB and proceeds to access memory immediately. On a TLB miss, the CPU (or, on some architectures, the OS via a software-managed TLB) must perform a page-table walk: it looks up the page table in main memory to find the frame number, and — assuming the page table entry is valid (the page is actually resident in RAM) — loads that translation into the TLB for future use before completing the access. If the page table entry itself is invalid (the page isn't resident, e.g., it's been swapped to disk), this escalates into a full page fault, which is a much more expensive trap into the OS that may involve reading the page in from disk entirely.\n\nContext switches interact badly with the TLB because a page table (and therefore its virtual-to-physical mappings) is specific to a single process. The simplest approach is to flush the entire TLB on every context switch, invalidating all cached translations; this keeps the hardware simple but means the newly scheduled process starts with a 'cold' TLB and will incur a burst of TLB misses (and associated page-table walks) as it repopulates useful entries — directly increasing the effective cost of that context switch. Many modern CPUs avoid this by tagging each TLB entry with an Address Space Identifier (ASID, or PCID on x86), letting entries from multiple processes coexist in the TLB simultaneously without being flushed; this lets a process resume with a warm TLB if it's scheduled again soon, significantly reducing the hidden cost of context switching, at the price of slightly more complex hardware (ASID comparison logic) and finite ASID space that must eventually be recycled.",
+      "sources": [
+        {
+          "title": "Translation Lookaside Buffer (TLB) - GeeksforGeeks",
+          "url": "https://www.geeksforgeeks.org/computer-organization-architecture/translation-lookaside-buffer-tlb/",
+          "domain": "geeksforgeeks.org"
+        },
+        {
+          "title": "The Translation Lookaside Buffer - CS 61C Course Notes",
+          "url": "https://notes.cs61c.org/content/vm/tlb/",
+          "domain": "notes.cs61c.org"
+        }
+      ],
+      "id": 28
+    },
+    {
+      "question": "Compare deadlock prevention, avoidance, and detection as strategies — what are the trade-offs, and how does a deadlock detection algorithm typically work?",
+      "difficulty": "Hard",
+      "answer": "These three strategies (plus a fourth, ignoring the problem entirely, the so-called 'ostrich method' that many general-purpose OSes actually use) sit on a spectrum of how conservative vs. permissive they are about resource allocation.\n\nDeadlock prevention works by structurally guaranteeing that at least one of the four necessary deadlock conditions (mutual exclusion, hold-and-wait, no preemption, circular wait) can never occur, so deadlock is impossible by design. For example: require every process to request all the resources it will ever need at once, upfront (eliminates hold-and-wait); impose a global total ordering on resource types and require processes to request resources only in increasing order (eliminates circular wait). This is the most conservative approach — deadlock genuinely cannot happen — but it tends to hurt resource utilization and concurrency significantly, since it forces overly cautious allocation patterns (e.g., holding resources you don't need yet, or being unable to request resources 'out of order' even when it would be safe to do so).\n\nDeadlock avoidance (the Banker's Algorithm being the canonical example) is less restrictive: it allows all four conditions to be possible, but before granting any resource request, it checks whether doing so would leave the system in an 'unsafe' state (one from which a deadlock could occur even if it hasn't yet). It only grants requests that keep the system in a provably safe state. This achieves better utilization than strict prevention but requires processes to declare their maximum resource needs in advance, and the safety-checking overhead runs on every request.\n\nDeadlock detection allows deadlocks to actually occur, and instead periodically (or on demand) checks whether the system is currently deadlocked, then recovers by aborting one or more processes or preempting their resources. The standard detection algorithm builds a wait-for graph (or, for multi-instance resource types, tracks Available/Allocation/Request matrices similar to the Banker's Algorithm's structures) and looks for a cycle: an edge from process Pi to Pj exists if Pi is waiting for a resource currently held by Pj; if the graph contains a cycle, the processes in that cycle are deadlocked. Recovery then requires choosing a victim to abort or preempt resources from — a policy decision with its own trade-offs (e.g., picking the process that's used the least CPU time so far to minimize wasted work, but risking starvation if the same process keeps getting picked).\n\nTrade-off summary for interviews: prevention is the safest but most restrictive and hurts throughput; avoidance is a middle ground requiring upfront knowledge of maximum resource needs; detection allows maximum concurrency but pays a periodic checking cost and must handle recovery (which can lose work). Most general-purpose operating systems (Linux, Windows) actually use none of these formally for arbitrary user-level resource deadlocks — they rely on application-level discipline — while detection/avoidance are more common in database systems and specialized real-time/embedded environments.",
+      "sources": [
+        {
+          "title": "Deadlock Detection Algorithm in Operating System - GeeksforGeeks",
+          "url": "https://www.geeksforgeeks.org/operating-systems/deadlock-detection-algorithm-in-operating-system/",
+          "domain": "geeksforgeeks.org"
+        },
+        {
+          "title": "Handling Deadlocks - GeeksforGeeks",
+          "url": "https://origin.geeksforgeeks.org/operating-systems/handling-deadlocks/",
+          "domain": "origin.geeksforgeeks.org"
+        }
+      ],
+      "id": 29
+    },
+    {
+      "question": "What is the working set model, and how can an OS use it to prevent thrashing rather than just react to it?",
+      "difficulty": "Hard",
+      "answer": "The working set model, introduced by Peter Denning, defines a process's working set at time t as the set of distinct pages it has referenced during the most recent Δ time units (a sliding window). The intuition is that this set approximates the pages the process is 'actively using' right now, based on temporal locality — most programs concentrate their memory accesses on a relatively small, slowly-shifting subset of their total address space at any given moment.\n\nRather than waiting for thrashing to happen and then reacting (e.g., detecting low CPU utilization and suspending processes after the fact), the OS can use the working set proactively as an admission-control and memory-allocation policy: before admitting a new process to run (increasing the degree of multiprogramming), the OS checks whether there's enough free memory to hold that process's estimated working set on top of all currently running processes' working sets. If sum of working sets already exceeds physical memory, the OS refuses to admit the new process (or suspends/swaps out an already-running one) rather than letting memory become over-committed in the first place. This directly prevents the over-commitment condition that causes thrashing, instead of detecting the symptom (high fault rate, low CPU utilization) after the damage is already being done.\n\nPractically, tracking the exact working set (which pages were touched in the last Δ time units) is expensive to do precisely, so operating systems approximate it — for example, using the Clock algorithm's reference/use bits together with a periodic sweep: pages whose 'idle time' since last access is below a threshold T are considered part of the working set, and a page's idle counter resets whenever it's found with its reference bit set. Choosing Δ (or T) involves a trade-off: too small, and the estimated working set is noisy and underestimates real memory needs (causing more faults); too large, and it overestimates needs, wasting memory and limiting the number of processes that can run concurrently, and it also responds too slowly when a process's actual working set shifts (e.g., moving to a new phase of computation).\n\nA related, more directly reactive alternative some systems also use is page-fault-frequency (PFF) control: monitor each process's page-fault rate directly, and if it's too high, give that process more frames; if too low, take frames away — sidestepping the need to explicitly track which pages are 'in' the working set.",
+      "sources": [
+        {
+          "title": "Page replacement and thrashing (CS 4410, Cornell)",
+          "url": "https://www.cs.cornell.edu/courses/cs4410/2017su/lectures/lec14-replacement.html",
+          "domain": "cs.cornell.edu"
+        },
+        {
+          "title": "L30 (IIT Delhi OS lecture notes)",
+          "url": "https://www.cse.iitd.ac.in/~sbansal/os/lec/l30.html",
+          "domain": "cse.iitd.ac.in"
+        }
+      ],
+      "id": 30
+    },
+    {
+      "question": "Describe the Clock (second-chance) page-replacement algorithm. Why do most production operating systems use it instead of true LRU?",
+      "difficulty": "Hard",
+      "answer": "The Clock algorithm (also called second-chance) approximates LRU (Least Recently Used) cheaply, using only a single extra hardware-maintained bit per page: the reference (or 'use') bit, which the hardware automatically sets to 1 whenever that page is accessed.\n\nThe algorithm treats the set of page frames as a circular list with a single 'hand' (pointer) that advances around it. When a page fault occurs and a victim must be chosen: the algorithm looks at the frame the hand currently points to. If its reference bit is 0, that page hasn't been used recently — it's evicted immediately. If its reference bit is 1, the page is given a 'second chance': its reference bit is cleared to 0, and the hand advances to the next frame, repeating the same check. Eventually the hand finds a frame with a reference bit of 0 (in the worst case, after one full sweep, since every bit it passed got cleared) and evicts that page.\n\nWhy production systems (Linux, most commercial Unix/Windows variants) use Clock instead of true LRU:\n- True LRU requires tracking the exact recency order of every page access — either a timestamp updated on every single memory reference, or a doubly-linked list that gets reordered on every access. Given that memory accesses happen at CPU speed (billions per second), maintaining exact ordering in software is far too slow, and dedicated hardware support for it (a full hardware-maintained access-time stamp per page) is expensive and rarely implemented.\n- Clock needs only a single bit per page that ordinary MMU hardware already sets automatically on access — essentially free to obtain, unlike a full access-time counter.\n- Clock's victim-selection cost is amortized O(1) in practice (the hand rarely needs to sweep through many frames before finding a 0-bit), whereas maintaining a perfectly-ordered LRU list has non-trivial cost on every memory access, not just on eviction.\n- In practice, Clock's approximation of recency is 'good enough' — it correctly protects pages that have been touched at all recently (within roughly one sweep of the clock hand) and evicts genuinely idle pages, capturing most of the benefit of true LRU (avoiding worst-case behaviors like Belady's Anomaly, since it's a reasonable stack-like approximation) without the overhead.\n\nEnhancements like the enhanced second-chance algorithm additionally consider the dirty (modified) bit, preferring to evict clean pages before dirty ones (since evicting a dirty page requires an extra disk write-back, while a clean page can simply be discarded), and some systems use variants with two 'hands' (one to clear reference bits ahead of time, one to actually evict) to better tune what 'recently used' means without re-sweeping the same frames repeatedly.",
+      "sources": [
+        {
+          "title": "Second Chance (or Clock) Page Replacement Policy - GeeksforGeeks",
+          "url": "https://www.geeksforgeeks.org/operating-systems/second-chance-or-clock-page-replacement-policy/",
+          "domain": "geeksforgeeks.org"
+        },
+        {
+          "title": "lec15 thrashing / Lecture 14 (CS 4410, Cornell)",
+          "url": "https://www.cs.cornell.edu/courses/cs4410/2018su/lectures/lec15-thrashing.html",
+          "domain": "cs.cornell.edu"
+        }
+      ],
+      "id": 31
+    },
+    {
+      "question": "How does a Multilevel Feedback Queue (MLFQ) scheduler approximate \"shortest job first\" without knowing a process's burst time in advance, and what are the trade-offs in tuning it?",
+      "difficulty": "Hard",
+      "answer": "MLFQ, invented by Corbato in 1962 and used as the basis for schedulers in BSD Unix, Solaris, and Windows NT and its successors, solves a fundamental problem: SJF (Shortest Job First) is provably optimal for minimizing average waiting time, but it requires knowing each process's future CPU burst length in advance — information the OS simply doesn't have for arbitrary programs. MLFQ's insight is to infer a proxy for 'is this likely a short/interactive job or a long/CPU-bound job' from a process's observed past behavior, on the assumption that past behavior predicts future behavior.\n\nMLFQ maintains multiple priority queues (queue 0 = highest priority, down to queue N-1 = lowest), each with its own time quantum (typically shorter quanta at higher/more-privileged queues, longer quanta lower down). The basic rules:\n1. If Priority(A) > Priority(B), A runs and B doesn't.\n2. Processes at the same priority level run in round-robin using that queue's time quantum.\n3. A new job entering the system starts at the highest-priority queue.\n4. If a job uses its entire time allotment at a given level (regardless of how many times it voluntarily yielded the CPU within that allotment), its priority is demoted one level.\n\nThis naturally separates workloads without any prior knowledge: an interactive job that frequently blocks on I/O (e.g., waiting for keyboard input) never uses up its full time allotment before yielding, so it stays at a high-priority queue with short quanta — giving it fast response times, effectively approximating SJF/short-job treatment. A CPU-bound batch job, in contrast, keeps using its full allotment and gets progressively demoted to lower-priority, longer-quantum queues, where it competes with other similarly long jobs and doesn't interfere with the responsiveness of interactive work.\n\nTwo important patches to the naive design fix real problems: (1) Starvation — a long-running job stuck permanently at the bottom queue could be starved indefinitely if enough new interactive jobs keep arriving at the top. The fix is a periodic priority boost (Rule 5): after some fixed period S, every job in the system is moved back to the topmost queue, guaranteeing CPU-bound jobs still get periodic time and giving them a chance to be reclassified if their behavior changes. (2) Gaming the scheduler — without care, a process could issue a trivial I/O operation just before its allotment expires, voluntarily relinquishing the CPU (avoiding demotion) while still hogging almost all the CPU time overall. The fix is 'better accounting': track total CPU time consumed at a given priority level across all yields, not just resetting the counter each time the process voluntarily gives up the CPU.\n\nTuning trade-offs: the number of queues, each queue's time quantum, and the priority-boost period S are all 'voodoo constants' with no universally correct value — they must be tuned to the expected workload. Too short a boost period wastes CPU on excessive boosting and undermines the separation between interactive/batch jobs; too long a period risks real starvation of low-priority jobs in the meantime. Similarly, quantum lengths trade off responsiveness against context-switch overhead, exactly as with plain Round Robin.",
+      "sources": [
+        {
+          "title": "8 Scheduling: The Multi-Level Feedback Queue (OSTEP, pages.cs.wisc.edu)",
+          "url": "https://pages.cs.wisc.edu/~remzi/OSTEP/cpu-sched-mlfq.pdf",
+          "domain": "pages.cs.wisc.edu"
+        },
+        {
+          "title": "OSTEP Chapter 8 (muratbuffalo.blogspot.com)",
+          "url": "http://muratbuffalo.blogspot.com/2026/02/ostep-chapter-8-scheduling-multi-level.html",
+          "domain": "muratbuffalo.blogspot.com"
+        }
+      ],
+      "id": 32
+    },
+    {
+      "question": "Explain the Dining Philosophers problem. What solutions prevent deadlock, and do they also prevent starvation?",
+      "difficulty": "Hard",
+      "answer": "The Dining Philosophers problem, introduced by Dijkstra in 1965, is a classic illustration of resource-allocation deadlock and starvation. Five philosophers sit around a circular table with one fork placed between each adjacent pair (five forks total). Each philosopher alternates between thinking and eating; to eat, a philosopher needs both the fork to their left and the fork to their right, and each fork can only be held by one philosopher at a time.\n\nThe naive solution — each philosopher picks up their left fork, then their right fork — can deadlock: if all five philosophers simultaneously pick up their left fork, every philosopher is now holding one fork and waiting forever for their right fork, which is held by their neighbor who is in exactly the same situation. This is a textbook circular wait, one of the four necessary conditions for deadlock.\n\nSeveral established solutions address this:\n- Resource hierarchy (Dijkstra's original solution): assign a strict global ordering to the forks (e.g., number them 1–5), and require every philosopher to pick up the lower-numbered fork before the higher-numbered one. This breaks the circular-wait condition, guaranteeing no deadlock — but it is not fair: a philosopher who is slow can be perpetually beaten to a fork by a faster neighbor, so this solution does not guarantee freedom from starvation for any specific philosopher, even though the system as a whole always makes progress.\n- Arbitrator (waiter) solution: introduce a central authority that a philosopher must ask permission from before picking up any forks; the arbitrator only grants permission if doing so won't lead to deadlock (e.g., only allowing at most four philosophers to attempt picking up forks simultaneously, guaranteeing at least one can always get both forks). This prevents deadlock and, if the arbitrator is implemented fairly (e.g., FIFO queuing of requests), can also prevent starvation.\n- Chandy/Misra solution: a fully distributed, token/request-based protocol where philosophers pass forks between each other based on message priority, without a central arbitrator; it's deadlock-free and, with appropriate priority rules, also starvation-free, at the cost of higher implementation complexity.\n- Limiting concurrency: simply cap the number of philosophers allowed to sit down and attempt to eat at N-1 (four, in the classic five-philosopher case). Since at most four philosophers are competing for five forks, at least one is guaranteed to be able to acquire both of theirs, breaking the deadlock condition — though this alone doesn't guarantee fairness/starvation-freedom without additional queuing discipline.\n\nThe key interview point: deadlock-freedom and starvation-freedom are separate properties. A solution can guarantee the system as a whole always makes progress (no deadlock) while still allowing an individual, unlucky philosopher to be repeatedly out-competed by neighbors and never actually get to eat (starvation) — genuinely preventing starvation requires an additional fairness mechanism, such as a FIFO-ordered arbitrator or explicit priority/aging rules.",
+      "sources": [
+        {
+          "title": "Dining Philosopher Solution using Semaphores - GeeksforGeeks",
+          "url": "https://www.geeksforgeeks.org/operating-systems/dining-philosopher-problem-using-semaphores/",
+          "domain": "geeksforgeeks.org"
+        },
+        {
+          "title": "11.4: Dining Philosopher Problem - Engineering LibreTexts",
+          "url": "https://eng.libretexts.org/Courses/Delta_College/Introduction_to_Operating_Systems/11:_Concurrency-__Deadlock_and_Starvation/11.04:_Dining_Philosopher_Problem",
+          "domain": "eng.libretexts.org"
+        }
+      ],
+      "id": 33
+    },
+    {
+      "question": "Compare RAID 0, 1, 5, and 6 in terms of performance, storage efficiency, and fault tolerance trade-offs.",
+      "difficulty": "Hard",
+      "answer": "RAID (Redundant Array of Independent Disks) combines multiple physical drives into a logical unit, and each level makes a different trade-off between raw performance, usable storage capacity, and how many drive failures it can survive.\n\nRAID 0 (striping) splits data evenly across all drives with no redundancy at all. It offers the best raw read/write performance and 100% storage efficiency (all capacity is usable), because data is simply spread across drives with no parity or duplication overhead. Its critical weakness: zero fault tolerance — if any single drive in the array fails, all data in the array is lost, since every file's data is scattered across every drive. It's appropriate only for non-critical, easily-reproducible or already-backed-up data where speed matters more than safety.\n\nRAID 1 (mirroring) duplicates all data identically across two (or more) drives. Every write goes to all mirrors; reads can be load-balanced across them. It tolerates one drive failure trivially — the surviving mirror has a complete, immediately usable copy of the data, and rebuild is as simple as copying from the good drive to a replacement. The cost is storage efficiency: usable capacity is only 50% of raw capacity for a two-drive mirror (you pay for 2x the drives to store 1x the data).\n\nRAID 5 stripes both data and parity information across at least three drives, with parity distributed (not on a single dedicated drive, unlike RAID 4), which improves write parallelism. It can survive exactly one drive failure — the missing drive's data can be reconstructed from the parity and remaining data. Storage efficiency is (n-1)/n of raw capacity for n drives (e.g., 4 drives of 1TB each yield 3TB usable), which is generally better than RAID 1 for larger arrays. The trade-off is the 'write penalty': every write requires a read-modify-write cycle to recompute and update parity, which is slower than RAID 0/1 for write-heavy workloads, and during a rebuild after a failure the array is in a 'degraded' state with reduced performance and (importantly) zero further failure tolerance until the rebuild completes — a second failure during rebuild means data loss.\n\nRAID 6 extends RAID 5 by storing two independent parity blocks instead of one, allowing the array to survive two simultaneous drive failures. This makes it significantly safer than RAID 5, particularly important as drive capacities grow (larger drives mean longer rebuild times, during which RAID 5 has no further protection margin). The cost is storage efficiency of (n-2)/n of raw capacity (slightly less than RAID 5) and an even heavier write penalty due to the extra parity calculation.\n\nInterview-level summary: RAID 0 = speed, no safety; RAID 1 = simple safety, poor storage efficiency; RAID 5 = balanced safety/efficiency/performance for one-failure tolerance, weak during rebuilds; RAID 6 = better safety margin (two-failure tolerance) for large/critical arrays, at extra storage and write-performance cost. None of these RAID levels is a substitute for backups — they protect against drive hardware failure, not against data corruption, accidental deletion, or site-wide disasters.",
+      "sources": [
+        {
+          "title": "RAID (Redundant Arrays of Independent Disks) - GeeksforGeeks",
+          "url": "https://www.geeksforgeeks.org/dbms/raid-redundant-arrays-of-independent-disks/",
+          "domain": "geeksforgeeks.org"
+        },
+        {
+          "title": "RAID Levels Explained: RAID 0, 1, 5, 6, 10 Compared | Xinnor",
+          "url": "https://xinnor.io/blog/a-guide-to-raid-pt-2-raid-levels-explained/",
+          "domain": "xinnor.io"
+        }
+      ],
+      "id": 34
+    },
+    {
+      "question": "What actually happens at the hardware/OS level during a context switch (registers, page tables, caches/TLB), and why is it considered expensive? How do modern OSes try to minimize this cost?",
+      "difficulty": "Hard",
+      "answer": "A context switch involves several layers of state that must be saved and restored, and the cost comes from all of them combined, not just one operation.\n\nAt the register level: a timer interrupt, system call, or I/O event triggers the switch. The CPU (or a trap handler) saves the currently running process's full register state — general-purpose registers, the program counter, the stack pointer, condition/flags register, and often floating-point/SIMD registers — into that process's PCB. The scheduler then selects the next process to run, and the CPU loads that process's previously saved register state from its PCB back into the physical registers. This part alone is on the order of dozens to a few hundred nanoseconds of pure instruction overhead — cheap in isolation, but not free.\n\nAt the memory-management level: if the switch is between two different processes (as opposed to two threads of the same process, which share an address space), the CPU must also switch page tables — updating the page-table base register (e.g., CR3 on x86) to point at the new process's page tables. Because the TLB caches virtual-to-physical translations that are only valid for a specific process's address space, a process switch typically invalidates or flushes some or all TLB entries (unless the hardware supports tagged TLB entries via ASIDs/PCIDs, in which case entries can be preserved and simply not selected until that process resumes). Either way, the newly scheduled process will experience a burst of TLB misses as it re-populates useful translations, each miss costing an extra page-table walk through memory.\n\nAt the cache level: modern CPUs have multi-level caches (L1/L2/L3) that hold recently accessed instructions and data. A process switch means the CPU starts executing a different code/data footprint, which pollutes the cache with data belonging to the previous process — the newly scheduled process suffers a burst of 'cold' cache misses as its working set displaces the old process's cached data, and if it's later rescheduled it may find its own previously-cached data has since been evicted by whatever ran in between. This 'cache pollution' effect is often the largest hidden component of context-switch cost on modern hardware, since a cache miss that goes to main memory can cost hundreds of CPU cycles — far more than the register save/restore itself.\n\nWhy it's expensive overall: the direct cost (registers + page-table pointer update) is small and roughly fixed, but the indirect cost (TLB misses and cache misses as the new process 'warms up') can dwarf it and is highly variable depending on how large the process's working set is and how long it's been since it last ran.\n\nHow modern OSes minimize this: (1) Preferring thread switches over process switches where possible — threads within the same process share an address space, so no page-table switch or TLB flush is needed, only register state changes; (2) Tagged TLBs (ASID/PCID) so translations for multiple processes coexist without a full flush, letting a process resume with a partially warm TLB if scheduled again soon; (3) Scheduler affinity — trying to keep a process/thread running on the same CPU core it last ran on (or a core sharing its cache hierarchy), so its cached data and TLB entries are more likely to still be present; (4) Choosing sensible time quanta — long enough that the fixed and warm-up costs of a context switch are amortized over meaningful useful work, but short enough to preserve responsiveness — which is exactly the tuning trade-off discussed for Round Robin and MLFQ scheduling.",
+      "sources": [
+        {
+          "title": "Context Switching in Operating System - GeeksforGeeks",
+          "url": "https://www.geeksforgeeks.org/operating-systems/context-switch-in-operating-system/",
+          "domain": "geeksforgeeks.org"
+        },
+        {
+          "title": "The Translation Lookaside Buffer - CS 61C Course Notes",
+          "url": "https://notes.cs61c.org/content/vm/tlb/",
+          "domain": "notes.cs61c.org"
+        }
+      ],
+      "id": 35
+    }
+  ],
+  "sources": [
+    {
+      "title": "Lecture 3: processes, isolation, context switching (CS4410, Cornell)",
+      "url": "https://www.cs.cornell.edu/courses/cs4410/2018su/lectures/lec03-processes.html",
+      "domain": "cs.cornell.edu",
+      "count": 3
+    },
+    {
+      "title": "Page Fault Handling - GeeksforGeeks",
+      "url": "https://www.geeksforgeeks.org/computer-organization-architecture/page-fault-handling/",
+      "domain": "geeksforgeeks.org",
+      "count": 3
+    },
+    {
+      "title": "Context Switching in Operating System - GeeksforGeeks",
+      "url": "https://www.geeksforgeeks.org/operating-systems/context-switch-in-operating-system/",
+      "domain": "geeksforgeeks.org",
+      "count": 3
+    },
+    {
+      "title": "Process Control Block in OS - GeeksforGeeks",
+      "url": "https://www.geeksforgeeks.org/operating-systems/process-control-block-in-os/",
+      "domain": "geeksforgeeks.org",
+      "count": 2
+    },
+    {
+      "title": "Paging vs. Segmentation - GeeksforGeeks",
+      "url": "https://www.geeksforgeeks.org/operating-systems/difference-between-paging-and-segmentation/",
+      "domain": "geeksforgeeks.org",
+      "count": 2
+    },
+    {
+      "title": "Handling Deadlocks - GeeksforGeeks",
+      "url": "https://origin.geeksforgeeks.org/operating-systems/handling-deadlocks/",
+      "domain": "origin.geeksforgeeks.org",
+      "count": 2
+    },
+    {
+      "title": "Page replacement and thrashing (CS 4410, Cornell)",
+      "url": "https://www.cs.cornell.edu/courses/cs4410/2017su/lectures/lec14-replacement.html",
+      "domain": "cs.cornell.edu",
+      "count": 2
+    },
+    {
+      "title": "lec15 thrashing (CS 4410, Cornell)",
+      "url": "https://www.cs.cornell.edu/courses/cs4410/2018su/lectures/lec15-thrashing.html",
+      "domain": "cs.cornell.edu",
+      "count": 2
+    },
+    {
+      "title": "Fork and Exec (Swarthmore CS31)",
+      "url": "https://www.cs.swarthmore.edu/~kwebb/cs31/s15/bucs/fork_and_exec.html",
+      "domain": "cs.swarthmore.edu",
+      "count": 2
+    },
+    {
+      "title": "The Difference Between Fork(), Vfork(), Exec(), and Clone() — linuxvox.com",
+      "url": "https://linuxvox.com/blog/the-difference-between-fork-vfork-exec-and-clone/",
+      "domain": "linuxvox.com",
+      "count": 2
+    },
+    {
+      "title": "The Translation Lookaside Buffer - CS 61C Course Notes",
+      "url": "https://notes.cs61c.org/content/vm/tlb/",
+      "domain": "notes.cs61c.org",
+      "count": 2
+    },
+    {
+      "title": "What is an Operating System? Definition, Functions, and Types",
+      "url": "https://www.thecoreitech.com/computer-basics/what-is-an-operating-system/",
+      "domain": "thecoreitech.com",
+      "count": 1
+    },
+    {
+      "title": "Core Functions of Operating Systems - Operating System Essentials",
+      "url": "https://oboe.com/learn/operating-system-essentials-1ejz89o/core-functions-of-operating-systems-operating-system-essentials-2",
+      "domain": "oboe.com",
+      "count": 1
+    },
+    {
+      "title": "Process management in operating system | process states | PCB | FORK() | Zombie and Orphan process",
+      "url": "https://www.slideshare.net/slideshow/process-management-in-operating-system-process-states-pcb-fork-zombie-and-orphan-process/235120214",
+      "domain": "slideshare.net",
+      "count": 1
+    },
+    {
+      "title": "Thread Control Block in Operating System - GeeksforGeeks",
+      "url": "https://www.geeksforgeeks.org/operating-systems/thread-control-block-in-operating-system/",
+      "domain": "geeksforgeeks.org",
+      "count": 1
+    },
+    {
+      "title": "Process Control Block | Baeldung on Computer Science",
+      "url": "https://www.baeldung.com/cs/process-control-block",
+      "domain": "baeldung.com",
+      "count": 1
+    },
+    {
+      "title": "Process Table and Process Control Block (PCB) - GeeksforGeeks",
+      "url": "https://www.geeksforgeeks.org/operating-systems/process-table-and-process-control-block-pcb/",
+      "domain": "geeksforgeeks.org",
+      "count": 1
+    },
+    {
+      "title": "Mutex vs Semaphore - GeeksforGeeks",
+      "url": "https://www.geeksforgeeks.org/operating-systems/mutex-vs-semaphore/",
+      "domain": "geeksforgeeks.org",
+      "count": 1
+    },
+    {
+      "title": "Difference between Binary Semaphore and Mutex - GeeksforGeeks",
+      "url": "https://www.geeksforgeeks.org/operating-systems/difference-between-binary-semaphore-and-mutex/",
+      "domain": "geeksforgeeks.org",
+      "count": 1
+    },
+    {
+      "title": "Paging vs Segmentation: Core Differences Explained - Enterprise Storage Forum",
+      "url": "https://www.enterprisestorageforum.com/hardware/paging-and-segmentation/",
+      "domain": "enterprisestorageforum.com",
+      "count": 1
+    },
+    {
+      "title": "Preemptive and Non-Preemptive Scheduling - GeeksforGeeks",
+      "url": "https://www.geeksforgeeks.org/preemptive-and-non-preemptive-scheduling/",
+      "domain": "geeksforgeeks.org",
+      "count": 1
+    },
+    {
+      "title": "Preemptive and Non-Preemptive Scheduling | Baeldung on Computer Science",
+      "url": "https://www.baeldung.com/cs/scheduling-types",
+      "domain": "baeldung.com",
+      "count": 1
+    },
+    {
+      "title": "Difference Between FCFS and SJF CPU Scheduling Algorithms - GeeksforGeeks",
+      "url": "https://www.geeksforgeeks.org/operating-systems/difference-between-fcfs-and-sjf-cpu-scheduling-algorithms/",
+      "domain": "geeksforgeeks.org",
+      "count": 1
+    },
+    {
+      "title": "CPU scheduling: FCFS, SJF, Round Robin with Gantt charts - Knowledge Gate AI",
+      "url": "https://www.knowledgegate.ai/blog/cpu-scheduling-algorithms-explained",
+      "domain": "knowledgegate.ai",
+      "count": 1
+    },
+    {
+      "title": "Implementing Race Condition in C++ - GeeksforGeeks",
+      "url": "https://www.geeksforgeeks.org/operating-systems/implementing-race-condition-in-c/",
+      "domain": "geeksforgeeks.org",
+      "count": 1
+    },
+    {
+      "title": "Race Condition Vulnerability - GeeksforGeeks",
+      "url": "https://www.geeksforgeeks.org/operating-systems/race-condition-vulnerability/",
+      "domain": "geeksforgeeks.org",
+      "count": 1
+    },
+    {
+      "title": "Banker's Algorithm - GeeksforGeeks",
+      "url": "https://www.geeksforgeeks.org/operating-systems/bankers-algorithm-in-operating-system-2/",
+      "domain": "geeksforgeeks.org",
+      "count": 1
+    },
+    {
+      "title": "Operating Systems II — Week 4. Deadlocks: Detection, Prevention & Avoidance",
+      "url": "https://medium.com/@ayoadeakin234/operating-systems-ii-week-4-59446abbba78",
+      "domain": "medium.com",
+      "count": 1
+    },
+    {
+      "title": "Segmentation with Paging - GeeksforGeeks",
+      "url": "https://www.geeksforgeeks.org/operating-systems/segmentation-with-paging/",
+      "domain": "geeksforgeeks.org",
+      "count": 1
+    },
+    {
+      "title": "Demand Paging in Operating System - GeeksforGeeks",
+      "url": "https://www.geeksforgeeks.org/operating-systems/what-is-demand-paging-in-operating-system/",
+      "domain": "geeksforgeeks.org",
+      "count": 1
+    },
+    {
+      "title": "External Fragmentation in OS - GeeksforGeeks",
+      "url": "https://www.geeksforgeeks.org/operating-systems/external-fragmentation-in-os/",
+      "domain": "geeksforgeeks.org",
+      "count": 1
+    },
+    {
+      "title": "Internal Fragmentation vs. External Fragmentation in Paging | Baeldung on Computer Science",
+      "url": "https://www.baeldung.com/cs/internal-vs-external-fragmentation-paging",
+      "domain": "baeldung.com",
+      "count": 1
+    },
+    {
+      "title": "Belady's Anomaly in Page Replacement Algorithms - GeeksforGeeks",
+      "url": "https://www.geeksforgeeks.org/operating-systems/beladys-anomaly-in-page-replacement-algorithms/",
+      "domain": "geeksforgeeks.org",
+      "count": 1
+    },
+    {
+      "title": "Bélády's anomaly - Wikipedia",
+      "url": "https://en.wikipedia.org/wiki/B%C3%A9l%C3%A1dy's_anomaly",
+      "domain": "en.wikipedia.org",
+      "count": 1
+    },
+    {
+      "title": "Linux Has Zombies and Orphans and I Think That's Kind of Brilliant",
+      "url": "https://medium.com/@sayuj_chaps/linux-has-zombies-and-orphans-and-i-think-thats-kind-of-brilliant-40124de29cb5",
+      "domain": "medium.com",
+      "count": 1
+    },
+    {
+      "title": "Unix Processes: fork, exec, wait, and Everything In Between",
+      "url": "https://gpereira.dev/posts/unix-processes/",
+      "domain": "gpereira.dev",
+      "count": 1
+    },
+    {
+      "title": "Producer Consumer Solution using Semaphores - GeeksforGeeks",
+      "url": "https://www.geeksforgeeks.org/operating-systems/producer-consumer-problem-using-semaphores-set-1/",
+      "domain": "geeksforgeeks.org",
+      "count": 1
+    },
+    {
+      "title": "Tackling the bounded-buffer problem using Semaphores",
+      "url": "https://medium.com/@ashaymotiwala/tackling-the-bounded-buffer-problem-aka-producer-consumer-problem-using-semaphores-42b4b22f2448",
+      "domain": "medium.com",
+      "count": 1
+    },
+    {
+      "title": "LOOK Disk Scheduling Algorithm - GeeksforGeeks",
+      "url": "https://www.geeksforgeeks.org/operating-systems/look-disk-scheduling-algorithm/",
+      "domain": "geeksforgeeks.org",
+      "count": 1
+    },
+    {
+      "title": "Disk Scheduling Algorithms - GeeksforGeeks",
+      "url": "https://www.geeksforgeeks.org/operating-systems/disk-scheduling-algorithms/",
+      "domain": "geeksforgeeks.org",
+      "count": 1
+    },
+    {
+      "title": "Mars Pathfinder: Priority Inversion Problem",
+      "url": "https://www.cse.chalmers.se/~risat/Report_MarsPathFinder.pdf",
+      "domain": "cse.chalmers.se",
+      "count": 1
+    },
+    {
+      "title": "What is Priority Inversion? Why You Care and What to Do About It | Timesys LinuxLink",
+      "url": "https://linuxlink.timesys.com/docs/priority_inversion",
+      "domain": "linuxlink.timesys.com",
+      "count": 1
+    },
+    {
+      "title": "Differences Between Mutex and Spinlock | Baeldung on Computer Science",
+      "url": "https://www.baeldung.com/cs/mutex-vs-spinlock-concurrent-parallel-distributed-programming",
+      "domain": "baeldung.com",
+      "count": 1
+    },
+    {
+      "title": "Spinlocks vs. Mutexes: When to Spin and When to Sleep",
+      "url": "https://howtech.substack.com/p/spinlocks-vs-mutexes-when-to-spin",
+      "domain": "howtech.substack.com",
+      "count": 1
+    },
+    {
+      "title": "Translation Lookaside Buffer (TLB) - GeeksforGeeks",
+      "url": "https://www.geeksforgeeks.org/computer-organization-architecture/translation-lookaside-buffer-tlb/",
+      "domain": "geeksforgeeks.org",
+      "count": 1
+    },
+    {
+      "title": "Deadlock Detection Algorithm in Operating System - GeeksforGeeks",
+      "url": "https://www.geeksforgeeks.org/operating-systems/deadlock-detection-algorithm-in-operating-system/",
+      "domain": "geeksforgeeks.org",
+      "count": 1
+    },
+    {
+      "title": "L30 (IIT Delhi OS lecture notes)",
+      "url": "https://www.cse.iitd.ac.in/~sbansal/os/lec/l30.html",
+      "domain": "cse.iitd.ac.in",
+      "count": 1
+    },
+    {
+      "title": "Second Chance (or Clock) Page Replacement Policy - GeeksforGeeks",
+      "url": "https://www.geeksforgeeks.org/operating-systems/second-chance-or-clock-page-replacement-policy/",
+      "domain": "geeksforgeeks.org",
+      "count": 1
+    },
+    {
+      "title": "8 Scheduling: The Multi-Level Feedback Queue (OSTEP, pages.cs.wisc.edu)",
+      "url": "https://pages.cs.wisc.edu/~remzi/OSTEP/cpu-sched-mlfq.pdf",
+      "domain": "pages.cs.wisc.edu",
+      "count": 1
+    },
+    {
+      "title": "OSTEP Chapter 8 (muratbuffalo.blogspot.com)",
+      "url": "http://muratbuffalo.blogspot.com/2026/02/ostep-chapter-8-scheduling-multi-level.html",
+      "domain": "muratbuffalo.blogspot.com",
+      "count": 1
+    },
+    {
+      "title": "Dining Philosopher Solution using Semaphores - GeeksforGeeks",
+      "url": "https://www.geeksforgeeks.org/operating-systems/dining-philosopher-problem-using-semaphores/",
+      "domain": "geeksforgeeks.org",
+      "count": 1
+    },
+    {
+      "title": "11.4: Dining Philosopher Problem - Engineering LibreTexts",
+      "url": "https://eng.libretexts.org/Courses/Delta_College/Introduction_to_Operating_Systems/11:_Concurrency-__Deadlock_and_Starvation/11.04:_Dining_Philosopher_Problem",
+      "domain": "eng.libretexts.org",
+      "count": 1
+    },
+    {
+      "title": "RAID (Redundant Arrays of Independent Disks) - GeeksforGeeks",
+      "url": "https://www.geeksforgeeks.org/dbms/raid-redundant-arrays-of-independent-disks/",
+      "domain": "geeksforgeeks.org",
+      "count": 1
+    },
+    {
+      "title": "RAID Levels Explained: RAID 0, 1, 5, 6, 10 Compared | Xinnor",
+      "url": "https://xinnor.io/blog/a-guide-to-raid-pt-2-raid-levels-explained/",
+      "domain": "xinnor.io",
+      "count": 1
+    }
+  ]
+}

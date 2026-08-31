@@ -1,0 +1,1671 @@
+{
+  "slug": "sql",
+  "name": "SQL",
+  "headline": "Relational Queries, Window Functions, CTEs, Indexing & Query Tuning",
+  "description": "70 curated SQL interview questions spanning aggregations, self-joins, recursive CTEs, ranking window functions, partitioning, and complex analytical queries.",
+  "icon": "sql",
+  "totalQuestions": 65,
+  "easyCount": 20,
+  "mediumCount": 31,
+  "hardCount": 14,
+  "questions": [
+    {
+      "question": "When would you reach for useRef instead of useState?",
+      "difficulty": "Easy",
+      "answer": "`useRef` creates a mutable object (`{ current: ... }`) that persists across renders without causing a re-render when it changes — the opposite of `useState`, which always triggers a re-render on update. Use `useRef` when you need to: (1) hold a reference to a DOM node to imperatively read/manipulate it (focus an input, measure size, scroll into view); (2) store a mutable value that shouldn't trigger re-renders, like a timer/interval ID, a previous value for comparison, or a flag tracking whether a component is still mounted; or (3) keep a value alive across renders that the render output itself doesn't depend on. If a value's change should be reflected in what's rendered, use state, not a ref — mutating `ref.current` won't update the screen.",
+      "sources": [
+        {
+          "title": "useRef – React",
+          "url": "https://react.dev/reference/react/useRef",
+          "domain": "react.dev"
+        },
+        {
+          "title": "top-reactjs-interview-questions README",
+          "url": "https://github.com/greatfrontend/top-reactjs-interview-questions",
+          "domain": "github.com"
+        }
+      ],
+      "id": 1
+    },
+    {
+      "question": "How do you write a custom hook, and what makes one genuinely reusable versus just extracted code?",
+      "difficulty": "Medium",
+      "answer": "A custom hook is just a JavaScript function whose name starts with `use` and that calls other hooks internally (e.g., `useState`, `useEffect`) — extracting it lets multiple components share the same stateful logic while each still gets its own independent state (calling the hook in two components does not share state between them, it duplicates it). Mechanically it's simple: pull the reusable logic and its hook calls into a function, have it return whatever the consuming components need (values, setters, handlers). What separates a genuinely reusable hook from a superficial extraction is a clean, self-contained API: it shouldn't leak internal implementation details, should handle its own cleanup (e.g., unsubscribing in `useEffect`'s cleanup function), should be named for what it does (`useDebouncedValue`, `useOnlineStatus`) rather than what it wraps, and should compose well with other hooks rather than assuming a specific component's context.",
+      "sources": [
+        {
+          "title": "Reusing Logic with Custom Hooks – React",
+          "url": "https://react.dev/learn/reusing-logic-with-custom-hooks",
+          "domain": "react.dev"
+        }
+      ],
+      "id": 2
+    },
+    {
+      "question": "How would you implement a debounced search input that avoids firing an API call on every keystroke?",
+      "difficulty": "Hard",
+      "answer": "The core idea: keep the input's visual value updating immediately (so typing feels responsive), but delay the side effect (the API call) until the user has paused typing for some interval, resetting the timer on every new keystroke. A common approach with hooks: store the raw input in local state via `useState` for instant rendering, and use a `useEffect` that sets a `setTimeout` (e.g. 300–500ms) to fire the actual search/API call, whose cleanup function calls `clearTimeout` — since the cleanup runs before the next effect execution, this automatically cancels any pending call whenever the value changes again before the timeout fires. To avoid stale or out-of-order results, also cancel/ignore in-flight requests when a newer one starts (via `AbortController`, or by checking whether the request that just resolved still matches the current input). This same pattern is typically extracted into a reusable `useDebounce` custom hook.",
+      "sources": [
+        {
+          "title": "React Coding Interview Questions 2026 – Playcode",
+          "url": "https://playcode.io/blog/react-coding-interview-questions-2026",
+          "domain": "playcode.io"
+        },
+        {
+          "title": "Synchronizing with Effects – React",
+          "url": "https://react.dev/learn/synchronizing-with-effects",
+          "domain": "react.dev"
+        }
+      ],
+      "id": 3
+    },
+    {
+      "question": "How would you implement an accordion or tabs component with accessible keyboard navigation?",
+      "difficulty": "Hard",
+      "answer": "Structurally, use the compound-component pattern: a parent (`Accordion`/`Tabs`) holds the active index/expanded state (in `useState` or `useReducer`) and shares it via Context or cloned props to its children (`AccordionItem`, `Tab`, `TabPanel`), so consumers can compose the pieces declaratively. For accessibility, follow the WAI-ARIA Authoring Practices patterns: tabs need `role=\"tablist\"` on the container, `role=\"tab\"` with `aria-selected` and a matching `aria-controls`/`id` pair linking each tab to its `role=\"tabpanel\"`; accordion headers are typically a `<button>` inside a heading with `aria-expanded` toggling and `aria-controls` pointing at the associated panel. Keyboard support is essential, not optional: tabs should support Left/Right (or Up/Down) arrow keys to move focus between tabs (using `roving tabindex` — only the active tab is in the normal tab order, others get `tabIndex={-1}`), Home/End to jump to first/last, and accordions should support Enter/Space to toggle a focused header. Test with a real screen reader (VoiceOver/NVDA), not just visually, since ARIA attributes wired incorrectly can be worse than no ARIA at all.",
+      "sources": [
+        {
+          "title": "ARIA Authoring Practices Guide – Tabs Pattern",
+          "url": "https://www.w3.org/WAI/ARIA/apg/patterns/tabs/",
+          "domain": "w3.org"
+        },
+        {
+          "title": "ARIA Authoring Practices Guide – Accordion Pattern",
+          "url": "https://www.w3.org/WAI/ARIA/apg/patterns/accordion/",
+          "domain": "w3.org"
+        }
+      ],
+      "id": 4
+    },
+    {
+      "question": "How would you build an autocomplete/autosuggest component, including loading, error, and empty states?",
+      "difficulty": "Hard",
+      "answer": "The typical shape: a controlled text input whose value drives a debounced fetch to a suggestions endpoint; while that request is in flight, show a loading indicator inside the dropdown; on success, render the returned list (with an explicit empty-state message if it's empty, distinct from the loading state); on failure, show an inline error rather than silently leaving a stale/blank list. State-wise, track the input text, the suggestion list, and a status (idle/loading/success/error) — either as separate `useState` calls or, more robustly, via `useReducer` so the states are mutually exclusive and can't get out of sync. Guard against race conditions: if the user types faster than requests resolve, an older response arriving after a newer one must not overwrite the current results (track the latest request or use `AbortController` to cancel outdated ones). For UX and accessibility, this is essentially the ARIA combobox pattern: the input needs `role=\"combobox\"`/`aria-expanded`/`aria-controls`, the list needs `role=\"listbox\"`, options need `role=\"option\"`, and arrow keys should move a highlighted selection with Enter to select and Escape to close — plus click-outside and blur handling to dismiss the dropdown.",
+      "sources": [
+        {
+          "title": "React Machine Coding Interview Guide: AutoSuggest Component – Medium",
+          "url": "https://medium.com/@sanjeev-singh/react-machine-coding-interview-guide-autosuggest-component-91b8b20494c8",
+          "domain": "medium.com"
+        },
+        {
+          "title": "ARIA Authoring Practices Guide – Combobox Pattern",
+          "url": "https://www.w3.org/WAI/ARIA/apg/patterns/combobox/",
+          "domain": "w3.org"
+        }
+      ],
+      "id": 5
+    },
+    {
+      "question": "What is the difference between CHAR and VARCHAR2?",
+      "difficulty": "Easy",
+      "answer": "CHAR is a fixed-length character type: if you declare CHAR(10) and insert a 4-character string, the database right-pads it with spaces to store exactly 10 characters (bytes, in single-byte encodings). VARCHAR/VARCHAR2 is variable-length: it stores only the characters you actually inserted (plus a small length prefix), so a 4-character value in a VARCHAR(10) column uses roughly 4-5 bytes, not 10. Practical implications: (1) Storage/performance — CHAR is more predictable and can be marginally faster for fixed-size data (e.g., country codes, fixed IDs) because every row is the same width; VARCHAR is more space-efficient for data whose length varies (names, emails, free text). (2) Retrieval behavior — in MySQL, trailing spaces are stripped from CHAR values on retrieval, while VARCHAR preserves trailing spaces as inserted; comparison behavior for trailing spaces also depends on the collation's pad attribute. (3) Naming — VARCHAR2 is Oracle's/Oracle-specific variable-length type (functionally almost identical to the ANSI VARCHAR); SQL Server and PostgreSQL just use VARCHAR(n) or VARCHAR (unlimited/TEXT-like). A common misconception is that CHAR is always faster — in modern engines the difference is usually negligible except at very large scale or with millions of rows, so the choice is mostly about correctness of representation (fixed vs. variable-length real-world data) rather than raw performance.",
+      "sources": [
+        {
+          "title": "char and varchar (Transact-SQL) - SQL Server | Microsoft Learn",
+          "url": "https://learn.microsoft.com/en-us/sql/t-sql/data-types/char-and-varchar-transact-sql?view=sql-server-ver17",
+          "domain": "learn.microsoft.com"
+        },
+        {
+          "title": "MySQL :: MySQL 9.7 Reference Manual :: 13.3.2 The CHAR and VARCHAR Types",
+          "url": "https://dev.mysql.com/doc/en/char.html",
+          "domain": "dev.mysql.com"
+        },
+        {
+          "title": "CHAR vs VARCHAR vs VARCHAR(MAX) in SQL Server | Simple Talk",
+          "url": "https://www.red-gate.com/simple-talk/databases/sql-server/learn/when-use-char-varchar-varcharmax/",
+          "domain": "red-gate.com"
+        }
+      ],
+      "id": 6
+    },
+    {
+      "question": "Explain the difference between the WHERE and HAVING clauses",
+      "difficulty": "Easy",
+      "answer": "WHERE filters individual rows before any grouping or aggregation happens, so it operates on raw table data and cannot reference aggregate functions like SUM() or COUNT() directly. HAVING filters groups after GROUP BY has produced aggregated results, so it's specifically meant for conditions on aggregate values (e.g., 'only show customers with more than 5 orders'). Logically, the order of evaluation in a SELECT is roughly: FROM → WHERE → GROUP BY → HAVING → SELECT → ORDER BY, which is why WHERE runs first (filtering rows early, which also improves performance by reducing the data volume that needs to be grouped) and HAVING runs after grouping. Example: `SELECT customer_id, COUNT() AS orders_2025 FROM orders WHERE order_date >= '2025-01-01' GROUP BY customer_id HAVING COUNT() > 5;` — WHERE narrows rows to 2025 orders, then HAVING keeps only customers with more than 5 such orders. A common interview trap: trying to use an aggregate function in WHERE (e.g., `WHERE COUNT(*) > 5`) throws an error in most databases because aggregates aren't computed yet at that stage.",
+      "sources": [
+        {
+          "title": "Top 100 SQL Interview Questions and Answers (2025) - GeeksforGeeks",
+          "url": "https://www.geeksforgeeks.org/sql/sql-interview-questions/",
+          "domain": "geeksforgeeks.org"
+        }
+      ],
+      "id": 7
+    },
+    {
+      "question": "What are SQL joins and what are the differences between INNER, LEFT, RIGHT and FULL joins?",
+      "difficulty": "Easy",
+      "answer": "A SQL join combines rows from two (or more) tables based on a related column, letting you answer questions that span multiple tables. INNER JOIN returns only rows where the join condition matches in both tables — it's the intersection, so unmatched rows on either side are excluded entirely. LEFT JOIN (LEFT OUTER JOIN) returns all rows from the left table plus matching rows from the right table; where there's no match, the right table's columns come back as NULL. RIGHT JOIN is the mirror image — all rows from the right table, NULLs for unmatched left-side columns. FULL JOIN (FULL OUTER JOIN) returns all rows from both tables, filling in NULLs wherever a counterpart is missing on either side — effectively the union of LEFT and RIGHT joins. Note: MySQL historically did not support FULL OUTER JOIN natively; it's typically emulated with a UNION of LEFT and RIGHT joins there, while PostgreSQL, SQL Server, and Oracle support FULL JOIN directly. A frequent gotcha in interviews: forgetting that filtering the right-table columns of a LEFT JOIN in a WHERE clause (rather than the ON clause) effectively turns it into an INNER JOIN, because rows with NULL in that column get filtered out.",
+      "sources": [
+        {
+          "title": "Top 100 SQL Interview Questions and Answers (2025) - GeeksforGeeks",
+          "url": "https://www.geeksforgeeks.org/sql/sql-interview-questions/",
+          "domain": "geeksforgeeks.org"
+        }
+      ],
+      "id": 8
+    },
+    {
+      "question": "What is the difference between DELETE, TRUNCATE, and DROP?",
+      "difficulty": "Easy",
+      "answer": "DELETE is a DML statement that removes rows one at a time, can use a WHERE clause for selective removal, fires triggers, and is always fully transactional/rollback-able — but because it logs each row individually, it's slower on large tables and takes row-level locks. TRUNCATE removes all rows from a table at once by deallocating data pages rather than scanning row by row, making it much faster; it's classified as DDL in most engines (MySQL, Oracle), doesn't support WHERE, typically doesn't fire ordinary triggers, resets auto-increment/identity counters, and takes a table-level (often exclusive) lock. Rollback behavior for TRUNCATE is engine-specific and a common interview trap: in PostgreSQL and SQL Server, TRUNCATE is transactional and CAN be rolled back if it's inside an explicit transaction that hasn't committed; in MySQL (especially older/MyISAM behavior), TRUNCATE causes an implicit commit and generally cannot be rolled back. DROP removes the entire table structure and its data permanently, including indexes, constraints, and triggers defined on it — it's the most destructive of the three. Rule of thumb for interviews: DELETE for selective, logged removal; TRUNCATE to fast-empty a table you're keeping; DROP to remove the table object entirely.",
+      "sources": [
+        {
+          "title": "TRUNCATE vs DELETE in SQL: Differences Across PostgreSQL, MySQL, and SQL Server | Bytebase",
+          "url": "https://www.bytebase.com/blog/truncate-vs-delete-sql/",
+          "domain": "bytebase.com"
+        },
+        {
+          "title": "PostgreSQL: DELETE vs. TRUNCATE | CYBERTEC PostgreSQL",
+          "url": "https://www.cybertec-postgresql.com/en/postgresql-delete-vs-truncate/",
+          "domain": "cybertec-postgresql.com"
+        },
+        {
+          "title": "TRUNCATE vs DELETE vs DROP: Remove Rows Fast in PostgreSQL | Postgres Scripts",
+          "url": "https://www.postgresscripts.com/post/remove-all-rows-fast-truncate-vs-delete-vs-drop-in-postgresql/",
+          "domain": "postgresscripts.com"
+        }
+      ],
+      "id": 9
+    },
+    {
+      "question": "What is the difference between UNION and UNION ALL?",
+      "difficulty": "Easy",
+      "answer": "Both UNION and UNION ALL combine the result sets of two or more SELECT statements that have the same number of columns with compatible data types. UNION performs an implicit DISTINCT pass, removing duplicate rows across the combined result — this requires the engine to sort or hash the combined rows to detect duplicates, which adds overhead. UNION ALL simply concatenates all rows from every SELECT without deduplication, making it faster and more memory-efficient since it skips that extra processing step entirely. Use UNION when you specifically need unique rows across the combined sets (e.g., merging two customer lists into one deduplicated list); use UNION ALL whenever duplicates are acceptable or impossible by design (e.g., you know the sets don't overlap) — it should generally be your default for performance unless you specifically need deduplication. A common interview follow-up: both operators require the same number of columns in each SELECT, and the final result's column names come from the first SELECT statement.",
+      "sources": [
+        {
+          "title": "Top 100 SQL Interview Questions and Answers (2025) - GeeksforGeeks",
+          "url": "https://www.geeksforgeeks.org/sql/sql-interview-questions/",
+          "domain": "geeksforgeeks.org"
+        }
+      ],
+      "id": 10
+    },
+    {
+      "question": "What is a foreign key, and how does it enforce referential integrity?",
+      "difficulty": "Easy",
+      "answer": "A foreign key is a column (or set of columns) in one table (the 'child' or referencing table) that refers to the primary key (or a unique constraint/unique index) of another table (the 'parent' or referenced table). It enforces referential integrity by ensuring that any non-null value placed in the foreign key column must already exist as a value in the referenced column — the database rejects inserts or updates that would create an 'orphan' row pointing to a non-existent parent. Per the SQL standard (and PostgreSQL's implementation), a foreign key must reference columns that are either a primary key, a unique constraint, or columns backed by a non-partial unique index — you can't reference an arbitrary, non-unique column. By default, a referencing row satisfies the constraint if any of its foreign key columns are NULL (unless MATCH FULL is specified, in which case a mix of NULL and non-NULL values in a composite key fails the constraint). Foreign keys can also define ON DELETE/ON UPDATE actions (CASCADE, SET NULL, SET DEFAULT, RESTRICT/NO ACTION) that determine what happens to child rows when the referenced parent row is deleted or its key is changed — e.g., ON DELETE CASCADE automatically deletes dependent child rows.",
+      "sources": [
+        {
+          "title": "PostgreSQL: Documentation: 18: 5.5. Constraints",
+          "url": "https://www.postgresql.org/docs/current/ddl-constraints.html",
+          "domain": "postgresql.org"
+        },
+        {
+          "title": "PostgreSQL: Documentation: 8.1: Constraints",
+          "url": "https://www.postgresql.org/docs/8.1/ddl-constraints.html",
+          "domain": "postgresql.org"
+        }
+      ],
+      "id": 11
+    },
+    {
+      "question": "What is the purpose of the GROUP BY clause, and how does it interact with aggregate functions like COUNT, SUM, and AVG?",
+      "difficulty": "Easy",
+      "answer": "GROUP BY collapses rows that share the same value(s) in specified column(s) into a single output row per group, and is used together with aggregate functions (COUNT, SUM, AVG, MIN, MAX) to compute a summary statistic per group rather than over the whole table. For example, `SELECT department, AVG(salary) FROM employees GROUP BY department;` returns one row per department showing that department's average salary. The key rule most databases enforce: every column in the SELECT list that is not itself wrapped in an aggregate function must appear in the GROUP BY clause (PostgreSQL and SQL Server enforce this strictly; MySQL historically allowed exceptions under certain SQL modes, which can produce nondeterministic results and is generally discouraged). Aggregate functions ignore NULLs in the column being aggregated except COUNT() — COUNT(column) counts only non-NULL values, while COUNT() counts every row regardless of NULLs. GROUP BY executes after WHERE (which filters raw rows) and before HAVING (which filters the resulting groups), which is why you can't reference an aggregate in WHERE but can in HAVING.",
+      "sources": [
+        {
+          "title": "Top 100 SQL Interview Questions and Answers (2025) - GeeksforGeeks",
+          "url": "https://www.geeksforgeeks.org/sql/sql-interview-questions/",
+          "domain": "geeksforgeeks.org"
+        }
+      ],
+      "id": 12
+    },
+    {
+      "question": "What does the NULL value represent in SQL, and how does it behave differently from zero or an empty string?",
+      "difficulty": "Easy",
+      "answer": "NULL represents an unknown, missing, or inapplicable value — it is not the same as zero (a numeric value) or an empty string '' (a zero-length but defined string); NULL means 'we don't know' or 'there is no value here.' This has major practical consequences: comparisons involving NULL using standard operators (=, <>, <, >) don't return TRUE or FALSE — they return NULL (unknown), which is why `WHERE column = NULL` never matches any rows, even rows where the column is actually NULL; you must use `IS NULL` or `IS NOT NULL` instead. Arithmetic with NULL also propagates NULL (e.g., 5 + NULL = NULL). Aggregate functions like SUM, AVG, MIN, MAX, and COUNT(column) all ignore NULL values in their input — only COUNT(*) counts rows regardless of NULLs. Functions like COALESCE() and NULLIF() exist specifically to handle NULLs gracefully: COALESCE returns the first non-NULL value in a list (useful for default values), and NULLIF returns NULL if two expressions are equal (useful for avoiding divide-by-zero errors). Understanding NULL's three-valued logic (TRUE/FALSE/UNKNOWN) is a frequent interview topic because it trips up many SQL writers, particularly around WHERE clauses, JOIN conditions, and NOT IN subqueries (a NOT IN list containing even one NULL causes the entire NOT IN to return no rows).",
+      "sources": [
+        {
+          "title": "Top 100 SQL Interview Questions and Answers (2025) - GeeksforGeeks",
+          "url": "https://www.geeksforgeeks.org/sql/sql-interview-questions/",
+          "domain": "geeksforgeeks.org"
+        }
+      ],
+      "id": 13
+    },
+    {
+      "question": "What is a Common Table Expression (CTE), and when would you use one instead of a subquery?",
+      "difficulty": "Medium",
+      "answer": "A CTE is a temporary, named result set defined using a WITH clause that exists only for the duration of the single SQL statement that references it — conceptually similar to a view that's scoped to just one query. Syntax: `WITH cte_name AS (SELECT ...) SELECT * FROM cte_name;`. You'd reach for a CTE instead of a subquery for several reasons: (1) readability — breaking a complex query into named, logical steps makes it far easier to read and maintain than deeply nested subqueries; (2) reusability within the same query — a CTE can be referenced multiple times in the outer query without repeating the same subquery logic (whether it's actually computed once or re-evaluated each reference is implementation-dependent — PostgreSQL 12+ can choose to inline a non-recursive CTE like a subquery for optimization, whereas pre-12 PostgreSQL always materialized CTEs); (3) recursion — CTEs support the RECURSIVE keyword to query hierarchical/tree-structured data (org charts, category trees, bill-of-materials), something ordinary subqueries cannot do at all. One nuance for interviews: before PostgreSQL 12, CTEs acted as an 'optimization fence' — the planner would always materialize them, sometimes hurting performance versus an equivalent subquery; from PG12 onward, the planner can inline simple non-recursive CTEs unless you force materialization with the MATERIALIZED keyword.",
+      "sources": [
+        {
+          "title": "Top 100 SQL Interview Questions and Answers (2025) - GeeksforGeeks",
+          "url": "https://www.geeksforgeeks.org/sql/sql-interview-questions/",
+          "domain": "geeksforgeeks.org"
+        },
+        {
+          "title": "Recursive queries in PostgreSQL | an introduction | CYBERTEC PostgreSQL",
+          "url": "https://www.cybertec-postgresql.com/en/recursive-queries-postgresql/",
+          "domain": "cybertec-postgresql.com"
+        },
+        {
+          "title": "Fun with SQL: Recursive CTEs in Postgres - Citus Data",
+          "url": "https://www.citusdata.com/blog/2018/05/15/fun-with-sql-recursive-ctes/",
+          "domain": "citusdata.com"
+        }
+      ],
+      "id": 14
+    },
+    {
+      "question": "Explain normalization and briefly describe the differences between 1NF, 2NF, and 3NF.",
+      "difficulty": "Medium",
+      "answer": "Normalization is a database design technique, introduced by Edgar F. Codd, that organizes tables and columns to minimize data redundancy and prevent update, insert, and delete anomalies by ensuring every fact is stored in exactly one place. It's applied as an ordered set of rules called normal forms, each removing one specific kind of harmful dependency. First Normal Form (1NF) requires that every column hold only atomic (single, indivisible) values and that there be no repeating groups — e.g., you can't store a comma-separated list of phone numbers in one cell; each value-row combination must be unique and identifiable. Second Normal Form (2NF) requires the table already be in 1NF and additionally have no partial dependencies — meaning every non-key column must depend on the entire composite primary key, not just part of it (this only matters when you have a composite/multi-column primary key). Third Normal Form (3NF) requires 2NF plus no transitive dependencies — no non-key column may depend on another non-key column; every non-key attribute must depend directly on the primary key and nothing else. Example: in an Orders table with (OrderID, CustomerID, CustomerName), CustomerName depends on CustomerID rather than directly on OrderID — that's a transitive dependency, violating 3NF, and CustomerName should move to a separate Customers table. 3NF is generally the practical target for transactional (OLTP) systems, balancing integrity against excessive joins; BCNF, 4NF, and 5NF exist for stricter edge cases but are rarely needed in everyday schema design.",
+      "sources": [
+        {
+          "title": "Top 100 SQL Interview Questions and Answers (2025) - GeeksforGeeks",
+          "url": "https://www.geeksforgeeks.org/sql/sql-interview-questions/",
+          "domain": "geeksforgeeks.org"
+        },
+        {
+          "title": "Database Normalization: 1NF, 2NF, and 3NF | Boot.dev",
+          "url": "https://www.boot.dev/blog/backend/database-normalization",
+          "domain": "boot.dev"
+        },
+        {
+          "title": "Third normal form - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Third_normal_form",
+          "domain": "en.wikipedia.org"
+        }
+      ],
+      "id": 15
+    },
+    {
+      "question": "What is a correlated subquery, and how does it differ from a regular (non-correlated) subquery? Give an example use case.",
+      "difficulty": "Medium",
+      "answer": "A correlated subquery is a subquery that references a column from the outer query, which means it can't be executed independently — it's logically re-evaluated once for each row processed by the outer query (though real query optimizers often rewrite/transform this into a join-like execution plan rather than literally looping row by row). A regular (non-correlated) subquery, by contrast, runs once, independently of the outer query, and its result is then used by the outer query — it has no reference back to outer-query columns. Classic example of a correlated subquery — find employees whose salary is above their own department's average: `SELECT e.employee_id, e.salary, e.department_id FROM employees e WHERE e.salary > (SELECT AVG(e2.salary) FROM employees e2 WHERE e2.department_id = e.department_id);` — here the inner query's WHERE clause references e.department_id from the outer query, so it must conceptually re-run per outer row. This pattern is common for row-by-row comparisons against a per-group aggregate, or for existence checks (EXISTS/NOT EXISTS), which are almost always correlated. In interviews, it's worth noting that a correlated subquery can often be rewritten as a window function (e.g., AVG() OVER (PARTITION BY department_id)) or a JOIN against a pre-aggregated subquery, which is frequently more efficient because it avoids conceptually re-running logic per row.",
+      "sources": [
+        {
+          "title": "Top 100 SQL Interview Questions and Answers (2025) - GeeksforGeeks",
+          "url": "https://www.geeksforgeeks.org/sql/sql-interview-questions/",
+          "domain": "geeksforgeeks.org"
+        }
+      ],
+      "id": 16
+    },
+    {
+      "question": "Explain the differences between ROW_NUMBER(), RANK(), and DENSE_RANK().",
+      "difficulty": "Medium",
+      "answer": "All three are ranking window functions used with an OVER() clause (optionally with PARTITION BY and always with ORDER BY to define ranking order), but they handle tied values differently. ROW_NUMBER() assigns a strictly sequential, unique integer to every row within its partition, counting from 1 — even if two rows have identical ORDER BY values, they get different numbers (the tie-break order is otherwise arbitrary unless you add more ORDER BY columns). RANK() assigns the same rank to rows with tied values, but then skips the next rank number(s) accordingly — e.g., two rows tied for rank 2 means the next distinct row gets rank 4, not 3 (there's a 'gap'). DENSE_RANK() also gives tied rows the same rank, but does NOT skip subsequent rank numbers — after two rows tied at rank 2, the next distinct row gets rank 3. Per the PostgreSQL documentation, rows that are not distinct considering only the ORDER BY columns are called 'peers,' and the ranking functions are defined to give the same answer to every row in a peer group. Example: `SELECT empno, RANK() OVER (ORDER BY salary DESC) AS rnk FROM salaries;` — to get the single highest earner even with ties, filter WHERE rnk = 1. Interview tip: ROW_NUMBER() is the right choice when you need exactly one row per group (e.g., deduplication, 'top-1 per group'), while RANK()/DENSE_RANK() matter when ties should be reflected in the output.",
+      "sources": [
+        {
+          "title": "PostgreSQL: Documentation: 18: 9.22. Window Functions",
+          "url": "https://www.postgresql.org/docs/current/functions-window.html",
+          "domain": "postgresql.org"
+        },
+        {
+          "title": "The RANK and DENSE_RANK Functions in PostgreSQL | Tiger Data",
+          "url": "https://www.tigerdata.com/learn/understanding-rank-and-dense_rank-in-postgres",
+          "domain": "tigerdata.com"
+        },
+        {
+          "title": "PostgreSQL and Window Functions: differences between row_number(), rank(), and dense_rank()",
+          "url": "https://jereze.com/code/postgresql-row_number-rank-send_rank/",
+          "domain": "jereze.com"
+        }
+      ],
+      "id": 17
+    },
+    {
+      "question": "Write a query to find the second-highest salary in an Employees table without using LIMIT/OFFSET or TOP.",
+      "difficulty": "Medium",
+      "answer": "A common, portable approach uses a correlated subquery with MAX() and NOT IN/comparison, or window functions. A simple non-window approach: `SELECT MAX(salary) AS second_highest_salary FROM Employees WHERE salary < (SELECT MAX(salary) FROM Employees);` — this works by finding the highest salary in the subquery, then finding the max salary strictly less than that value, which is the second-highest distinct salary. A window-function approach that also correctly handles ties (multiple employees sharing the highest salary) uses DENSE_RANK(): `SELECT salary FROM (SELECT salary, DENSE_RANK() OVER (ORDER BY salary DESC) AS rnk FROM Employees) t WHERE rnk = 2;` — DENSE_RANK() is preferred over RANK() here because if two employees are tied for 1st place, RANK() would jump straight to rank 3 for the next distinct salary, skipping rank 2 entirely, while DENSE_RANK() correctly assigns rank 2 to the next distinct salary value. Edge case to mention in an interview: if there's only one distinct salary value in the table, both queries return NULL/no rows for the 'second highest,' which is the technically correct behavior — it's worth explicitly calling that out to show awareness of edge cases.",
+      "sources": [
+        {
+          "title": "Top 20 SQL Interview Questions on Window Functions 2024. – datainked.com",
+          "url": "https://datainked.com/index.php/2024/11/21/top-20-sql-interview-questions-on-window-functions-2024/",
+          "domain": "datainked.com"
+        },
+        {
+          "title": "PostgreSQL: Documentation: 18: 9.22. Window Functions",
+          "url": "https://www.postgresql.org/docs/current/functions-window.html",
+          "domain": "postgresql.org"
+        }
+      ],
+      "id": 18
+    },
+    {
+      "question": "What are EXISTS and NOT EXISTS, and how do they differ from using IN for filtering against a subquery?",
+      "difficulty": "Medium",
+      "answer": "EXISTS returns TRUE if a subquery returns at least one row (the actual column values returned by the subquery don't matter — it's purely a presence check, so `SELECT 1` is conventionally used inside it); NOT EXISTS returns TRUE if the subquery returns zero rows. Both are almost always used with a correlated subquery, e.g.: `SELECT c.CustomerID FROM Customers c WHERE EXISTS (SELECT 1 FROM Orders o WHERE o.CustomerID = c.CustomerID);` returns customers who have placed at least one order. IN checks whether a single value matches any value in a list or in the result set of a (typically non-correlated) subquery, e.g., `WHERE department_id IN (SELECT id FROM departments WHERE region = 'West')`. Key practical differences: (1) NULL handling — this is the classic interview gotcha: if the subquery in a NOT IN clause returns even one NULL value, the entire NOT IN comparison becomes UNKNOWN for every row and the query returns zero rows unexpectedly, whereas NOT EXISTS is unaffected by NULLs in the subquery because it only checks row existence, not value equality. (2) Performance — EXISTS/NOT EXISTS can short-circuit and stop searching as soon as one matching (or non-matching) row is found, and many query optimizers handle correlated EXISTS very efficiently, often via a semi-join/anti-join plan; IN is generally best suited to smaller, static lists or subqueries returning a small, non-null-containing result set. As a rule of thumb favored in most interview guidance: prefer EXISTS/NOT EXISTS over IN/NOT IN when working with subqueries, especially if there's any chance the subquery's column could contain NULLs.",
+      "sources": [
+        {
+          "title": "Top 100 SQL Interview Questions and Answers (2025) - GeeksforGeeks",
+          "url": "https://www.geeksforgeeks.org/sql/sql-interview-questions/",
+          "domain": "geeksforgeeks.org"
+        }
+      ],
+      "id": 19
+    },
+    {
+      "question": "How would you write a query to find duplicate rows in a table, and how would you delete duplicates while keeping one copy?",
+      "difficulty": "Medium",
+      "answer": "To find duplicates, group by the columns that define a 'duplicate' and filter groups with a count greater than 1: `SELECT column1, column2, COUNT() FROM TableName GROUP BY column1, column2 HAVING COUNT() > 1;`. To delete duplicates while keeping exactly one copy, the most portable modern approach uses ROW_NUMBER() in a CTE: assign a row number partitioned by the duplicate-defining columns, ordered by some tiebreaker (often the primary key), then delete every row where that row number is greater than 1: `WITH cte AS (SELECT *, ROW_NUMBER() OVER (PARTITION BY column1, column2 ORDER BY id) AS rn FROM TableName) DELETE FROM cte WHERE rn > 1;` (syntax for deleting through a CTE varies slightly by engine — PostgreSQL and SQL Server support this directly; some engines require a join-based DELETE instead). An older, self-join style approach compares a table against itself and deletes the row with the higher ID among duplicates: `DELETE t1 FROM TableName t1, TableName t2 WHERE t1.column1 = t2.column1 AND t1.id > t2.id;` — this keeps the row with the lowest ID per duplicate group. Interview tip: always clarify what defines a 'duplicate' (which columns must match) before writing the query, and mention that adding a UNIQUE constraint or index on the relevant columns afterward prevents the duplicates from recurring.",
+      "sources": [
+        {
+          "title": "Top 100 SQL Interview Questions and Answers (2025) - GeeksforGeeks",
+          "url": "https://www.geeksforgeeks.org/sql/sql-interview-questions/",
+          "domain": "geeksforgeeks.org"
+        }
+      ],
+      "id": 20
+    },
+    {
+      "question": "What is an anti-join, and how would you implement one to find customers who have never placed an order?",
+      "difficulty": "Medium",
+      "answer": "An anti-join returns rows from one table that have NO matching rows in another table — it's the logical opposite of a semi-join (which would return rows that DO have a match). SQL has no dedicated ANTI JOIN keyword; it's implemented using NOT EXISTS (a correlated subquery checking for absence of a match) or a LEFT JOIN combined with a WHERE ... IS NULL filter on the right table's key. Using NOT EXISTS: `SELECT c.CustomerID, c.CustomerName FROM Customers c WHERE NOT EXISTS (SELECT 1 FROM Orders o WHERE o.CustomerID = c.CustomerID);` — this returns customers who have no matching row in Orders at all. Using LEFT JOIN + IS NULL: `SELECT c.CustomerID, c.CustomerName FROM Customers c LEFT JOIN Orders o ON c.CustomerID = o.CustomerID WHERE o.CustomerID IS NULL;` — the LEFT JOIN keeps all customers and fills unmatched Order columns with NULL, then filtering for NULL isolates exactly the customers with no orders. Both approaches are logically equivalent, but NOT EXISTS is often preferred and can be more efficient because query optimizers can short-circuit as soon as any match is found, whereas the LEFT JOIN approach materializes the full join result before filtering (though modern optimizers often produce similar plans for well-indexed queries). This pattern is very common in real-world interviews for churn/inactive-user detection.",
+      "sources": [
+        {
+          "title": "Top 100 SQL Interview Questions and Answers (2025) - GeeksforGeeks",
+          "url": "https://www.geeksforgeeks.org/sql/sql-interview-questions/",
+          "domain": "geeksforgeeks.org"
+        }
+      ],
+      "id": 21
+    },
+    {
+      "question": "How do LAG() and LEAD() work, and when would you use them instead of a self-join?",
+      "difficulty": "Medium",
+      "answer": "LAG() and LEAD() are window functions that let a row access a column's value from a preceding (LAG) or following (LEAD) row within the same result set, without needing to join the table to itself. Syntax: `LAG(column, offset, default) OVER (PARTITION BY ... ORDER BY ...)` — offset defaults to 1 (immediately previous row) and default is the value returned when there's no such row (e.g., the very first row in a partition has no 'previous' row). LEAD() works identically but looks forward instead of backward. Example — computing day-over-day change: `SELECT date, revenue, revenue - LAG(revenue) OVER (ORDER BY date) AS daily_change FROM sales;`. You'd choose LAG/LEAD over a self-join for a few clear reasons: (1) simplicity and readability — a self-join requires explicitly joining the table to itself on a date/sequence offset, which is verbose and error-prone, especially with gaps in the sequence; (2) performance — the window function typically requires just one sort/pass over the data per partition, while a self-join can be more expensive since it produces (and then filters) a full join between two copies of the table; (3) correctness with gaps — a self-join joining on 'date = date - 1' silently breaks if there are missing dates, while LAG/LEAD always correctly reference the actual previous/next row in the ordered sequence, regardless of gaps. Common interview use cases: computing period-over-period differences, detecting consecutive-event patterns, and finding the time between a customer's first and next purchase.",
+      "sources": [
+        {
+          "title": "Top 100 SQL Interview Questions and Answers (2025) - GeeksforGeeks",
+          "url": "https://www.geeksforgeeks.org/sql/sql-interview-questions/",
+          "domain": "geeksforgeeks.org"
+        },
+        {
+          "title": "PostgreSQL: Documentation: 18: 9.22. Window Functions",
+          "url": "https://www.postgresql.org/docs/current/functions-window.html",
+          "domain": "postgresql.org"
+        }
+      ],
+      "id": 22
+    },
+    {
+      "question": "How would you write a query to calculate a running total (cumulative sum) of sales per product over time?",
+      "difficulty": "Medium",
+      "answer": "The modern, efficient approach uses the SUM() window function with an OVER() clause that partitions by product and orders by date: `SELECT product_id, sale_date, amount, SUM(amount) OVER (PARTITION BY product_id ORDER BY sale_date) AS running_total FROM Sales;`. Here, PARTITION BY product_id resets the running total for each product, and ORDER BY sale_date within the OVER clause causes SUM() to accumulate only the current row and all prior rows in that partition (by default, the window frame for an ordered window function is 'RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW,' which is exactly a running total). An older, less efficient equivalent uses a self-join: `SELECT a.date, SUM(b.amount) AS cumulative FROM transactions a JOIN transactions b ON a.date >= b.date GROUP BY a.date ORDER BY a.date;` — this works but is O(n²)-ish in the number of comparisons it makes, since every row is joined against every prior row, whereas the window function typically computes the running total in a single ordered pass. Interview tip: be ready to note that ties in the ORDER BY column (e.g., two sales on the exact same date) using the default RANGE frame will sum all tied rows together (they're treated as 'peers'), which can differ from what you'd get with an explicit ROWS frame — worth clarifying with the interviewer if precise per-row behavior with ties matters.",
+      "sources": [
+        {
+          "title": "Top 100 SQL Interview Questions and Answers (2025) - GeeksforGeeks",
+          "url": "https://www.geeksforgeeks.org/sql/sql-interview-questions/",
+          "domain": "geeksforgeeks.org"
+        },
+        {
+          "title": "The Best Medium-Hard Data Analyst SQL Interview Questions",
+          "url": "https://gist.github.com/monbang/76151aa5f36d5c058f95ce396d992bdb",
+          "domain": "gist.github.com"
+        }
+      ],
+      "id": 23
+    },
+    {
+      "question": "What is the difference between a view and a materialized view?",
+      "difficulty": "Medium",
+      "answer": "A regular view is a saved SQL query — a virtual table that stores no data of its own. Every time you SELECT from a view, the database re-executes the underlying query against the base tables at that moment, so the view always reflects fully current, real-time data, but offers no inherent performance benefit beyond query reuse/readability. A materialized view, by contrast, physically stores (caches) the result set of its defining query as an actual table on disk. Reading from a materialized view is essentially reading from a precomputed table, which can be dramatically faster for complex, expensive queries — but the data becomes a stale snapshot that must be explicitly refreshed to reflect changes in the underlying base tables (e.g., in PostgreSQL, via `REFRESH MATERIALIZED VIEW view_name;`, optionally with CONCURRENTLY to avoid locking readers out during the refresh, which requires a unique index on the materialized view). Refresh strategies and capabilities vary by engine: Oracle supports incremental/fast refresh via materialized view logs that track changes on the base tables and ON COMMIT refresh policies; PostgreSQL's built-in REFRESH MATERIALIZED VIEW performs a full recompute by default (no native incremental refresh, though extensions like pg_ivm exist), and has no built-in job scheduler, so refreshes are typically automated via cron or similar external tooling. Use plain views for simplifying/reusing query logic where data must always be current; use materialized views for expensive aggregations/reports where some staleness is acceptable in exchange for much faster reads (e.g., dashboards, nightly reporting).",
+      "sources": [
+        {
+          "title": "PostgreSQL: Documentation: 18: CREATE VIEW",
+          "url": "https://www.postgresql.org/docs/current/sql-createview.html",
+          "domain": "postgresql.org"
+        },
+        {
+          "title": "SQL VIEW Comparison in SQL Server, Oracle and PostgreSQL",
+          "url": "https://www.mssqltips.com/sqlservertip/6929/sql-view-comparison-sql-server-oracle-postgresql/",
+          "domain": "mssqltips.com"
+        },
+        {
+          "title": "Oracle and PostgreSQL materialized views - Oracle to Aurora PostgreSQL Migration Playbook",
+          "url": "https://docs.aws.amazon.com/dms/latest/oracle-to-aurora-postgresql-migration-playbook/chap-oracle-aurora-pg.special.matviews.html",
+          "domain": "docs.aws.amazon.com"
+        }
+      ],
+      "id": 24
+    },
+    {
+      "question": "Given a table of employees and managers (self-referencing via manager_id), write a query to list each employee with their manager's name.",
+      "difficulty": "Medium",
+      "answer": "This is a classic SELF JOIN — joining a table to itself using two different aliases to represent the employee role and the manager role. `SELECT e.EmployeeName, m.EmployeeName AS Manager FROM Employees e LEFT JOIN Employees m ON e.ManagerID = m.EmployeeID;` — here, the alias `e` represents each employee row, and the alias `m` represents that same table but matched on the manager's own EmployeeID. A LEFT JOIN (rather than INNER JOIN) is generally the right choice because it ensures employees with no manager (e.g., the CEO, where ManagerID is NULL) still appear in the results, with a NULL manager name, instead of being silently excluded. Self-joins require distinct table aliases because you can't otherwise disambiguate which 'copy' of the table a column reference belongs to — the same underlying pattern extends to other hierarchical relationships (e.g., product categories with parent categories, org charts). For multi-level hierarchies (e.g., listing an employee's entire management chain, not just their direct manager), a recursive CTE is the appropriate tool instead of a fixed self-join, since a plain self-join only reaches one level up.",
+      "sources": [
+        {
+          "title": "Top 100 SQL Interview Questions and Answers (2025) - GeeksforGeeks",
+          "url": "https://www.geeksforgeeks.org/sql/sql-interview-questions/",
+          "domain": "geeksforgeeks.org"
+        }
+      ],
+      "id": 25
+    },
+    {
+      "question": "Explain the standard SQL transaction isolation levels (Read Uncommitted, Read Committed, Repeatable Read, Serializable) and the anomalies (dirty reads, non-repeatable reads, phantom reads) each one prevents.",
+      "difficulty": "Hard",
+      "answer": "The SQL standard defines four isolation levels that trade off consistency against concurrency. Read Uncommitted is the weakest: transactions can see other transactions' uncommitted changes (dirty reads), which is rarely used in practice because it risks reading data that may later be rolled back. Read Committed (PostgreSQL's default) ensures a transaction only ever sees data that has been committed — it prevents dirty reads, but each individual statement within the transaction takes a fresh snapshot, so if you run the same query twice in one transaction, a concurrent transaction's commit in between can change the result (a non-repeatable read), and new rows matching your WHERE clause committed by others can appear between queries (a phantom read). Repeatable Read guarantees that once a transaction starts, it sees a consistent snapshot as of the start of the transaction's first statement — it never sees uncommitted data OR any changes committed by other transactions during its own execution, which prevents both dirty reads and non-repeatable reads. Notably, PostgreSQL's implementation of Repeatable Read is stricter than the SQL standard's minimum requirement and also prevents phantom reads (via its snapshot-based MVCC), whereas the standard technically only requires it to prevent dirty and non-repeatable reads — this is a documented PostgreSQL-specific strengthening. Serializable is the strictest level: it emulates true serial (one-at-a-time) execution of all committed transactions, additionally guarding against serialization anomalies that could occur even without classic phantom reads. Applications using Serializable (and, in PostgreSQL, Repeatable Read too, for update conflicts) must be prepared to catch serialization failures and retry the transaction, since the engine may abort a transaction rather than allow behavior inconsistent with a valid serial ordering. Higher isolation levels generally increase safety at the cost of more locking/contention or more forced transaction retries, which is why choosing an isolation level is a deliberate consistency-vs-concurrency trade-off, not just 'always pick the strictest.'",
+      "sources": [
+        {
+          "title": "PostgreSQL: Documentation: 18: 13.2. Transaction Isolation",
+          "url": "https://www.postgresql.org/docs/current/transaction-iso.html",
+          "domain": "postgresql.org"
+        },
+        {
+          "title": "PostgreSQL Transaction Isolation Levels & MVCC | Mydbops",
+          "url": "https://www.mydbops.com/blog/postgresql-transaction-isolation-levels-guide",
+          "domain": "mydbops.com"
+        }
+      ],
+      "id": 26
+    },
+    {
+      "question": "What causes a deadlock in a database, and what strategies can be used to detect, prevent, or resolve one?",
+      "difficulty": "Hard",
+      "answer": "A deadlock occurs when two or more transactions each hold a lock on a resource the other needs, creating a circular wait where none can proceed — e.g., Transaction A locks Table 1 and requests a lock on Table 2, while Transaction B locks Table 2 and requests a lock on Table 1; neither can continue without the other releasing its lock first. Databases don't just hang forever: SQL Server, for example, runs a background 'lock monitor' process that periodically (roughly every few seconds, and more frequently if deadlocks are detected) searches the lock graph for cycles; when it finds one, it selects a 'deadlock victim' (often the transaction that's cheapest to roll back, though this can be influenced via DEADLOCK_PRIORITY) and forcibly terminates/rolls back that transaction with an error, allowing the other(s) to proceed. Prevention/mitigation strategies commonly cited include: (1) consistent resource access ordering — ensure all transactions acquire locks on shared resources/tables in the same order across the application, which eliminates circular-wait conditions by design; (2) keep transactions short — the longer a transaction holds locks, the more opportunity for contention and deadlocks, so committing promptly and avoiding user interaction or slow external calls inside a transaction reduces risk; (3) proper indexing — well-indexed queries lock fewer rows/pages for less time, directly reducing contention; (4) appropriate isolation levels — lower isolation levels (or row-versioning-based approaches like SQL Server's Read Committed Snapshot Isolation, which uses row versioning instead of locking for reads) reduce lock contention compared to stricter levels; (5) retry logic at the application level — since some deadlocks are essentially unavoidable in busy, highly concurrent systems, catching the deadlock error (e.g., SQL Server error 1205) and automatically retrying the transaction after a brief, randomized pause is standard practice. Monitoring tools like Extended Events (deadlock graphs) or the system_health session help diagnose recurring deadlock patterns for root-cause fixes.",
+      "sources": [
+        {
+          "title": "Deadlocks Guide - SQL Server | Microsoft Learn",
+          "url": "https://learn.microsoft.com/en-us/sql/relational-databases/sql-server-deadlocks-guide?view=sql-server-ver17",
+          "domain": "learn.microsoft.com"
+        },
+        {
+          "title": "SQL Server Deadlocks: Detect & Prevent | DBSync",
+          "url": "https://www.mydbsync.com/blogs/unlocking-sql-server-deadlocks",
+          "domain": "mydbsync.com"
+        },
+        {
+          "title": "SQL Server Deadlocks: Causes, Monitoring & Fixes",
+          "url": "https://www.devart.com/dbforge/sql/studio/sql-server-deadlock.html",
+          "domain": "devart.com"
+        }
+      ],
+      "id": 27
+    },
+    {
+      "question": "Write a query to calculate the month-over-month percentage change in monthly active users from a raw logins table.",
+      "difficulty": "Hard",
+      "answer": "Given a `logins` table with columns `user_id` and `date`, the approach is: (1) compute monthly active users (MAU) per month by truncating the date to month and counting distinct users, then (2) self-join consecutive months to compute the percentage change. `WITH mau AS (SELECT DATE_TRUNC('month', date) AS month_timestamp, COUNT(DISTINCT user_id) AS mau FROM logins GROUP BY DATE_TRUNC('month', date)) SELECT a.month_timestamp AS previous_month, a.mau AS previous_mau, b.month_timestamp AS current_month, b.mau AS current_mau, ROUND(100.0  (b.mau - a.mau) / a.mau, 2) AS percent_change FROM mau a JOIN mau b ON a.month_timestamp = b.month_timestamp - INTERVAL '1 month';` — the CTE first collapses raw login events into one MAU value per calendar month, then the self-join pairs each month with the immediately following month (matched via the interval offset) to compute the percent change. An equivalent, often cleaner approach uses LAG() instead of a self-join: `SELECT month_timestamp, mau, ROUND(100.0  (mau - LAG(mau) OVER (ORDER BY month_timestamp)) / LAG(mau) OVER (ORDER BY month_timestamp), 2) AS percent_change FROM mau;` — this avoids the join entirely by directly referencing the previous row's MAU value. Interview-relevant edge cases to flag: division by zero if a previous month had zero active users (guard with NULLIF or a CASE check), and the fact that DATE_TRUNC('month', ...) syntax is PostgreSQL-specific — other engines require different date-truncation functions (e.g., DATEFROMPARTS/FORMAT in SQL Server, DATE_FORMAT in MySQL) though the underlying logic (group by month, then compare consecutive months) is identical across engines.",
+      "sources": [
+        {
+          "title": "The Best Medium-Hard Data Analyst SQL Interview Questions",
+          "url": "https://gist.github.com/monbang/76151aa5f36d5c058f95ce396d992bdb",
+          "domain": "gist.github.com"
+        }
+      ],
+      "id": 28
+    },
+    {
+      "question": "Explain how you would design a query to compute a 7-day rolling average using window functions, and how the frame clause (ROWS vs RANGE) affects the result.",
+      "difficulty": "Hard",
+      "answer": "A rolling/moving average over the preceding N rows is computed with AVG() as a window function combined with an explicit frame specification. Using ROWS (physical row count): `SELECT date, sign_ups, AVG(sign_ups) OVER (ORDER BY date ROWS BETWEEN 6 PRECEDING AND CURRENT ROW) AS rolling_7day_avg FROM signups;` — ROWS BETWEEN 6 PRECEDING AND CURRENT ROW means 'the current row plus the 6 physically preceding rows in the ordered result set,' i.e., exactly 7 rows every time, regardless of what their date values actually are. This assumes one row per day with no gaps; if a day is missing from the data, the window still just grabs the 6 preceding physical rows, which may actually span more than 7 calendar days. RANGE, by contrast, defines the frame in terms of the logical value of the ORDER BY expression rather than physical row position — `RANGE BETWEEN INTERVAL '6 days' PRECEDING AND CURRENT ROW` (syntax varies by engine) would include every row whose date value falls within the actual 7-day calendar window, correctly handling gaps or multiple rows sharing the same date (RANGE treats rows with equal ORDER BY values, called 'peers,' as all belonging to the frame together, whereas ROWS distinguishes them by physical position even if their order-by values tie). The interview-critical distinction: RANGE is 'value-aware' and correct for genuinely date-based rolling windows with potential gaps or duplicate dates, while ROWS is 'row-count-aware' and correct when you want a fixed number of rows regardless of their underlying values (e.g., 'average of the last 7 transactions,' not 'last 7 calendar days'). Per PostgreSQL's documentation, functions like FIRST_VALUE, LAST_VALUE, and NTH_VALUE also depend on the frame, and by default (with no explicit frame specified but an ORDER BY present) the frame is `RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW` — which is why LAST_VALUE() without an explicit frame override often unhelpfully just returns the current row's own value rather than the true last value in the whole partition.",
+      "sources": [
+        {
+          "title": "PostgreSQL: Documentation: 18: 9.22. Window Functions",
+          "url": "https://www.postgresql.org/docs/current/functions-window.html",
+          "domain": "postgresql.org"
+        },
+        {
+          "title": "The Best Medium-Hard Data Analyst SQL Interview Questions",
+          "url": "https://gist.github.com/monbang/76151aa5f36d5c058f95ce396d992bdb",
+          "domain": "gist.github.com"
+        },
+        {
+          "title": "SQL Window Functions Interview Questions and Answers | by Dr. Sanjay Kumar | Medium",
+          "url": "https://skphd.medium.com/sql-window-functions-interview-questions-and-answers-127ee0be483b",
+          "domain": "skphd.medium.com"
+        }
+      ],
+      "id": 29
+    },
+    {
+      "question": "Given a table of user login events, write a query to compute monthly retained users (users active in both the current and immediately preceding month) — and explain how you'd adapt it for churned/reactivated users.",
+      "difficulty": "Hard",
+      "answer": "Retention is computed by self-joining a table of logins to itself, matching the same user across two consecutive months. Given `logins(user_id, date)`: `SELECT DATE_TRUNC('month', a.date) AS month_timestamp, COUNT(DISTINCT a.user_id) AS retained_users FROM logins a JOIN logins b ON a.user_id = b.user_id AND DATE_TRUNC('month', a.date) = DATE_TRUNC('month', b.date) + INTERVAL '1 month' GROUP BY DATE_TRUNC('month', a.date);` — here, table alias `a` represents the current month's activity and `b` represents the prior month; the join condition requires the same user_id to appear in both, and `a`'s month must be exactly one month after `b`'s month, so counting distinct users per group gives the retained-user count for that month (users active this month who were also active the immediately preceding month). To find churned users instead (users active last month who did NOT come back this month), flip the logic with an outer join and filter for the absence of a match: `SELECT DATE_TRUNC('month', a.date) AS month_timestamp, COUNT(DISTINCT b.user_id) AS churned_users FROM logins a FULL OUTER JOIN logins b ON a.user_id = b.user_id AND DATE_TRUNC('month', a.date) = DATE_TRUNC('month', b.date) + INTERVAL '1 month' WHERE a.user_id IS NULL GROUP BY DATE_TRUNC('month', a.date);` — the FULL OUTER JOIN plus filtering for `a.user_id IS NULL` isolates users present in table `b` (the earlier month) with no corresponding row in `a` (the following month), meaning they didn't return; note this pattern can also be written with a LEFT or RIGHT join depending on which side you frame as the 'earlier' month. For reactivated users (someone active this month who previously churned and is now returning), the pattern extends further: you'd typically build an intermediate table/CTE of churn events (as computed above) and then join current-month activity against it, checking that a user's most recent churn event is more recent than their most recent prior active month — a multi-step query that's genuinely more complex than typical interview scope and is usually treated as a stretch/bonus question. Across all of these, the core technique is the same: self-join or window-function comparison of consecutive time periods per user, which is a foundational pattern for any cohort/retention analysis interview question.",
+      "sources": [
+        {
+          "title": "The Best Medium-Hard Data Analyst SQL Interview Questions",
+          "url": "https://gist.github.com/monbang/76151aa5f36d5c058f95ce396d992bdb",
+          "domain": "gist.github.com"
+        }
+      ],
+      "id": 30
+    },
+    {
+      "question": "What is a view in SQL, and why would you use one instead of querying the base tables directly?",
+      "difficulty": "Easy",
+      "answer": "A view is a virtual table defined by a stored SELECT query — per the PostgreSQL documentation, 'the view is not physically materialized; instead, the query is run every time the view is referenced in a query.' It has no storage of its own; querying a view simply re-executes its underlying query against the base tables at that moment, always returning current data. You'd use a view instead of querying base tables directly for several reasons: (1) simplification — you can hide a complex multi-table join, aggregation, or filtering logic behind a simple, reusable name, so application code just does `SELECT * FROM active_customers` instead of repeating a complex JOIN everywhere; (2) security/access control — a view can expose only certain columns or rows of a sensitive table (e.g., hiding a salary column), letting you grant access to the view without granting direct access to the underlying table; (3) abstraction/backward compatibility — if the underlying schema changes, you can often update the view's definition to preserve the same external interface for consumers. A common interview follow-up distinguishes this from a materialized view, which physically stores the result and must be refreshed, trading real-time accuracy for query speed.",
+      "sources": [
+        {
+          "title": "PostgreSQL: Documentation: 18: CREATE VIEW",
+          "url": "https://www.postgresql.org/docs/current/sql-createview.html",
+          "domain": "postgresql.org"
+        }
+      ],
+      "id": 31
+    },
+    {
+      "question": "What is the difference between IS NULL and = NULL, and why does the latter not work as expected?",
+      "difficulty": "Easy",
+      "answer": "IS NULL is the correct, dedicated predicate for testing whether a value is NULL, and it always returns a definite TRUE or FALSE. `= NULL` does not work as most people expect: per the PostgreSQL documentation, 'ordinary comparison operators yield null (signifying \"unknown\"), not true or false, when either input is null' — so `column = NULL` doesn't error, but it also never evaluates to TRUE, even for rows where the column genuinely is NULL, because NULL represents an unknown value and SQL's three-valued logic treats 'is this unknown value equal to another unknown value?' as itself unknown, not true. The PostgreSQL docs explicitly warn: 'Do not write expression = NULL because NULL is not \"equal to\" NULL... It is highly recommended' to use IS NULL / IS NOT NULL instead. For the rare case where you want NULL to be treated as a regular, comparable value (so two NULLs are considered 'equal'), PostgreSQL provides `IS [NOT] DISTINCT FROM`, which does behave like a normal equality/inequality check but treats NULL consistently rather than always returning unknown.",
+      "sources": [
+        {
+          "title": "PostgreSQL: Documentation: 18: 9.2. Comparison Functions and Operators",
+          "url": "https://www.postgresql.org/docs/current/functions-comparison.html",
+          "domain": "postgresql.org"
+        }
+      ],
+      "id": 32
+    },
+    {
+      "question": "What does the DISTINCT keyword do, and how does it differ from GROUP BY when removing duplicates?",
+      "difficulty": "Easy",
+      "answer": "DISTINCT eliminates duplicate rows from a query's result set based on the exact combination of values in the selected columns — `SELECT DISTINCT department FROM employees;` returns each unique department name exactly once. GROUP BY also collapses rows sharing the same values into a single output row, but its actual purpose is different: it exists to support aggregate functions (COUNT, SUM, AVG, etc.) computed per group, not simply to deduplicate. Functionally, `SELECT DISTINCT department FROM employees;` and `SELECT department FROM employees GROUP BY department;` produce the same deduplicated list of departments — but GROUP BY additionally lets you compute per-group aggregates in the same query (e.g., `SELECT department, COUNT() FROM employees GROUP BY department;`), which DISTINCT alone cannot do. In terms of intent: reach for DISTINCT when you simply want unique rows/values with no aggregation; reach for GROUP BY when you need to compute a summary statistic per group (even if that statistic is just COUNT(), which is functionally similar to counting distinct groups). Performance-wise, both typically require similar underlying work (sorting or hashing to detect duplicates/groups), so the choice should be driven by intent and readability rather than a performance difference.",
+      "sources": [
+        {
+          "title": "Top 100 SQL Interview Questions and Answers (2025) - GeeksforGeeks",
+          "url": "https://www.geeksforgeeks.org/sql/sql-interview-questions/",
+          "domain": "geeksforgeeks.org"
+        }
+      ],
+      "id": 33
+    },
+    {
+      "question": "What is the purpose of the ALTER TABLE statement, and what kinds of changes can it make to an existing table?",
+      "difficulty": "Easy",
+      "answer": "ALTER TABLE is a DDL statement used to modify the structure of an existing table without dropping and recreating it (which would lose data). Per the PostgreSQL documentation, common forms include: ADD COLUMN / DROP COLUMN to add or remove columns; ALTER COLUMN ... SET DATA TYPE to change a column's data type (which succeeds automatically only if existing values can be implicitly cast to the new type — otherwise a USING clause specifying the conversion logic is required); ALTER COLUMN ... SET DEFAULT / DROP DEFAULT to add or remove a column's default value; SET NOT NULL / DROP NOT NULL to add or remove a NOT NULL constraint (adding NOT NULL requires the engine to verify no existing NULLs are present, which it can sometimes skip if a valid CHECK constraint already proves that); and ADD CONSTRAINT / DROP CONSTRAINT to add or remove constraints like CHECK, UNIQUE, PRIMARY KEY, or FOREIGN KEY. A practical interview note: some ALTER TABLE operations (like adding a column with a constant default in modern PostgreSQL, or dropping a column) are fast metadata-only changes, while others (like changing a column's data type, in engines/versions without optimized fast-path support) can require a full table rewrite, taking exclusive locks and significant time on large tables — this distinction matters a lot for zero-downtime schema migrations in production.",
+      "sources": [
+        {
+          "title": "PostgreSQL: Documentation: 18: ALTER TABLE",
+          "url": "https://www.postgresql.org/docs/current/sql-altertable.html",
+          "domain": "postgresql.org"
+        },
+        {
+          "title": "PostgreSQL: Documentation: 14: 5.6. Modifying Tables",
+          "url": "https://www.postgresql.org/docs/14//ddl-alter.html",
+          "domain": "postgresql.org"
+        }
+      ],
+      "id": 34
+    },
+    {
+      "question": "What is a stored procedure, and what are its main benefits over sending individual ad-hoc SQL statements from an application?",
+      "difficulty": "Easy",
+      "answer": "A stored procedure is a precompiled, named block of SQL (and often procedural logic like loops/conditionals, depending on the engine) that's stored in the database and can be invoked by name, optionally accepting input parameters and returning output parameters or result sets. Compared to sending individual ad-hoc SQL statements from an application, stored procedures offer several benefits: (1) reduced round-trips — multiple related SQL statements can be bundled into a single procedure call, avoiding repeated network round-trips between the application and database for each statement; (2) performance — because they're precompiled, the database can reuse an execution plan across calls rather than re-parsing and re-optimizing the same logic every time; (3) centralized/reusable business logic — common data operations can live in one place in the database, shared consistently across multiple applications or services rather than duplicated in each; (4) security — applications can be granted permission to execute a procedure without being granted direct read/write access to the underlying tables, and procedures help guard against SQL injection since parameters are handled separately from the SQL structure. A commonly cited limitation worth mentioning: stored procedures generally cannot be used directly inside a SELECT statement (unlike user-defined functions), and heavy business logic embedded in stored procedures can make an application's logic harder to version-control, test, and reason about compared to keeping it in application code.",
+      "sources": [
+        {
+          "title": "MOST FREQUENTLY ASKED SQL INTERVIEW QUESTIONS - The Vista Academy",
+          "url": "https://www.thevistaacademy.com/most-frequently-asked-sql-interview-questions/",
+          "domain": "thevistaacademy.com"
+        },
+        {
+          "title": "Top 100+ SQL Interview Questions And Answers in 2025 - CETPA Infotech",
+          "url": "https://www.cetpainfotech.com/blogs/sql-interview-questions",
+          "domain": "cetpainfotech.com"
+        }
+      ],
+      "id": 35
+    },
+    {
+      "question": "What is the difference between a CHECK constraint and a DEFAULT constraint?",
+      "difficulty": "Easy",
+      "answer": "A CHECK constraint enforces a business rule on the values allowed in a column (or across multiple columns) — it defines a boolean expression that every row must satisfy, and the database rejects any INSERT or UPDATE that would violate it (e.g., `CHECK (salary > 0)` prevents negative salaries from ever being stored). A DEFAULT constraint is not a validation rule at all — it simply specifies a value to use automatically when an INSERT statement doesn't explicitly provide a value for that column (e.g., `price NUMERIC DEFAULT 0`), which is set via `ALTER TABLE products ALTER COLUMN price SET DEFAULT 7.77;` in PostgreSQL. The key distinction: CHECK restricts what values are allowed, while DEFAULT only fills in a fallback value when none is given — a column can have both simultaneously (a default that itself must satisfy any CHECK constraint on the column), and CHECK constraints continue enforcing their rule on every future insert/update regardless of whether the value came from a DEFAULT or was explicitly supplied by the application.",
+      "sources": [
+        {
+          "title": "PostgreSQL: Documentation: 14: 5.6. Modifying Tables",
+          "url": "https://www.postgresql.org/docs/14//ddl-alter.html",
+          "domain": "postgresql.org"
+        },
+        {
+          "title": "PostgreSQL: Documentation: 18: ALTER TABLE",
+          "url": "https://www.postgresql.org/docs/current/sql-altertable.html",
+          "domain": "postgresql.org"
+        }
+      ],
+      "id": 36
+    },
+    {
+      "question": "What is the BETWEEN operator used for, and are the boundary values inclusive or exclusive?",
+      "difficulty": "Easy",
+      "answer": "BETWEEN is a shorthand for testing whether a value falls within a specified range, and per the PostgreSQL documentation it is 'implemented in terms of the ordinary comparison operators' — `a BETWEEN x AND y` is equivalent to `a >= x AND a <= y`. This means both boundary values are inclusive: `WHERE age BETWEEN 18 AND 65` matches ages of exactly 18 and exactly 65, not just values strictly in between. NOT BETWEEN does the reverse comparison. PostgreSQL also offers BETWEEN SYMMETRIC, a non-standard extension that removes the requirement that the left argument be less than or equal to the right — if the arguments are given in the 'wrong' order, they're automatically swapped so a non-empty range is always implied. A common interview gotcha: because BETWEEN is inclusive on both ends, using it on a date column intended to represent a half-open range (e.g., 'all of January') can silently include unwanted rows at the boundary — e.g., `date BETWEEN '2025-01-01' AND '2025-02-01'` would incorrectly include February 1st itself; the safer pattern for date ranges is often `date >= '2025-01-01' AND date < '2025-02-01'`.",
+      "sources": [
+        {
+          "title": "PostgreSQL: Documentation: 18: 9.2. Comparison Functions and Operators",
+          "url": "https://www.postgresql.org/docs/current/functions-comparison.html",
+          "domain": "postgresql.org"
+        }
+      ],
+      "id": 37
+    },
+    {
+      "question": "What is the purpose of table and column aliases, and how do you define them using AS?",
+      "difficulty": "Easy",
+      "answer": "An alias assigns a temporary, alternate name to a table or column for the duration of a single query, used to improve readability, shorten verbose references, disambiguate identical column names across joined tables, or rename computed/expression columns in the output. Column aliases are commonly used to give a meaningful name to a derived value: `SELECT price * quantity AS total_cost FROM order_items;` — without the alias, the column would typically show up with an unreadable expression as its name (or a generic placeholder, depending on the engine). Table aliases shorten long table names or, critically, disambiguate the same table referenced multiple times, which is required for self-joins: `SELECT e.name, m.name AS manager_name FROM employees e JOIN employees m ON e.manager_id = m.id;` — here `e` and `m` let the query distinguish which 'copy' of the employees table a column reference belongs to. The AS keyword introduces the alias (`column_name AS alias_name` or `table_name AS alias_name`), though many databases (including PostgreSQL for table aliases) allow omitting AS and simply writing the alias directly after the table/column reference — column aliases in PostgreSQL, however, generally do require AS if the alias itself is a reserved keyword or needs quoting.",
+      "sources": [
+        {
+          "title": "Top 100 SQL Interview Questions and Answers (2025) - GeeksforGeeks",
+          "url": "https://www.geeksforgeeks.org/sql/sql-interview-questions/",
+          "domain": "geeksforgeeks.org"
+        }
+      ],
+      "id": 38
+    },
+    {
+      "question": "What is the difference between a SQL function (UDF) and a stored procedure, in terms of what each can do and where each can be used (e.g., inside a SELECT)?",
+      "difficulty": "Medium",
+      "answer": "A user-defined function (UDF) is designed to compute and return a value (scalar or table-valued) and, critically, can be called directly within a SELECT statement, WHERE clause, or other SQL expression — e.g., `SELECT id, calculate_tax(amount) FROM orders;`. A stored procedure is designed to perform an action or a sequence of operations and generally cannot be referenced inside a SELECT statement's expression list; it must be explicitly invoked (e.g., `EXEC procedure_name` or `CALL procedure_name(...)`). Key practical differences commonly cited: functions typically can only accept input parameters, while procedures can have both input and output parameters; functions generally cannot execute DML statements that modify data or manage transactions (no COMMIT/ROLLBACK inside a function in most engines), whereas procedures can freely perform INSERT/UPDATE/DELETE and manage transaction control; procedures can call other procedures and typically support structured error handling (TRY...CATCH-style blocks in T-SQL), which functions in some engines cannot use as freely. In short: reach for a UDF when you need a reusable, composable calculation embeddable inside queries; reach for a stored procedure when you need to encapsulate a multi-step business process or transaction that modifies data and doesn't need to be composed inline within a SELECT.",
+      "sources": [
+        {
+          "title": "Stored Procedure, SQL Function, Triggers In Brief - c-sharpcorner.com",
+          "url": "https://www.c-sharpcorner.com/blogs/about-store-proc-function-trigger-in-brif",
+          "domain": "c-sharpcorner.com"
+        },
+        {
+          "title": "MOST FREQUENTLY ASKED SQL INTERVIEW QUESTIONS - The Vista Academy",
+          "url": "https://www.thevistaacademy.com/most-frequently-asked-sql-interview-questions/",
+          "domain": "thevistaacademy.com"
+        }
+      ],
+      "id": 39
+    },
+    {
+      "question": "What is a trigger, and what are the risks of overusing triggers for business logic?",
+      "difficulty": "Medium",
+      "answer": "A trigger is a special stored procedure that automatically executes in response to a specific event (INSERT, UPDATE, or DELETE) on a table, typically defined as firing BEFORE or AFTER that event — unlike a regular stored procedure, a trigger cannot be called directly; it's only invoked implicitly when its associated event occurs. Common uses include maintaining data integrity (e.g., cascading a change to related tables), enforcing business rules that a simple constraint can't express, and audit logging (recording who changed what and when). The risks of overusing triggers for business logic, frequently raised in engineering discussions, include: (1) hidden/invisible behavior — a developer running a simple UPDATE statement may have no idea it silently cascades into several additional side effects defined in triggers elsewhere, making the system's actual behavior hard to trace and debug just by reading the calling code; (2) cascading trigger chains — if a trigger's own DML action fires another trigger, which fires another, the resulting chain can be difficult to reason about, hard to test comprehensively, and prone to unexpected infinite loops or performance cliffs; (3) performance overhead — every write to the table now implicitly executes additional logic, which can slow down bulk operations significantly if not carefully designed; (4) maintainability — business logic scattered across triggers, stored procedures, and application code (rather than centralized) makes the system harder to understand, test, and evolve over time. The general engineering guidance is to use triggers sparingly, primarily for genuinely automatic housekeeping tasks (like audit trails), and to keep substantial business logic in application code or well-documented stored procedures where it's more visible and testable.",
+      "sources": [
+        {
+          "title": "Choice Between Stored Procedures, Functions, Views, Triggers, Inline SQL (updated)",
+          "url": "https://www.paragoncorporation.com/ArticleDetail.aspx?ArticleID=28",
+          "domain": "paragoncorporation.com"
+        },
+        {
+          "title": "Top 100+ SQL Interview Questions And Answers in 2025 - CETPA Infotech",
+          "url": "https://www.cetpainfotech.com/blogs/sql-interview-questions",
+          "domain": "cetpainfotech.com"
+        }
+      ],
+      "id": 40
+    },
+    {
+      "question": "Explain the difference between PARTITION BY (in a window function) and GROUP BY.",
+      "difficulty": "Medium",
+      "answer": "GROUP BY collapses the result set into one row per group, discarding individual row-level detail — you're left only with whatever aggregate values you computed per group. PARTITION BY, used inside a window function's OVER() clause, divides the result set into logical partitions for the purpose of the calculation, but keeps every individual row intact in the output — you get the per-row detail AND a computed aggregate/ranking value alongside it. For example, `SELECT first_name, department, salary, AVG(salary) OVER (PARTITION BY department) FROM employees;` returns one row per employee (full detail preserved), with each row also showing that employee's department average — whereas the equivalent GROUP BY query `SELECT department, AVG(salary) FROM employees GROUP BY department;` returns only one row per department, with no per-employee detail at all. Practically: use PARTITION BY (window functions) when you need to compare an individual row's value against a group-level aggregate (e.g., 'show each employee's salary alongside their department average,' or ranking, running totals per group); use GROUP BY when you only need the aggregate itself and don't need per-row detail alongside it.",
+      "sources": [
+        {
+          "title": "Top 20 SQL Interview Questions on Window Functions 2024. – datainked.com",
+          "url": "https://datainked.com/index.php/2024/11/21/top-20-sql-interview-questions-on-window-functions-2024/",
+          "domain": "datainked.com"
+        },
+        {
+          "title": "SQL Window Functions Interview Questions (2026) | AI2SQL",
+          "url": "https://builder.ai2sql.io/blog/sql-window-functions-interview",
+          "domain": "builder.ai2sql.io"
+        }
+      ],
+      "id": 41
+    },
+    {
+      "question": "What is the NTILE() window function used for, and how would you use it to bucket rows into quartiles or percentiles?",
+      "difficulty": "Medium",
+      "answer": "NTILE(n) is a window function that divides the rows within a partition (ordered by the specified ORDER BY) into n roughly equal-sized groups ('tiles') and returns the group number (1 through n) each row falls into — it's used to create quartiles, deciles, percentiles, or any other equal-sized bucketing of ranked data. Example, dividing employees into salary quartiles: `SELECT employee_id, salary, NTILE(4) OVER (ORDER BY salary DESC) AS quartile FROM employees;` — this assigns each employee to quartile 1 (highest-paid group) through quartile 4 (lowest-paid group). To find percentiles specifically, use NTILE(100): `WITH percentile_ranked AS (SELECT claim_id, state, fraud_score, NTILE(100) OVER (PARTITION BY state ORDER BY fraud_score DESC) AS percentile_bucket FROM fraud_claims) SELECT claim_id, state, fraud_score FROM percentile_ranked WHERE percentile_bucket <= 5 ORDER BY state, fraud_score DESC;` — this creates 100 equal-sized buckets per state and filters for the top 5% highest-scoring claims within each state (note the PARTITION BY state, which resets the percentile calculation independently for each state, preventing one large state from dominating a global top-5% cut). An important edge case worth mentioning in an interview: when the total row count isn't evenly divisible by n, NTILE distributes the remainder across the earliest groups, so bucket sizes can differ by at most 1 row; and with a very small number of rows per partition, NTILE(100) percentile accuracy degrades significantly since there simply aren't enough rows to form 100 meaningful buckets.",
+      "sources": [
+        {
+          "title": "SQL Window Functions Interview Questions and Answers | Medium",
+          "url": "https://skphd.medium.com/sql-window-functions-interview-questions-and-answers-127ee0be483b",
+          "domain": "skphd.medium.com"
+        },
+        {
+          "title": "SQL Window Functions Interview Questions: The Complete Guide | Let's Data Science",
+          "url": "https://letsdatascience.com/blog/sql-window-functions-interview-questions",
+          "domain": "letsdatascience.com"
+        },
+        {
+          "title": "SQL Window Functions - KDnuggets",
+          "url": "https://www.kdnuggets.com/2022/04/sql-window-functions.html",
+          "domain": "kdnuggets.com"
+        }
+      ],
+      "id": 42
+    },
+    {
+      "question": "Explain FIRST_VALUE(), LAST_VALUE(), and NTH_VALUE(), and why you need to explicitly define the window frame for LAST_VALUE() to behave as expected.",
+      "difficulty": "Medium",
+      "answer": "FIRST_VALUE() returns the value of a specified expression from the first row in the window frame; LAST_VALUE() returns it from the last row in the frame; NTH_VALUE() returns it from an arbitrary specified position within the frame. The critical gotcha, confirmed by the PostgreSQL documentation: 'first_value, last_value, and nth_value consider only the rows within the window frame,' and by default — when an ORDER BY is present in the OVER clause but no explicit frame is specified — the implicit frame is 'RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW,' meaning the frame ends at the current row, not at the end of the entire partition. This makes LAST_VALUE() with default framing 'likely to give unhelpful results' (per the PostgreSQL docs) because it simply returns the current row's own value every time, rather than the actual last value across the whole partition. To get the true last value in each partition, you must explicitly widen the frame: `LAST_VALUE(salary) OVER (PARTITION BY department_id ORDER BY salary DESC ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS lowest_salary` — extending the frame to cover the entire partition (both directions) so LAST_VALUE() actually reaches the final row. FIRST_VALUE() doesn't have this problem by default because the frame's start (UNBOUNDED PRECEDING) already coincides with the true first row of the partition, but it's still good practice to be explicit about the frame whenever precise behavior matters.",
+      "sources": [
+        {
+          "title": "PostgreSQL: Documentation: 18: 9.22. Window Functions",
+          "url": "https://www.postgresql.org/docs/current/functions-window.html",
+          "domain": "postgresql.org"
+        },
+        {
+          "title": "SQL Window Functions Explained: The Complete Visual Guide (2026) | SQLNoir",
+          "url": "https://www.sqlnoir.com/blog/sql-window-functions",
+          "domain": "sqlnoir.com"
+        },
+        {
+          "title": "30 SQL Window Function Questions for Interviews | Medium",
+          "url": "https://medium.com/@krthiak/30-sql-window-functionion-questions-for-interviews-day-47-of-100-days-of-data-engineering-ai-and-638bef1af0f6",
+          "domain": "medium.com"
+        }
+      ],
+      "id": 43
+    },
+    {
+      "question": "What happens if you omit ORDER BY inside an OVER() clause for a window function — how does that affect ranking or running-total results?",
+      "difficulty": "Medium",
+      "answer": "Without ORDER BY inside OVER(), a window function loses any defined sequence to operate over, which has different consequences depending on the function type. For a plain aggregate window function like `SUM(amount) OVER ()` (no PARTITION BY or ORDER BY at all), the frame becomes the entire result set (or entire partition, if PARTITION BY is present), so it simply computes the total across all rows and repeats that same total on every row — this is fine and often intentional, e.g., computing each row's percentage of a grand total. However, for ranking functions like ROW_NUMBER(), RANK(), and DENSE_RANK(), an ORDER BY is required to define what 'rank' even means — omitting it (where the engine allows it at all) produces an arbitrary, non-deterministic assignment of row numbers/ranks, since there's no criterion to rank by. Similarly, for running totals and rolling calculations using SUM()/AVG() with an implied ordered frame, omitting ORDER BY means there's no 'preceding rows' concept, so the function can't produce a meaningful cumulative result — it effectively collapses to the same whole-partition aggregate on every row rather than a true running total. The practical interview takeaway: PARTITION BY groups rows for the calculation, but ORDER BY is what actually defines sequence-dependent behavior (ranking, LAG/LEAD, running totals, and the default window frame) — omitting it when sequence matters produces results that may be inconsistent across different query runs or query plans.",
+      "sources": [
+        {
+          "title": "30 SQL Window Function Questions for Interviews | Medium",
+          "url": "https://medium.com/@krthiak/30-sql-window-functionion-questions-for-interviews-day-47-of-100-days-of-data-engineering-ai-and-638bef1af0f6",
+          "domain": "medium.com"
+        },
+        {
+          "title": "PostgreSQL: Documentation: 18: 9.22. Window Functions",
+          "url": "https://www.postgresql.org/docs/current/functions-window.html",
+          "domain": "postgresql.org"
+        }
+      ],
+      "id": 44
+    },
+    {
+      "question": "Can you use a window function's result directly in a WHERE clause? Why or why not, and how would you filter on it instead?",
+      "difficulty": "Medium",
+      "answer": "No — window functions cannot be referenced directly in a WHERE clause. This comes down to logical query processing order: per how SQL statements are conceptually evaluated, WHERE is applied before window functions are computed (window functions are evaluated after WHERE, GROUP BY, and HAVING, but before the final ORDER BY/LIMIT), so at the point WHERE runs, the window function's result doesn't exist yet for the engine to filter on — attempting `WHERE ROW_NUMBER() OVER (...) = 1` throws a syntax/semantic error in virtually all SQL engines. The standard workaround is to wrap the query containing the window function in a subquery or CTE, compute the window function there, and then apply the filter in the outer query's WHERE clause against the now-materialized column: `WITH ranked AS (SELECT , ROW_NUMBER() OVER (PARTITION BY district ORDER BY risk_score DESC) AS rank_in_district FROM suspects) SELECT  FROM ranked WHERE rank_in_district <= 3;` — this is an extremely common pattern for 'top N per group' queries (e.g., top-3 salespeople per region, most recent order per customer). This is one of the most frequently tested window-function 'gotchas' in interviews because it trips up many people who assume window functions behave like ordinary computed columns usable anywhere in the query.",
+      "sources": [
+        {
+          "title": "SQL Window Functions Explained: The Complete Visual Guide (2026) | SQLNoir",
+          "url": "https://www.sqlnoir.com/blog/sql-window-functions",
+          "domain": "sqlnoir.com"
+        },
+        {
+          "title": "30 SQL Window Function Questions for Interviews | Medium",
+          "url": "https://medium.com/@krthiak/30-sql-window-functionion-questions-for-interviews-day-47-of-100-days-of-data-engineering-ai-and-638bef1af0f6",
+          "domain": "medium.com"
+        },
+        {
+          "title": "Top 20 SQL Interview Questions on Window Functions 2024. – datainked.com",
+          "url": "https://datainked.com/index.php/2024/11/21/top-20-sql-interview-questions-on-window-functions-2024/",
+          "domain": "datainked.com"
+        }
+      ],
+      "id": 45
+    },
+    {
+      "question": "Write a query to find, for each department, the top 3 highest-paid employees.",
+      "difficulty": "Medium",
+      "answer": "This is a classic 'top N per group' problem, solved by ranking rows within each group using a window function inside a CTE (or subquery), then filtering the outer query on that rank — since window function results can't be filtered directly in a WHERE clause. `WITH ranked_employees AS (SELECT employee_id, department_id, salary, DENSE_RANK() OVER (PARTITION BY department_id ORDER BY salary DESC) AS rank_in_dept FROM employees) SELECT employee_id, department_id, salary FROM ranked_employees WHERE rank_in_dept <= 3;` — PARTITION BY department_id resets the ranking for each department independently, and ORDER BY salary DESC ranks the highest earners first within each partition. The choice of ranking function matters: DENSE_RANK() is generally the right choice here because if multiple employees are tied at, say, 2nd-highest salary in a department, you'd still want all of them included as 'top 3' by salary value; RANK() would also include ties but could then return fewer than 3 distinct salary levels represented if there are ties earlier in the ranking (since it skips subsequent rank numbers); ROW_NUMBER() would arbitrarily pick exactly 3 rows regardless of ties, potentially excluding an employee tied for 3rd place while including another — so the right function genuinely depends on how the interviewer wants ties handled, and it's worth explicitly asking or stating that assumption.",
+      "sources": [
+        {
+          "title": "SQL Window Functions Explained: The Complete Visual Guide (2026) | SQLNoir",
+          "url": "https://www.sqlnoir.com/blog/sql-window-functions",
+          "domain": "sqlnoir.com"
+        },
+        {
+          "title": "PostgreSQL: Documentation: 18: 9.22. Window Functions",
+          "url": "https://www.postgresql.org/docs/current/functions-window.html",
+          "domain": "postgresql.org"
+        }
+      ],
+      "id": 46
+    },
+    {
+      "question": "What is the difference between a local temporary table and a global temporary table?",
+      "difficulty": "Medium",
+      "answer": "Both are temporary tables used to store intermediate results for the duration of a session or transaction, but they differ in scope and lifetime. A local temporary table (prefixed with a single # in SQL Server, e.g., #TempTable) is visible and accessible only within the session that created it — other concurrent sessions/connections cannot see or query it, and it is automatically dropped when that creating session ends (or, in some engines, when the creating scope/procedure exits). A global temporary table (prefixed with ## in SQL Server, e.g., ##GlobalTempTable) is visible to all sessions connected to the database, not just the one that created it — any session can query or modify it, and it persists until every session referencing it has closed (not just the creating session). Practical implication: use a local temporary table for private, scratch-space computations scoped to a single unit of work (the common case — e.g., storing intermediate results within a single stored procedure); use a global temporary table only in the rarer case where multiple concurrent sessions genuinely need to share the same temporary, transient data — this is uncommon in typical application code and introduces coordination/cleanup considerations across sessions.",
+      "sources": [
+        {
+          "title": "Top 100 SQL Interview Questions and Answers (2025) - GeeksforGeeks",
+          "url": "https://www.geeksforgeeks.org/sql/sql-interview-questions/",
+          "domain": "geeksforgeeks.org"
+        }
+      ],
+      "id": 47
+    },
+    {
+      "question": "How would you use COALESCE and NULLIF together to safely handle division that might divide by zero or hit NULLs?",
+      "difficulty": "Medium",
+      "answer": "COALESCE(expr1, expr2, ...) returns the first non-NULL expression in its argument list — commonly used to substitute a default value when a column might be NULL, e.g., `COALESCE(discount, 0)` treats a NULL discount as 0. NULLIF(expr1, expr2) returns NULL if the two expressions are equal, and otherwise returns expr1 — its classic use is preventing division-by-zero errors: `NULLIF(denominator, 0)` converts a zero denominator into NULL, and since any arithmetic operation involving NULL itself produces NULL (rather than throwing a divide-by-zero error), the division safely evaluates to NULL instead of crashing the query. Combining both patterns for a safe division: `SELECT total_revenue / NULLIF(total_orders, 0) AS avg_order_value FROM stats;` — if total_orders is 0, NULLIF converts it to NULL, making the whole division return NULL (avoiding an error) instead of failing; then, if you want a displayable default (like 0) instead of NULL in the final output, wrap the whole expression in COALESCE: `COALESCE(total_revenue / NULLIF(total_orders, 0), 0) AS avg_order_value`. This is a very common, practical pattern in reporting/analytics queries for computing ratios, rates, or averages where the denominator could legitimately be zero or missing.",
+      "sources": [
+        {
+          "title": "Top 100 SQL Interview Questions and Answers (2025) - GeeksforGeeks",
+          "url": "https://www.geeksforgeeks.org/sql/sql-interview-questions/",
+          "domain": "geeksforgeeks.org"
+        }
+      ],
+      "id": 48
+    },
+    {
+      "question": "What is dynamic SQL, and what risks does it introduce compared to static parameterized queries?",
+      "difficulty": "Medium",
+      "answer": "Dynamic SQL is SQL code that's constructed and executed at runtime, typically by concatenating strings (which may include variables, user input, or values determined only at execution time) into a SQL statement and then executing that assembled string — as opposed to static SQL, where the statement's structure is fixed at compile/write time and only parameter values vary. Dynamic SQL is genuinely useful for cases where the query's structure itself must vary based on runtime conditions — e.g., dynamically choosing which table or column to filter/sort on, building an optional multi-filter search query, or generating DDL programmatically. The risks, compared to static parameterized queries, are significant: (1) SQL injection — if any part of the dynamically assembled string comes from unsanitized user input concatenated directly into the SQL text (rather than passed as a bound parameter), an attacker can inject malicious SQL that gets executed as part of the query structure itself, e.g., turning `WHERE username = '<input>'` into a tautology like `WHERE username = '' OR '1'='1'` that bypasses intended filtering; (2) harder to debug and maintain, since the actual SQL being run only exists as a runtime-constructed string rather than something visible in the source code; (3) reduced execution plan reuse/caching, since each dynamically-varying SQL text may be treated as a distinct statement by the query planner's cache, increasing parsing/compilation overhead compared to a single parameterized statement executed repeatedly with different parameter values. The mitigation is to still use parameterization within the dynamic SQL wherever the values (not the structure) vary — i.e., dynamically build the query's shape, but pass any actual data values as bound parameters rather than concatenating them as literal text into the string.",
+      "sources": [
+        {
+          "title": "Top 100+ SQL Interview Questions And Answers in 2025 - GeeksforGeeks",
+          "url": "https://www.geeksforgeeks.org/sql/sql-interview-questions/",
+          "domain": "geeksforgeeks.org"
+        },
+        {
+          "title": "40+ SQL Interview Questions and Answers to Crack Your Next Interview (2026)",
+          "url": "https://interviewkickstart.com/blogs/interview-questions/sql-interview-questions",
+          "domain": "interviewkickstart.com"
+        }
+      ],
+      "id": 49
+    },
+    {
+      "question": "How would you write a query using CASE WHEN to bucket customers into segments based on their total spend?",
+      "difficulty": "Medium",
+      "answer": "CASE WHEN implements conditional (if-else-style) logic in SQL, evaluating a sequence of WHEN conditions in order and returning the value tied to the first one that evaluates to TRUE, falling back to an ELSE value if none match. To bucket customers by total spend, you'd typically compute total spend per customer (via GROUP BY/SUM, or a pre-aggregated column) and then apply CASE WHEN in the SELECT list: `SELECT customer_id, total_spend, CASE WHEN total_spend >= 10000 THEN 'VIP' WHEN total_spend >= 1000 THEN 'Regular' WHEN total_spend > 0 THEN 'Occasional' ELSE 'Inactive' END AS customer_segment FROM customer_totals;` — the conditions are checked top-to-bottom, so ordering matters: a customer spending 15000 hits the first WHEN (>= 10000) and stops there, never evaluating the lower thresholds. This is often combined with a prior aggregation step: `WITH customer_totals AS (SELECT customer_id, SUM(order_amount) AS total_spend FROM orders GROUP BY customer_id) SELECT customer_id, CASE WHEN total_spend >= 10000 THEN 'VIP' ... END AS segment FROM customer_totals;`. A useful follow-up: the resulting segment column can then itself be used in an outer GROUP BY to count customers per segment, making this pattern the foundation of common cohort/segmentation reporting queries.",
+      "sources": [
+        {
+          "title": "Top 100 SQL Interview Questions and Answers (2025) - GeeksforGeeks",
+          "url": "https://www.geeksforgeeks.org/sql/sql-interview-questions/",
+          "domain": "geeksforgeeks.org"
+        }
+      ],
+      "id": 50
+    },
+    {
+      "question": "What is the difference between joining two tables and using a correlated subquery to achieve a similar result — when would you prefer one over the other?",
+      "difficulty": "Medium",
+      "answer": "A JOIN combines two tables' rows based on a matching condition, producing a single combined row set that the query optimizer can plan holistically — choosing hash joins, merge joins, or nested loop joins based on cost estimates, and it can leverage indexes on the join columns in either table. A correlated subquery, by contrast, references a column from the outer query and is conceptually (though not necessarily literally, once optimized) evaluated once per outer row, making it naturally suited to per-row existence checks (EXISTS/NOT EXISTS) or per-row aggregate comparisons (e.g., 'salary greater than this employee's own department average'). In many cases the two are logically equivalent and modern query optimizers (PostgreSQL, SQL Server, Oracle) can automatically rewrite/'de-correlate' a correlated subquery into an equivalent join-based (specifically semi-join or anti-join) execution plan, so there's often no meaningful performance difference for well-optimized engines. Practical guidance for when to prefer each: prefer a JOIN when you need columns from both tables in the final result set (a correlated subquery in WHERE can't project columns from the subquery's table into the outer SELECT); prefer EXISTS/NOT EXISTS (a correlated subquery form) specifically for existence checks, since it clearly communicates 'does a match exist' intent and naturally short-circuits, and it avoids duplicate outer rows that a JOIN could produce if the joined table has multiple matches per outer row (a JOIN used purely to check existence, without DISTINCT, can silently duplicate rows when the 'many' side of a one-to-many relationship has multiple matches — EXISTS avoids this pitfall entirely since it never multiplies rows). For per-row aggregate comparisons, a correlated subquery, a window function, or a join against a pre-aggregated subquery can all work, and modern practice often favors window functions for readability and performance.",
+      "sources": [
+        {
+          "title": "Top 100 SQL Interview Questions and Answers (2025) - GeeksforGeeks",
+          "url": "https://www.geeksforgeeks.org/sql/sql-interview-questions/",
+          "domain": "geeksforgeeks.org"
+        },
+        {
+          "title": "PostgreSQL Join Optimization: Nested Loop, Hash, and Merge | Medium",
+          "url": "https://medium.com/@philmcc/postgresql-join-optimization-nested-loop-hash-and-merge-c87b86373908",
+          "domain": "medium.com"
+        }
+      ],
+      "id": 51
+    },
+    {
+      "question": "Write a query to detect the longest streak of consecutive daily logins for each user (the \"gaps and islands\" problem).",
+      "difficulty": "Medium",
+      "answer": "This is the classic 'gaps and islands' pattern, where the key trick is subtracting a per-user sequential row number (via ROW_NUMBER()) from the actual date — for rows that are part of a truly consecutive run, this subtraction produces the same constant 'group key' value, letting you group by it to identify each island/streak. Given `user_logins(user_id, login_date)`: `WITH numbered AS (SELECT user_id, login_date, ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY login_date) AS rn FROM (SELECT DISTINCT user_id, login_date FROM user_logins) t), grouped AS (SELECT user_id, login_date, login_date - (rn  INTERVAL '1 day') AS streak_group FROM numbered) SELECT user_id, MIN(login_date) AS streak_start, MAX(login_date) AS streak_end, COUNT() AS streak_length FROM grouped GROUP BY user_id, streak_group ORDER BY user_id, streak_length DESC;` — the logic: within a truly consecutive run of dates, each date increases by exactly 1 day while rn also increases by exactly 1, so `login_date - rn` stays constant for the entire island and only changes when a gap breaks the sequence; grouping by that constant value isolates each streak, and MAX(COUNT(*)) per user (or a final filter picking the top streak) gives the longest streak. Selecting DISTINCT user_id, login_date first is important to avoid a user's multiple same-day logins inflating the row numbering. This exact technique (partition by entity, order by date, subtract row number from date to derive a stable group identifier) is described as one of the most common patterns tested in SQL interviews for sessionization, streak detection, and consecutive-period analysis.",
+      "sources": [
+        {
+          "title": "How to Solve Gaps and Islands SQL Interview Questions with LAG and ROW_NUMBER",
+          "url": "https://sqlpad.io/tutorial/how-to-solve-gaps-and-islands-sql-interview-questions-with-lag-and-row-number/",
+          "domain": "sqlpad.io"
+        },
+        {
+          "title": "SQL Window functions and Interview Practice Questions | Medium",
+          "url": "https://medium.com/@keshavkhandelwal142/the-gaps-and-islands-problem-sql-interview-practice-8c087a511cd1",
+          "domain": "medium.com"
+        },
+        {
+          "title": "Gaps and Islands in SQL: Techniques & Examples | Simple Talk",
+          "url": "https://www.red-gate.com/simple-talk/databases/sql-server/t-sql-programming-sql-server/introduction-to-gaps-and-islands-analysis/",
+          "domain": "red-gate.com"
+        }
+      ],
+      "id": 52
+    },
+    {
+      "question": "What are the main strategies to prevent SQL injection, and why is input sanitization alone not considered sufficient?",
+      "difficulty": "Hard",
+      "answer": "SQL injection occurs when an application concatenates untrusted user input directly into a SQL statement's text, allowing an attacker to alter the query's actual structure — e.g., a vulnerable query like `\"SELECT  FROM users WHERE username = '\" + username + \"'\"` can be exploited with input like `' OR '1'='1`, turning the query into `SELECT  FROM users WHERE username = '' OR '1'='1'`, which returns every row and can bypass authentication entirely. The primary and industry-standard defense is parameterized queries (prepared statements): the SQL structure is sent to the database engine separately from the user-supplied values, which are bound as parameters rather than concatenated as literal text — the database driver guarantees these parameter values are always treated strictly as data, never as executable SQL syntax, which structurally eliminates injection through that input regardless of what characters it contains. A secondary layer is stored procedures, which similarly isolate data-access logic and, when used with proper parameterization internally, reduce the attack surface (though a stored procedure that itself builds and executes dynamic SQL by concatenating its own parameters is not protected). Input sanitization/validation (stripping or escaping special characters, allow-listing expected formats) is a useful complementary layer — rejecting obviously malformed input early — but is explicitly called out across security-focused sources as insufficient as a primary defense: sanitization relies on anticipating and blocking every possible malicious pattern, which is inherently incomplete (attackers continually find encoding tricks, alternate syntax, or context-specific bypasses), whereas parameterization removes the entire class of vulnerability structurally rather than trying to filter it out reactively. A related, frequently-missed mistake: partially parameterizing a query (binding a WHERE value as a parameter) while still concatenating other parts, like a dynamically chosen table or column name, directly into the SQL string — that unparameterized part remains fully exploitable even though the rest of the query 'looks' safe.",
+      "sources": [
+        {
+          "title": "40+ SQL Interview Questions and Answers to Crack Your Next Interview (2026) | Interview Kickstart",
+          "url": "https://interviewkickstart.com/blogs/interview-questions/sql-interview-questions",
+          "domain": "interviewkickstart.com"
+        },
+        {
+          "title": "GitHub - Devinterview-io/sql-interview-questions",
+          "url": "https://github.com/Devinterview-io/sql-interview-questions",
+          "domain": "github.com"
+        },
+        {
+          "title": "Parameterized Queries - The Only Real Fix for SQL Injection - DEV Community",
+          "url": "https://dev.to/kriosa/parameterized-queries-the-only-real-fix-for-sql-injection-and-what-developers-get-wrong-about-them-21h3",
+          "domain": "dev.to"
+        }
+      ],
+      "id": 53
+    },
+    {
+      "question": "Explain sargability in SQL — what makes a WHERE clause \"non-sargable,\" and how would you rewrite a query that wraps an indexed column in a function to make it sargable again?",
+      "difficulty": "Hard",
+      "answer": "A 'sargable' (Search ARGument ABLE) predicate is one the query optimizer can evaluate using an index seek — it directly compares an indexed column against a value or range without transforming the column itself first. A predicate becomes non-sargable when the indexed column is wrapped in a function, arithmetic expression, or type conversion within the WHERE clause, because the database would have to compute that function's result for every row before it can compare — which defeats the purpose of the index's pre-sorted structure and forces a full table/index scan instead of a seek. Classic example: `WHERE YEAR(order_date) = 2025` is non-sargable — even with an index on order_date, the engine must apply YEAR() to every row's order_date to evaluate the condition, since the index is sorted by the raw date values, not by the year extracted from them. The sargable rewrite leaves the indexed column bare and moves any transformation to the comparison value(s) instead: `WHERE order_date >= '2025-01-01' AND order_date < '2026-01-01'` — this expresses the exact same logical condition but allows the optimizer to seek directly into the order_date index for that range. Other common non-sargable patterns: a leading wildcard in LIKE (`LIKE '%term'`, which can't use a standard index because the prefix is unknown, versus `LIKE 'term%'`, which can), applying an implicit or explicit type cast to the indexed column, or performing arithmetic on the column (`WHERE price * 1.1 > 100` versus `WHERE price > 100 / 1.1`). Recognizing and rewriting non-sargable predicates is one of the highest-leverage, most commonly tested query-optimization skills in interviews because it's a frequent, easy-to-miss real-world performance bug.",
+      "sources": [
+        {
+          "title": "Top SQL Performance Tuning Interview Questions and Answers",
+          "url": "https://www.dbvis.com/thetable/top-sql-performance-tuning-interview-questions-and-answers/",
+          "domain": "dbvis.com"
+        },
+        {
+          "title": "40+ SQL Interview Questions and Answers to Crack Your Next Interview (2026) | Interview Kickstart",
+          "url": "https://interviewkickstart.com/blogs/interview-questions/sql-interview-questions",
+          "domain": "interviewkickstart.com"
+        }
+      ],
+      "id": 54
+    },
+    {
+      "question": "How would you design and query a table to efficiently store and retrieve hierarchical data at scale — compare adjacency list, path enumeration, and nested set models.",
+      "difficulty": "Hard",
+      "answer": "The Adjacency List model is the simplest approach: each row stores a reference to its immediate parent via a parent_id column (NULL for the root). It's easy to understand, cheap to insert/move/delete a single node (only that one row's parent_id changes), and pairs naturally with recursive CTEs in databases that support them (PostgreSQL, SQL Server, Oracle) for traversing the tree. Its weakness: without recursion, retrieving an arbitrary-depth subtree (all descendants of a node) or an ancestor chain requires one join per level, which is expensive and awkward for deep or variable-depth hierarchies — this is sometimes called the 'bill of materials' problem. The Path Enumeration (materialized path) model stores each node's full ancestry as a delimited string (e.g., '1/4/9/'), allowing descendant/ancestor lookups via a simple string-prefix match (`WHERE path LIKE '1/4/%'`) without any joins or recursion — fast reads, but every descendant's path string must be updated whenever a node is moved to a different parent, making writes/reparenting more expensive and requiring careful string-handling logic. The Nested Set model assigns each node a 'left' and 'right' numeric boundary such that a node's entire subtree falls within its left/right range; per Wikipedia, this lets you fetch entire subtrees with a single `BETWEEN`-style range query, in O(1) query complexity relative to tree depth, without needing recursion at all. Its major downside: inserting or deleting a single node requires recalculating and shifting the left/right values of many other nodes in the tree (potentially the entire tree), making writes expensive and typically requiring exclusive locking during structural changes — so it's best suited to read-heavy, rarely-modified hierarchies (e.g., a mostly-static product category tree). Per the Wikipedia entry on nested sets: nested-set queries are generally faster than adjacency-list traversal via stored procedures on databases lacking native recursive query support (older MySQL), but recursive CTEs perform comparably for shallow queries and much faster for deep ones on databases that do support recursion (PostgreSQL, Oracle, SQL Server) — meaning the adjacency list + recursive CTE combination is often the pragmatic default choice on modern engines, reserving nested sets for specifically read-heavy, low-churn hierarchies, and path enumeration for cases needing very fast prefix-based subtree lookups without recursion at all.",
+      "sources": [
+        {
+          "title": "Nested set model - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Nested_set_model",
+          "domain": "en.wikipedia.org"
+        },
+        {
+          "title": "Storing Hierarchical Data in Relational Databases with SQL",
+          "url": "https://adamdjellouli.com/articles/databases_notes/03_sql/09_hierarchical_data",
+          "domain": "adamdjellouli.com"
+        },
+        {
+          "title": "Mastering SQL Trees: From Adjacency Lists to Nested Sets and Closure Tables - TeddySmith.IO",
+          "url": "https://teddysmith.io/sql-trees/",
+          "domain": "teddysmith.io"
+        }
+      ],
+      "id": 55
+    },
+    {
+      "question": "What is the difference between statement-level and row-level triggers, and what pitfalls (e.g., mutating table errors, cascading trigger chains) can arise from complex trigger logic?",
+      "difficulty": "Hard",
+      "answer": "A statement-level trigger fires exactly once per triggering SQL statement, regardless of how many rows that statement actually affects — so a single UPDATE that modifies 10,000 rows fires the trigger just once, with no built-in per-row context unless the engine provides special transition tables/data. A row-level trigger (specified as FOR EACH ROW in most SQL dialects) fires once for every individual row affected by the triggering statement — that same 10,000-row UPDATE would fire the trigger 10,000 times, once per affected row, giving the trigger logic access to that specific row's old and new values. Row-level triggers are more common for fine-grained logic (e.g., validating or auditing each individual row's change), while statement-level triggers are more efficient for logic that only needs to happen once per statement (e.g., a single summary log entry regardless of row count). Key pitfalls with complex trigger logic: (1) mutating table errors — some database engines (notably Oracle) explicitly disallow a row-level trigger from querying or modifying the very table that fired it, because doing so during an in-progress statement could see an inconsistent, partially-updated view of that table; violating this raises a runtime error, and it constrains what a trigger's own logic can safely do; (2) cascading trigger chains — if a trigger's own INSERT/UPDATE/DELETE action causes another trigger to fire (on the same or a different table), which in turn triggers yet another, the resulting chain of side effects can become extremely difficult to trace, test comprehensively, or reason about — a change that looks like a single simple UPDATE in application code can silently cascade into many hidden downstream effects; (3) performance at scale — because row-level triggers execute their full logic once per affected row, bulk operations touching millions of rows can become dramatically slower than the equivalent set-based operation without a trigger, since the per-row overhead multiplies across the entire batch. The general guidance from engineering discussions is to keep trigger logic minimal, avoid chaining triggers where possible, and be very deliberate about using triggers for genuinely automatic, low-complexity housekeeping (like audit timestamps) rather than substantial business logic.",
+      "sources": [
+        {
+          "title": "Stored Procedures and Triggers Interview Questions - CodeWithCurious",
+          "url": "https://codewithcurious.com/interview/stored-procedures-and-triggers-interview-questions/",
+          "domain": "codewithcurious.com"
+        },
+        {
+          "title": "SQL Server Interview Questions Guide - Scribd",
+          "url": "https://www.scribd.com/doc/36095071/SQL-Server",
+          "domain": "scribd.com"
+        }
+      ],
+      "id": 56
+    },
+    {
+      "question": "How would you approach schema and query design for multi-tenant SaaS data isolation (e.g., shared table with tenant_id vs. schema-per-tenant vs. database-per-tenant), and what are the SQL-level trade-offs of each?",
+      "difficulty": "Hard",
+      "answer": "There are three common architectural patterns, each trading off isolation strength against operational complexity and cost. Shared database, shared schema: all tenants share the exact same tables, with every tenant-scoped table carrying a tenant_id column that every query must filter on (and every index should include, typically as the leading column for good selectivity). This is the cheapest and simplest to build and operate — a single schema to migrate, one connection pool, straightforward cross-tenant analytics — but it offers the weakest isolation: a single missing WHERE tenant_id = ? clause in application code (or an ORM misconfiguration) can leak or corrupt another tenant's data, and it's vulnerable to 'noisy neighbor' problems where one very large or heavily-queried tenant's data/access patterns degrade query performance (and even query plan selection, since the optimizer may cache/reuse plans across tenants with very different data volumes) for other tenants sharing the same tables. Shared database, separate schemas: one database instance, but each tenant gets its own schema (e.g., tenant_a.orders, tenant_b.orders) with structurally identical tables. This offers stronger logical isolation and simpler per-tenant backup/restore, but multiplies the number of schema objects the database must manage, and running/coordinating schema migrations across potentially hundreds or thousands of tenant schemas becomes a significant operational burden (some sources explicitly caution this middle option can combine the drawbacks of both other approaches without proportional benefit). Database-per-tenant: each tenant gets an entirely separate database (potentially on separate server instances), providing the strongest isolation — ideal for tenants with strict regulatory/compliance requirements demanding physical data separation — but it's by far the most operationally and financially expensive option: connection pooling must scale with tenant count (commonly requiring an external pooler like PgBouncer), and cross-tenant migrations, monitoring, and reporting all become substantially harder to coordinate consistently. A commonly recommended pragmatic path: start with the shared-schema model (with disciplined, consistently-enforced tenant_id scoping — every query, index, and even cache key including the tenant_id from day one) since it serves the vast majority of tenants cheaply, and selectively promote only specific tenants with genuine compliance, scale, or customization needs to schema-per-tenant or database-per-tenant as those requirements actually materialize, rather than defaulting to the most isolated (and expensive) model upfront.",
+      "sources": [
+        {
+          "title": "Multi-Tenant Database Architecture Patterns Explained | Bytebase",
+          "url": "https://www.bytebase.com/blog/multi-tenant-database-architecture-patterns-explained/",
+          "domain": "bytebase.com"
+        },
+        {
+          "title": "Multi-Tenant Architecture: Database Per Tenant vs Shared Schema — Pros and Cons (2026) - DEV Community",
+          "url": "https://dev.to/young_gao/multi-tenant-architecture-database-per-tenant-vs-shared-schema-1n2e",
+          "domain": "dev.to"
+        },
+        {
+          "title": "How to Design a Multi-Tenant Database in MySQL",
+          "url": "https://oneuptime.com/blog/post/2026-03-31-mysql-design-multi-tenant-database/view",
+          "domain": "oneuptime.com"
+        }
+      ],
+      "id": 57
+    },
+    {
+      "question": "What are the different categories of SQL commands (DDL, DML, DCL, TCL)?",
+      "difficulty": "Easy",
+      "answer": "SQL commands are grouped by what they operate on: DDL (Data Definition Language) defines or modifies database structure — CREATE, ALTER, DROP, TRUNCATE — these commands are typically auto-committed and can't usually be rolled back. DML (Data Manipulation Language) works with the actual data inside tables — INSERT, UPDATE, DELETE — these changes can be rolled back if not yet committed. Many references also split out DQL (Data Query Language) for SELECT, since it only reads data rather than manipulating it, though older material sometimes lumps SELECT into DML. DCL (Data Control Language) manages permissions — GRANT and REVOKE — controlling who can access or modify objects. TCL (Transaction Control Language) manages the boundaries of transactions — COMMIT (permanently save changes), ROLLBACK (undo changes since the last commit/savepoint), and SAVEPOINT (mark a point within a transaction to roll back to).\nExample: `CREATE TABLE Employee(...)` is DDL; `INSERT INTO Employee VALUES(...)` is DML; `GRANT SELECT ON Employee TO analyst_role` is DCL; `COMMIT;` is TCL.",
+      "sources": [
+        {
+          "title": "SQL Commands Explained: DDL, DML, DCL, and TCL with Practical Examples",
+          "url": "https://medium.com/@saravanan.aravindh02/sql-commands-explained-ddl-dml-dcl-and-tcl-with-practical-examples-f583a10a19f9",
+          "domain": "medium.com"
+        },
+        {
+          "title": "SQL Commands: DDL, DML, DCL, TCL, DQL (With Examples) - InterviewBit",
+          "url": "https://www.interviewbit.com/blog/sql-commands/",
+          "domain": "interviewbit.com"
+        }
+      ],
+      "id": 58
+    },
+    {
+      "question": "What is the difference between the WHERE clause and the HAVING clause?",
+      "difficulty": "Easy",
+      "answer": "WHERE filters individual rows before any grouping or aggregation happens; HAVING filters groups after GROUP BY has aggregated them. Because of this timing difference, WHERE cannot reference aggregate functions like SUM() or COUNT() directly (the aggregates don't exist yet at that stage), while HAVING can and typically does. WHERE can be used alone (e.g., in a simple SELECT, UPDATE, or DELETE); HAVING is meant to be used together with GROUP BY (though some databases allow it without GROUP BY, treating the whole result as one group) — using HAVING without any aggregation is unusual and usually a sign WHERE should have been used instead.\nExample:\n```sql\n-- WHERE filters rows first\nSELECT department, SUM(salary) AS total\nFROM employees\nWHERE hire_date >= '2023-01-01'  -- filters individual rows\nGROUP BY department\nHAVING SUM(salary) > 500000;      -- filters the grouped/aggregated results\n```\nHere WHERE removes employees hired before 2023 before grouping; HAVING then keeps only departments whose total salary exceeds 500,000 after the SUM is computed.",
+      "sources": [
+        {
+          "title": "WHERE vs HAVING Clause in SQL - GeeksforGeeks",
+          "url": "https://www.geeksforgeeks.org/sql/difference-between-where-and-having-clause-in-sql/",
+          "domain": "geeksforgeeks.org"
+        },
+        {
+          "title": "Difference between WHERE and HAVING in SQL",
+          "url": "https://medium.com/@mohinichandra1999/difference-between-where-and-having-in-sql-96523e6b7445",
+          "domain": "medium.com"
+        }
+      ],
+      "id": 59
+    },
+    {
+      "question": "What is a view in SQL, and how does it differ from a regular table?",
+      "difficulty": "Easy",
+      "answer": "A view is a virtual table defined by a stored SELECT query — it doesn't store data itself (in the common case); instead, each time you query the view, the underlying SELECT runs against the base tables and returns the result as if it were a table. A regular table physically stores its own data on disk. Because a view is just a saved query, it's useful for simplifying repeated complex JOINs/filters, presenting a restricted subset of columns/rows to certain users for security, and providing a stable interface even if the underlying table structure changes slightly (a form of logical data independence). Views can often be queried with SELECT and, if simple enough (e.g., based on a single table without aggregation), can support INSERT/UPDATE/DELETE, though updatability is restricted for views involving joins, GROUP BY, or aggregates. A materialized view is a distinct concept — it does physically store the query's result and must be refreshed, trading storage for query speed.\nExample: `CREATE VIEW active_customers AS SELECT id, name FROM customers WHERE status = 'active';` — querying `active_customers` always reflects the live data in `customers`.",
+      "sources": [
+        {
+          "title": "Comparing SQL Views and Stored Procedures - DEV Community",
+          "url": "https://dev.to/rachelsoderberg/comparing-sql-views-and-stored-procedures-4pfb",
+          "domain": "dev.to"
+        },
+        {
+          "title": "SQL Server Stored Procedure vs View",
+          "url": "https://www.tsql.info/sql-server/stored-procedure-vs-view.php",
+          "domain": "tsql.info"
+        }
+      ],
+      "id": 60
+    },
+    {
+      "question": "What are the different types of SQL joins (INNER, LEFT, RIGHT, FULL, self join), and when would you use each?",
+      "difficulty": "Medium",
+      "answer": "A JOIN combines rows from two or more tables based on a related column. INNER JOIN returns only rows that have matching values in both tables — use it when you only want records that exist on both sides (e.g., orders that have a valid customer). LEFT (OUTER) JOIN returns all rows from the left table plus matched rows from the right table, filling unmatched right-side columns with NULL — use it when you need every row from the primary table regardless of whether a match exists (e.g., all customers, even those with zero orders). RIGHT (OUTER) JOIN is the mirror of LEFT — all rows from the right table, matched or not; it's less commonly used because most people restructure the query as a LEFT JOIN instead. FULL (OUTER) JOIN returns all rows from both tables, matching where possible and filling NULLs where there's no match on either side — use it to see the union of both tables' data, including unmatched rows from each. A self-join joins a table to itself (using aliases) to compare rows within the same table — commonly used for hierarchical data like an `employees` table with a `manager_id` referencing another row in the same table.\nExample:\n```sql\nSELECT c.name, o.order_id\nFROM customers c\nLEFT JOIN orders o ON c.id = o.customer_id;  -- includes customers with no orders\n\nSELECT e.name AS employee, m.name AS manager\nFROM employees e\nJOIN employees m ON e.manager_id = m.id;      -- self-join\n```\nEdge case: MySQL doesn't support FULL OUTER JOIN natively; it's typically emulated with a UNION of LEFT and RIGHT JOINs.",
+      "sources": [
+        {
+          "title": "Top 100 SQL Interview Questions and Answers (2026) - GeeksforGeeks",
+          "url": "https://www.geeksforgeeks.org/sql/sql-interview-questions/",
+          "domain": "geeksforgeeks.org"
+        },
+        {
+          "title": "Top 75+ DBMS Interview Questions and Answers - InterviewBit",
+          "url": "https://www.interviewbit.com/dbms-interview-questions/",
+          "domain": "interviewbit.com"
+        }
+      ],
+      "id": 61
+    },
+    {
+      "question": "What is the difference between a clustered index and a non-clustered index?",
+      "difficulty": "Medium",
+      "answer": "A clustered index determines the physical storage order of the table's rows — the table's data is literally organized on disk according to the clustered index key, so its leaf level IS the actual data. Because of this, a table can have only one clustered index (rows can only be physically sorted one way). A non-clustered index is a separate structure: its leaf level holds the index key plus a pointer (row locator) back to the actual row rather than the row itself, so a table can have many non-clustered indexes. In systems like SQL Server and MySQL/InnoDB, the primary key is the clustered index by default, so physical row order follows the PK; looking up via a non-clustered index typically requires an extra step — following the pointer back to the base row (sometimes called a 'bookmark' or 'key lookup') — unless the non-clustered index is 'covering' (contains all the columns the query needs, avoiding that extra hop).\nExample: `CREATE INDEX idx_orders_customer ON orders (customer_id);` creates a non-clustered secondary index in InnoDB, while the primary key (`order_id`) remains the clustered index. Note: PostgreSQL heap tables don't have a true clustered index in the SQL Server sense — `CLUSTER` there is a one-time physical reorganization, not a continuously maintained structure — so this concept is somewhat engine-specific.",
+      "sources": [
+        {
+          "title": "DBMS Interview Questions (Q22: clustered vs non-clustered indexing)",
+          "url": "https://www.gatesmashers.com/resources/dbms-interview-questions",
+          "domain": "gatesmashers.com"
+        },
+        {
+          "title": "SQL Indexes Interview Questions and Answers (2026) | CodeBegun",
+          "url": "https://www.codebegun.com/interview/sql/indexes",
+          "domain": "codebegun.com"
+        }
+      ],
+      "id": 62
+    },
+    {
+      "question": "What is a dirty read, and which isolation level allows it to happen?",
+      "difficulty": "Medium",
+      "answer": "A dirty read happens when one transaction reads data that another transaction has written but not yet committed. If the writing transaction later rolls back, the reading transaction has acted on data that was never actually persisted — 'dirty' data. This is allowed by the READ UNCOMMITTED isolation level, the weakest of the standard SQL isolation levels; READ COMMITTED and stronger levels prevent it by ensuring a transaction never sees another transaction's uncommitted changes.\nExample: T1 updates a balance from 400 to 500 but hasn't committed. T2, running under READ UNCOMMITTED, reads the balance and sees 500. T1 then rolls back, reverting the balance to 400 — but T2 already acted on the value 500, which never officially existed. In practice, READ UNCOMMITTED is rarely used in production because of this risk; it's occasionally chosen for pure reporting queries on tables where staleness/dirtiness is acceptable in exchange for avoiding read locks and reducing contention.",
+      "sources": [
+        {
+          "title": "DBMS Interview Questions (Q15: dirty reads)",
+          "url": "https://www.gatesmashers.com/resources/dbms-interview-questions",
+          "domain": "gatesmashers.com"
+        },
+        {
+          "title": "Isolation Levels in OLE DB - Microsoft Learn",
+          "url": "https://learn.microsoft.com/ja-jp/previous-versions/windows/desktop/ms723120(v=vs.85)",
+          "domain": "learn.microsoft.com"
+        }
+      ],
+      "id": 63
+    },
+    {
+      "question": "What is the difference between a stored procedure and a trigger?",
+      "difficulty": "Medium",
+      "answer": "A stored procedure is a named, precompiled block of SQL/procedural code that is explicitly invoked — by an application, another procedure, or a user — usually with input/output parameters, and can perform complex, multi-statement business logic including transactions. A trigger is a special kind of procedure that is automatically fired by the database engine in response to a specific DML event (INSERT, UPDATE, or DELETE) on a table — it's never called directly; it runs implicitly whenever the triggering event occurs. Triggers come in different types: BEFORE triggers run prior to the operation (useful for validation or modifying the incoming data), AFTER triggers run after the operation completes (useful for logging/auditing or cascading changes), and INSTEAD OF triggers replace the operation entirely (commonly used to make otherwise non-updatable views writable). SQL Server, notably, does not support BEFORE triggers — only AFTER and INSTEAD OF.\nTrade-offs: stored procedures give explicit, traceable control flow that's easy for developers to reason about; triggers automate consistency (e.g., maintaining an audit log automatically) but their implicit execution can make debugging harder, since the logic 'hides' behind ordinary DML statements and isn't visible at the call site — overusing triggers for complex business logic is a common anti-pattern.",
+      "sources": [
+        {
+          "title": "Stored Procedures, Views, Triggers and Cursors in SQL",
+          "url": "https://medium.com/@madu.sharadika/stored-procedures-views-and-triggers-in-sql-3845708d0ee7",
+          "domain": "medium.com"
+        },
+        {
+          "title": "Comparing SQL Views and Stored Procedures - DEV Community",
+          "url": "https://dev.to/rachelsoderberg/comparing-sql-views-and-stored-procedures-4pfb",
+          "domain": "dev.to"
+        }
+      ],
+      "id": 64
+    },
+    {
+      "question": "What is a phantom read, and which isolation level is needed to prevent it?",
+      "difficulty": "Hard",
+      "answer": "A phantom read occurs when a transaction re-executes a range query (e.g., `WHERE amount > 1000`) and gets a different set of matching rows the second time, because another transaction inserted or deleted rows that satisfy the condition in between the two executions — the existing rows themselves haven't changed (that would be a non-repeatable read), but the set of rows matching the predicate has. This is distinct from a non-repeatable read, which concerns a single already-read row changing value; a phantom concerns new or vanished rows appearing in a range. REPEATABLE READ typically locks (or snapshots) the specific rows it has already read, preventing non-repeatable reads, but by default doesn't prevent new rows from appearing that match the same WHERE condition — so phantoms can still occur at REPEATABLE READ in the strict ANSI SQL definition. SERIALIZABLE, the strictest standard isolation level, prevents phantoms as well, typically by using range/predicate locking (locking the query's predicate, not just the rows it currently matches) or by using serializable snapshot isolation (SSI) with conflict detection at commit time, ensuring the schedule behaves as if transactions ran one at a time.\nCaveat worth mentioning in an interview: actual engine behavior varies — for example, PostgreSQL's REPEATABLE READ (implemented via MVCC snapshot isolation) already prevents phantoms for statements within a transaction, unlike the strict ANSI definition, so 'which level prevents phantoms' can be engine-dependent, and it's worth checking the specific database's documentation rather than assuming the ANSI table always applies exactly.",
+      "sources": [
+        {
+          "title": "Isolation Levels in OLE DB - Microsoft Learn",
+          "url": "https://learn.microsoft.com/ja-jp/previous-versions/windows/desktop/ms723120(v=vs.85)",
+          "domain": "learn.microsoft.com"
+        },
+        {
+          "title": "Understanding Phantom Reads in Databases",
+          "url": "https://medium.com/@nikhillad01/understanding-phantom-reads-in-databases-ddc8ffa36e4c",
+          "domain": "medium.com"
+        }
+      ],
+      "id": 65
+    }
+  ],
+  "sources": [
+    {
+      "title": "Top 100 SQL Interview Questions and Answers (2025) - GeeksforGeeks",
+      "url": "https://www.geeksforgeeks.org/sql/sql-interview-questions/",
+      "domain": "geeksforgeeks.org",
+      "count": 22
+    },
+    {
+      "title": "PostgreSQL: Documentation: 18: 9.22. Window Functions",
+      "url": "https://www.postgresql.org/docs/current/functions-window.html",
+      "domain": "postgresql.org",
+      "count": 7
+    },
+    {
+      "title": "The Best Medium-Hard Data Analyst SQL Interview Questions",
+      "url": "https://gist.github.com/monbang/76151aa5f36d5c058f95ce396d992bdb",
+      "domain": "gist.github.com",
+      "count": 4
+    },
+    {
+      "title": "Top 20 SQL Interview Questions on Window Functions 2024. – datainked.com",
+      "url": "https://datainked.com/index.php/2024/11/21/top-20-sql-interview-questions-on-window-functions-2024/",
+      "domain": "datainked.com",
+      "count": 3
+    },
+    {
+      "title": "SQL Window Functions Explained: The Complete Visual Guide (2026) | SQLNoir",
+      "url": "https://www.sqlnoir.com/blog/sql-window-functions",
+      "domain": "sqlnoir.com",
+      "count": 3
+    },
+    {
+      "title": "30 SQL Window Function Questions for Interviews | Medium",
+      "url": "https://medium.com/@krthiak/30-sql-window-functionion-questions-for-interviews-day-47-of-100-days-of-data-engineering-ai-and-638bef1af0f6",
+      "domain": "medium.com",
+      "count": 3
+    },
+    {
+      "title": "40+ SQL Interview Questions and Answers to Crack Your Next Interview (2026)",
+      "url": "https://interviewkickstart.com/blogs/interview-questions/sql-interview-questions",
+      "domain": "interviewkickstart.com",
+      "count": 3
+    },
+    {
+      "title": "PostgreSQL: Documentation: 18: CREATE VIEW",
+      "url": "https://www.postgresql.org/docs/current/sql-createview.html",
+      "domain": "postgresql.org",
+      "count": 2
+    },
+    {
+      "title": "SQL Window Functions Interview Questions and Answers | by Dr. Sanjay Kumar | Medium",
+      "url": "https://skphd.medium.com/sql-window-functions-interview-questions-and-answers-127ee0be483b",
+      "domain": "skphd.medium.com",
+      "count": 2
+    },
+    {
+      "title": "PostgreSQL: Documentation: 18: 9.2. Comparison Functions and Operators",
+      "url": "https://www.postgresql.org/docs/current/functions-comparison.html",
+      "domain": "postgresql.org",
+      "count": 2
+    },
+    {
+      "title": "PostgreSQL: Documentation: 18: ALTER TABLE",
+      "url": "https://www.postgresql.org/docs/current/sql-altertable.html",
+      "domain": "postgresql.org",
+      "count": 2
+    },
+    {
+      "title": "PostgreSQL: Documentation: 14: 5.6. Modifying Tables",
+      "url": "https://www.postgresql.org/docs/14//ddl-alter.html",
+      "domain": "postgresql.org",
+      "count": 2
+    },
+    {
+      "title": "MOST FREQUENTLY ASKED SQL INTERVIEW QUESTIONS - The Vista Academy",
+      "url": "https://www.thevistaacademy.com/most-frequently-asked-sql-interview-questions/",
+      "domain": "thevistaacademy.com",
+      "count": 2
+    },
+    {
+      "title": "Top 100+ SQL Interview Questions And Answers in 2025 - CETPA Infotech",
+      "url": "https://www.cetpainfotech.com/blogs/sql-interview-questions",
+      "domain": "cetpainfotech.com",
+      "count": 2
+    },
+    {
+      "title": "Comparing SQL Views and Stored Procedures - DEV Community",
+      "url": "https://dev.to/rachelsoderberg/comparing-sql-views-and-stored-procedures-4pfb",
+      "domain": "dev.to",
+      "count": 2
+    },
+    {
+      "title": "DBMS Interview Questions (Q22: clustered vs non-clustered indexing)",
+      "url": "https://www.gatesmashers.com/resources/dbms-interview-questions",
+      "domain": "gatesmashers.com",
+      "count": 2
+    },
+    {
+      "title": "Isolation Levels in OLE DB - Microsoft Learn",
+      "url": "https://learn.microsoft.com/ja-jp/previous-versions/windows/desktop/ms723120(v=vs.85)",
+      "domain": "learn.microsoft.com",
+      "count": 2
+    },
+    {
+      "title": "HTML5 Security - OWASP Cheat Sheet Series",
+      "url": "https://cheatsheetseries.owasp.org/cheatsheets/HTML5_Security_Cheat_Sheet.html",
+      "domain": "cheatsheetseries.owasp.org",
+      "count": 2
+    },
+    {
+      "title": "useRef – React",
+      "url": "https://react.dev/reference/react/useRef",
+      "domain": "react.dev",
+      "count": 1
+    },
+    {
+      "title": "top-reactjs-interview-questions README",
+      "url": "https://github.com/greatfrontend/top-reactjs-interview-questions",
+      "domain": "github.com",
+      "count": 1
+    },
+    {
+      "title": "Reusing Logic with Custom Hooks – React",
+      "url": "https://react.dev/learn/reusing-logic-with-custom-hooks",
+      "domain": "react.dev",
+      "count": 1
+    },
+    {
+      "title": "React Coding Interview Questions 2026 – Playcode",
+      "url": "https://playcode.io/blog/react-coding-interview-questions-2026",
+      "domain": "playcode.io",
+      "count": 1
+    },
+    {
+      "title": "Synchronizing with Effects – React",
+      "url": "https://react.dev/learn/synchronizing-with-effects",
+      "domain": "react.dev",
+      "count": 1
+    },
+    {
+      "title": "ARIA Authoring Practices Guide – Tabs Pattern",
+      "url": "https://www.w3.org/WAI/ARIA/apg/patterns/tabs/",
+      "domain": "w3.org",
+      "count": 1
+    },
+    {
+      "title": "ARIA Authoring Practices Guide – Accordion Pattern",
+      "url": "https://www.w3.org/WAI/ARIA/apg/patterns/accordion/",
+      "domain": "w3.org",
+      "count": 1
+    },
+    {
+      "title": "React Machine Coding Interview Guide: AutoSuggest Component – Medium",
+      "url": "https://medium.com/@sanjeev-singh/react-machine-coding-interview-guide-autosuggest-component-91b8b20494c8",
+      "domain": "medium.com",
+      "count": 1
+    },
+    {
+      "title": "ARIA Authoring Practices Guide – Combobox Pattern",
+      "url": "https://www.w3.org/WAI/ARIA/apg/patterns/combobox/",
+      "domain": "w3.org",
+      "count": 1
+    },
+    {
+      "title": "char and varchar (Transact-SQL) - SQL Server | Microsoft Learn",
+      "url": "https://learn.microsoft.com/en-us/sql/t-sql/data-types/char-and-varchar-transact-sql?view=sql-server-ver17",
+      "domain": "learn.microsoft.com",
+      "count": 1
+    },
+    {
+      "title": "MySQL :: MySQL 9.7 Reference Manual :: 13.3.2 The CHAR and VARCHAR Types",
+      "url": "https://dev.mysql.com/doc/en/char.html",
+      "domain": "dev.mysql.com",
+      "count": 1
+    },
+    {
+      "title": "CHAR vs VARCHAR vs VARCHAR(MAX) in SQL Server | Simple Talk",
+      "url": "https://www.red-gate.com/simple-talk/databases/sql-server/learn/when-use-char-varchar-varcharmax/",
+      "domain": "red-gate.com",
+      "count": 1
+    },
+    {
+      "title": "TRUNCATE vs DELETE in SQL: Differences Across PostgreSQL, MySQL, and SQL Server | Bytebase",
+      "url": "https://www.bytebase.com/blog/truncate-vs-delete-sql/",
+      "domain": "bytebase.com",
+      "count": 1
+    },
+    {
+      "title": "PostgreSQL: DELETE vs. TRUNCATE | CYBERTEC PostgreSQL",
+      "url": "https://www.cybertec-postgresql.com/en/postgresql-delete-vs-truncate/",
+      "domain": "cybertec-postgresql.com",
+      "count": 1
+    },
+    {
+      "title": "TRUNCATE vs DELETE vs DROP: Remove Rows Fast in PostgreSQL | Postgres Scripts",
+      "url": "https://www.postgresscripts.com/post/remove-all-rows-fast-truncate-vs-delete-vs-drop-in-postgresql/",
+      "domain": "postgresscripts.com",
+      "count": 1
+    },
+    {
+      "title": "PostgreSQL: Documentation: 18: 5.5. Constraints",
+      "url": "https://www.postgresql.org/docs/current/ddl-constraints.html",
+      "domain": "postgresql.org",
+      "count": 1
+    },
+    {
+      "title": "PostgreSQL: Documentation: 8.1: Constraints",
+      "url": "https://www.postgresql.org/docs/8.1/ddl-constraints.html",
+      "domain": "postgresql.org",
+      "count": 1
+    },
+    {
+      "title": "Recursive queries in PostgreSQL | an introduction | CYBERTEC PostgreSQL",
+      "url": "https://www.cybertec-postgresql.com/en/recursive-queries-postgresql/",
+      "domain": "cybertec-postgresql.com",
+      "count": 1
+    },
+    {
+      "title": "Fun with SQL: Recursive CTEs in Postgres - Citus Data",
+      "url": "https://www.citusdata.com/blog/2018/05/15/fun-with-sql-recursive-ctes/",
+      "domain": "citusdata.com",
+      "count": 1
+    },
+    {
+      "title": "Database Normalization: 1NF, 2NF, and 3NF | Boot.dev",
+      "url": "https://www.boot.dev/blog/backend/database-normalization",
+      "domain": "boot.dev",
+      "count": 1
+    },
+    {
+      "title": "Third normal form - Wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Third_normal_form",
+      "domain": "en.wikipedia.org",
+      "count": 1
+    },
+    {
+      "title": "The RANK and DENSE_RANK Functions in PostgreSQL | Tiger Data",
+      "url": "https://www.tigerdata.com/learn/understanding-rank-and-dense_rank-in-postgres",
+      "domain": "tigerdata.com",
+      "count": 1
+    },
+    {
+      "title": "PostgreSQL and Window Functions: differences between row_number(), rank(), and dense_rank()",
+      "url": "https://jereze.com/code/postgresql-row_number-rank-send_rank/",
+      "domain": "jereze.com",
+      "count": 1
+    },
+    {
+      "title": "SQL VIEW Comparison in SQL Server, Oracle and PostgreSQL",
+      "url": "https://www.mssqltips.com/sqlservertip/6929/sql-view-comparison-sql-server-oracle-postgresql/",
+      "domain": "mssqltips.com",
+      "count": 1
+    },
+    {
+      "title": "Oracle and PostgreSQL materialized views - Oracle to Aurora PostgreSQL Migration Playbook",
+      "url": "https://docs.aws.amazon.com/dms/latest/oracle-to-aurora-postgresql-migration-playbook/chap-oracle-aurora-pg.special.matviews.html",
+      "domain": "docs.aws.amazon.com",
+      "count": 1
+    },
+    {
+      "title": "PostgreSQL: Documentation: 18: 13.2. Transaction Isolation",
+      "url": "https://www.postgresql.org/docs/current/transaction-iso.html",
+      "domain": "postgresql.org",
+      "count": 1
+    },
+    {
+      "title": "PostgreSQL Transaction Isolation Levels & MVCC | Mydbops",
+      "url": "https://www.mydbops.com/blog/postgresql-transaction-isolation-levels-guide",
+      "domain": "mydbops.com",
+      "count": 1
+    },
+    {
+      "title": "Deadlocks Guide - SQL Server | Microsoft Learn",
+      "url": "https://learn.microsoft.com/en-us/sql/relational-databases/sql-server-deadlocks-guide?view=sql-server-ver17",
+      "domain": "learn.microsoft.com",
+      "count": 1
+    },
+    {
+      "title": "SQL Server Deadlocks: Detect & Prevent | DBSync",
+      "url": "https://www.mydbsync.com/blogs/unlocking-sql-server-deadlocks",
+      "domain": "mydbsync.com",
+      "count": 1
+    },
+    {
+      "title": "SQL Server Deadlocks: Causes, Monitoring & Fixes",
+      "url": "https://www.devart.com/dbforge/sql/studio/sql-server-deadlock.html",
+      "domain": "devart.com",
+      "count": 1
+    },
+    {
+      "title": "Stored Procedure, SQL Function, Triggers In Brief - c-sharpcorner.com",
+      "url": "https://www.c-sharpcorner.com/blogs/about-store-proc-function-trigger-in-brif",
+      "domain": "c-sharpcorner.com",
+      "count": 1
+    },
+    {
+      "title": "Choice Between Stored Procedures, Functions, Views, Triggers, Inline SQL (updated)",
+      "url": "https://www.paragoncorporation.com/ArticleDetail.aspx?ArticleID=28",
+      "domain": "paragoncorporation.com",
+      "count": 1
+    },
+    {
+      "title": "SQL Window Functions Interview Questions (2026) | AI2SQL",
+      "url": "https://builder.ai2sql.io/blog/sql-window-functions-interview",
+      "domain": "builder.ai2sql.io",
+      "count": 1
+    },
+    {
+      "title": "SQL Window Functions Interview Questions: The Complete Guide | Let's Data Science",
+      "url": "https://letsdatascience.com/blog/sql-window-functions-interview-questions",
+      "domain": "letsdatascience.com",
+      "count": 1
+    },
+    {
+      "title": "SQL Window Functions - KDnuggets",
+      "url": "https://www.kdnuggets.com/2022/04/sql-window-functions.html",
+      "domain": "kdnuggets.com",
+      "count": 1
+    },
+    {
+      "title": "PostgreSQL Join Optimization: Nested Loop, Hash, and Merge | Medium",
+      "url": "https://medium.com/@philmcc/postgresql-join-optimization-nested-loop-hash-and-merge-c87b86373908",
+      "domain": "medium.com",
+      "count": 1
+    },
+    {
+      "title": "How to Solve Gaps and Islands SQL Interview Questions with LAG and ROW_NUMBER",
+      "url": "https://sqlpad.io/tutorial/how-to-solve-gaps-and-islands-sql-interview-questions-with-lag-and-row-number/",
+      "domain": "sqlpad.io",
+      "count": 1
+    },
+    {
+      "title": "SQL Window functions and Interview Practice Questions | Medium",
+      "url": "https://medium.com/@keshavkhandelwal142/the-gaps-and-islands-problem-sql-interview-practice-8c087a511cd1",
+      "domain": "medium.com",
+      "count": 1
+    },
+    {
+      "title": "Gaps and Islands in SQL: Techniques & Examples | Simple Talk",
+      "url": "https://www.red-gate.com/simple-talk/databases/sql-server/t-sql-programming-sql-server/introduction-to-gaps-and-islands-analysis/",
+      "domain": "red-gate.com",
+      "count": 1
+    },
+    {
+      "title": "GitHub - Devinterview-io/sql-interview-questions",
+      "url": "https://github.com/Devinterview-io/sql-interview-questions",
+      "domain": "github.com",
+      "count": 1
+    },
+    {
+      "title": "Parameterized Queries - The Only Real Fix for SQL Injection - DEV Community",
+      "url": "https://dev.to/kriosa/parameterized-queries-the-only-real-fix-for-sql-injection-and-what-developers-get-wrong-about-them-21h3",
+      "domain": "dev.to",
+      "count": 1
+    },
+    {
+      "title": "Top SQL Performance Tuning Interview Questions and Answers",
+      "url": "https://www.dbvis.com/thetable/top-sql-performance-tuning-interview-questions-and-answers/",
+      "domain": "dbvis.com",
+      "count": 1
+    },
+    {
+      "title": "Nested set model - Wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Nested_set_model",
+      "domain": "en.wikipedia.org",
+      "count": 1
+    },
+    {
+      "title": "Storing Hierarchical Data in Relational Databases with SQL",
+      "url": "https://adamdjellouli.com/articles/databases_notes/03_sql/09_hierarchical_data",
+      "domain": "adamdjellouli.com",
+      "count": 1
+    },
+    {
+      "title": "Mastering SQL Trees: From Adjacency Lists to Nested Sets and Closure Tables - TeddySmith.IO",
+      "url": "https://teddysmith.io/sql-trees/",
+      "domain": "teddysmith.io",
+      "count": 1
+    },
+    {
+      "title": "Stored Procedures and Triggers Interview Questions - CodeWithCurious",
+      "url": "https://codewithcurious.com/interview/stored-procedures-and-triggers-interview-questions/",
+      "domain": "codewithcurious.com",
+      "count": 1
+    },
+    {
+      "title": "SQL Server Interview Questions Guide - Scribd",
+      "url": "https://www.scribd.com/doc/36095071/SQL-Server",
+      "domain": "scribd.com",
+      "count": 1
+    },
+    {
+      "title": "Multi-Tenant Database Architecture Patterns Explained | Bytebase",
+      "url": "https://www.bytebase.com/blog/multi-tenant-database-architecture-patterns-explained/",
+      "domain": "bytebase.com",
+      "count": 1
+    },
+    {
+      "title": "Multi-Tenant Architecture: Database Per Tenant vs Shared Schema — Pros and Cons (2026) - DEV Community",
+      "url": "https://dev.to/young_gao/multi-tenant-architecture-database-per-tenant-vs-shared-schema-1n2e",
+      "domain": "dev.to",
+      "count": 1
+    },
+    {
+      "title": "How to Design a Multi-Tenant Database in MySQL",
+      "url": "https://oneuptime.com/blog/post/2026-03-31-mysql-design-multi-tenant-database/view",
+      "domain": "oneuptime.com",
+      "count": 1
+    },
+    {
+      "title": "SQL Commands Explained: DDL, DML, DCL, and TCL with Practical Examples",
+      "url": "https://medium.com/@saravanan.aravindh02/sql-commands-explained-ddl-dml-dcl-and-tcl-with-practical-examples-f583a10a19f9",
+      "domain": "medium.com",
+      "count": 1
+    },
+    {
+      "title": "SQL Commands: DDL, DML, DCL, TCL, DQL (With Examples) - InterviewBit",
+      "url": "https://www.interviewbit.com/blog/sql-commands/",
+      "domain": "interviewbit.com",
+      "count": 1
+    },
+    {
+      "title": "WHERE vs HAVING Clause in SQL - GeeksforGeeks",
+      "url": "https://www.geeksforgeeks.org/sql/difference-between-where-and-having-clause-in-sql/",
+      "domain": "geeksforgeeks.org",
+      "count": 1
+    },
+    {
+      "title": "Difference between WHERE and HAVING in SQL",
+      "url": "https://medium.com/@mohinichandra1999/difference-between-where-and-having-in-sql-96523e6b7445",
+      "domain": "medium.com",
+      "count": 1
+    },
+    {
+      "title": "SQL Server Stored Procedure vs View",
+      "url": "https://www.tsql.info/sql-server/stored-procedure-vs-view.php",
+      "domain": "tsql.info",
+      "count": 1
+    },
+    {
+      "title": "Top 75+ DBMS Interview Questions and Answers - InterviewBit",
+      "url": "https://www.interviewbit.com/dbms-interview-questions/",
+      "domain": "interviewbit.com",
+      "count": 1
+    },
+    {
+      "title": "SQL Indexes Interview Questions and Answers (2026) | CodeBegun",
+      "url": "https://www.codebegun.com/interview/sql/indexes",
+      "domain": "codebegun.com",
+      "count": 1
+    },
+    {
+      "title": "Stored Procedures, Views, Triggers and Cursors in SQL",
+      "url": "https://medium.com/@madu.sharadika/stored-procedures-views-and-triggers-in-sql-3845708d0ee7",
+      "domain": "medium.com",
+      "count": 1
+    },
+    {
+      "title": "Understanding Phantom Reads in Databases",
+      "url": "https://medium.com/@nikhillad01/understanding-phantom-reads-in-databases-ddc8ffa36e4c",
+      "domain": "medium.com",
+      "count": 1
+    },
+    {
+      "title": "Secure Token Storage for SPAs: Avoiding XSS Theft",
+      "url": "https://safeguard.sh/resources/blog/single-page-application-token-storage-security",
+      "domain": "safeguard.sh",
+      "count": 1
+    },
+    {
+      "title": "LocalStorage vs httpOnly Cookies for JWT: Which Is More Secure? - Wisp CMS",
+      "url": "https://www.wisp.blog/blog/understanding-token-storage-local-storage-vs-httponly-cookies",
+      "domain": "wisp.blog",
+      "count": 1
+    },
+    {
+      "title": "Array.prototype.sort() - JavaScript | MDN",
+      "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort",
+      "domain": "developer.mozilla.org",
+      "count": 1
+    },
+    {
+      "title": "Private elements - JavaScript | MDN",
+      "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes/Private_elements",
+      "domain": "developer.mozilla.org",
+      "count": 1
+    },
+    {
+      "title": "Template literals (Template strings) - JavaScript | MDN",
+      "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals",
+      "domain": "developer.mozilla.org",
+      "count": 1
+    },
+    {
+      "title": "RegExp: lastIndex - JavaScript | MDN",
+      "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/lastIndex",
+      "domain": "developer.mozilla.org",
+      "count": 1
+    },
+    {
+      "title": "RegExp - JavaScript | MDN",
+      "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp",
+      "domain": "developer.mozilla.org",
+      "count": 1
+    },
+    {
+      "title": "Pure Functions and Immutability: Building Robust JavaScript Code - NashTech Blog",
+      "url": "https://blog.nashtechglobal.com/pure-functions-and-immutability-building-robust-javascript-code/",
+      "domain": "blog.nashtechglobal.com",
+      "count": 1
+    },
+    {
+      "title": "Chapter 01 – Pure Functions: Side Effects & Immutability",
+      "url": "https://www.learnyouafunctionaljavascript.com/chapter-01-pure-functions-side-effects-immutability/",
+      "domain": "learnyouafunctionaljavascript.com",
+      "count": 1
+    }
+  ]
+}
