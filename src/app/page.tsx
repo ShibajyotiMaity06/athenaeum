@@ -99,8 +99,8 @@ export default async function HomePage() {
          ───────────────────────────────────────────────────────────────────── */}
       <section className="relative overflow-hidden pt-12 pb-20 sm:pt-20 sm:pb-28 border-b border-[var(--border-recessed)]">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
-          <div className="grid gap-12 lg:grid-cols-[1.1fr_0.9fr] items-center">
-            <div>
+          <div className="grid gap-8 lg:gap-12 lg:grid-cols-[1.15fr_0.85fr] items-center">
+            <div className="min-w-0">
               {/* Live Trusted Users Counter Badge */}
               <div className="mb-6">
                 <TrustedUsersBadge initialCount={initialUserCount} />
@@ -114,24 +114,25 @@ export default async function HomePage() {
               </h1>
 
               <p className="mt-6 text-base sm:text-lg text-[var(--text-muted)] leading-relaxed max-w-xl">
-                One unified platform for Web Development, Backend, Core CS, System Design &amp; DevOps.
-                Graded strictly from Foundations to Internals. <strong className="text-[var(--text-primary)]"><GeoPrice /> lifetime</strong>, no subscription.
+                One unified platform for Frontend, Backend, Core CS, System Design &amp; Curated Technical Interview Screenings.
+                3,750+ questions graded strictly from Foundations to Internals. <strong className="text-[var(--text-primary)]">Lifetime access from ₹299</strong>, no subscription.
               </p>
 
               {/* Action Buttons */}
-              <div className="mt-8 flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
+              <div className="mt-8 flex flex-col sm:flex-row items-stretch sm:items-center gap-3.5">
                 <Link
-                  href="#technologies"
-                  className="btn-industrial btn-industrial-primary py-4 px-8 text-sm shadow-[var(--shadow-btn-primary)]"
+                  href="/interview-prep"
+                  className="btn-industrial btn-industrial-primary py-4 px-7 text-xs sm:text-sm shadow-[var(--shadow-btn-primary)] flex items-center justify-center gap-2"
                 >
-                  <span>Start Free · Browse Questions</span>
-                  <ArrowRight className="w-4 h-4" />
+                  <Sparkles className="w-4 h-4 text-white" />
+                  <span>Interview Prep Codex (150+ Qs)</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
                 </Link>
                 <Link
-                  href="/pricing"
-                  className="btn-industrial btn-industrial-secondary py-4 px-7 text-sm"
+                  href="#technologies"
+                  className="btn-industrial btn-industrial-secondary py-4 px-6 text-xs sm:text-sm flex items-center justify-center gap-2"
                 >
-                  <span>Unlock Lifetime — <GeoPrice className="ml-1" /></span>
+                  <span>Browse 3,600+ Tech Questions</span>
                 </Link>
               </div>
 
@@ -139,21 +140,22 @@ export default async function HomePage() {
               <div className="mt-8 pt-6 border-t border-[var(--border-recessed)] flex flex-wrap items-center gap-6 font-mono text-xs text-[var(--text-muted)]">
                 <div className="flex items-center gap-1.5">
                   <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                  <span>5 Free Qs per tech</span>
+                  <span>5 Free Qs per track</span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                  <span>Verified model answers</span>
+                  <span>160+ Source Citations</span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                  <span>Never a subscription</span>
+                  <span>Plans from ₹299 / ₹399</span>
                 </div>
               </div>
             </div>
 
             {/* 3D CSS Hardware Device Mockup */}
-            <div className="crt-bezel relative">
+            <div className="w-full max-w-full overflow-hidden min-w-0">
+              <div className="crt-bezel relative w-full max-w-full overflow-hidden">
               <div className="flex items-center justify-between pb-3 px-1 border-b border-[#2d3436] mb-3">
                 <div className="flex items-center gap-2">
                   <span className="w-2.5 h-2.5 rounded-full bg-[#ff4757] shadow-[0_0_6px_#ff4757]" />
@@ -162,49 +164,99 @@ export default async function HomePage() {
                   <span className="font-mono text-[11px] text-[#a8b2d1] ml-2">DEVPREP-TERMINAL // v2.6</span>
                 </div>
                 <div className="font-mono text-[10px] text-[#2ed573] uppercase tracking-wider font-bold">
-                  ONLINE · 27 NODES
+                  ONLINE · 30 NODES
                 </div>
               </div>
 
               <div className="crt-screen p-5 text-left font-mono text-xs text-[#f0f2f5] space-y-4">
                 <div className="flex items-center justify-between text-[#a8b2d1] pb-2 border-b border-[#1e272e]">
-                  <span>SYSTEM_LOAD: 3,600+ ENTRIES</span>
+                  <span>SYSTEM_LOAD: 3,750+ ENTRIES</span>
                   <span className="text-[#55efc4]">DIFFICULTY: GRADED</span>
                 </div>
 
                 <div className="space-y-2">
                   <div className="p-2.5 rounded bg-[#15191d] border border-[#232930] flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="text-emerald-400 font-bold">● EASY</span>
-                      <span className="text-zinc-200">React Reconciliation &amp; Fiber</span>
+                    <div className="flex items-center gap-2 truncate pr-2">
+                      <span className="text-cyan-400 font-bold shrink-0">✦ REACT 19</span>
+                      <span className="text-zinc-200 truncate">useActionState &amp; Server Actions</span>
                     </div>
-                    <span className="text-[10px] text-emerald-400 font-bold px-1.5 py-0.5 rounded bg-emerald-950/60 border border-emerald-800/40">OPEN</span>
+                    <span className="text-[10px] text-emerald-400 font-bold px-1.5 py-0.5 rounded bg-emerald-950/60 border border-emerald-800/40 shrink-0">OPEN</span>
                   </div>
 
                   <div className="p-2.5 rounded bg-[#15191d] border border-[#232930] flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="text-amber-400 font-bold">▲ MEDIUM</span>
-                      <span className="text-zinc-200">PostgreSQL MVCC &amp; WAL</span>
+                    <div className="flex items-center gap-2 truncate pr-2">
+                      <span className="text-emerald-400 font-bold shrink-0">● NODE.JS</span>
+                      <span className="text-zinc-200 truncate">Libuv Event Loop &amp; Microtasks</span>
                     </div>
-                    <span className="text-[10px] text-emerald-400 font-bold px-1.5 py-0.5 rounded bg-emerald-950/60 border border-emerald-800/40">OPEN</span>
+                    <span className="text-[10px] text-emerald-400 font-bold px-1.5 py-0.5 rounded bg-emerald-950/60 border border-emerald-800/40 shrink-0">OPEN</span>
                   </div>
 
                   <div className="p-2.5 rounded bg-[#15191d] border border-[#232930] flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="text-rose-400 font-bold">■ HARD</span>
-                      <span className="text-zinc-200">Distributed Consensus (Raft)</span>
+                    <div className="flex items-center gap-2 truncate pr-2">
+                      <span className="text-amber-400 font-bold shrink-0">▲ JS CORE</span>
+                      <span className="text-zinc-200 truncate">V8 Engine Scope, Closures &amp; Memory</span>
                     </div>
-                    <span className="text-[10px] text-zinc-400 px-1.5 py-0.5 rounded bg-zinc-900 border border-zinc-800">LOCKED</span>
+                    <span className="text-[10px] text-emerald-400 font-bold px-1.5 py-0.5 rounded bg-emerald-950/60 border border-emerald-800/40 shrink-0">OPEN</span>
+                  </div>
+
+                  <div className="p-2.5 rounded bg-[#15191d] border border-[#232930] flex items-center justify-between">
+                    <div className="flex items-center gap-2 truncate pr-2">
+                      <span className="text-rose-400 font-bold shrink-0">■ SYSTEM</span>
+                      <span className="text-zinc-200 truncate">Distributed Consensus (Raft)</span>
+                    </div>
+                    <span className="text-[10px] text-zinc-400 px-1.5 py-0.5 rounded bg-zinc-900 border border-zinc-800 shrink-0">LOCKED</span>
                   </div>
                 </div>
 
                 <div className="p-3 rounded-lg bg-[#111417] border border-[#2d3436] font-mono text-[11px] text-[#74b9ff] space-y-1">
-                  <div className="text-zinc-400">// Model Answer Preview:</div>
-                  <div className="text-[#a8b2d1]">
-                    &quot;Fiber breaks synchronous recursive rendering into prioritized incremental units of work...&quot;
+                  <div className="text-zinc-400">// Model Answer &amp; Citations:</div>
+                  <div className="text-[#a8b2d1] truncate">
+                    &quot;useActionState manages asynchronous form pending states and optimistic updates with zero boilerplate...&quot;
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+      {/* ─────────────────────────────────────────────────────────────────────
+          1.5. NEW INTERVIEW PREP CODEX FEATURE STRIP
+         ───────────────────────────────────────────────────────────────────── */}
+      <section className="py-8 bg-gradient-to-r from-[var(--bg-card)] via-[var(--bg-recessed)] to-[var(--bg-card)] border-b border-[var(--border-recessed)]">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6 p-6 rounded-2xl border border-[var(--accent)]/30 bg-[var(--bg-card)]/80 backdrop-blur shadow-sm">
+            <div className="flex items-start sm:items-center gap-4">
+              <div className="p-3 rounded-xl bg-[var(--accent)] text-white shadow-[var(--shadow-btn-primary)] shrink-0">
+                <Sparkles className="w-6 h-6" />
+              </div>
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--accent)]/20">
+                    NEW CODEX RELEASE
+                  </span>
+                  <span className="text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
+                    150+ REAL QUESTIONS
+                  </span>
+                </div>
+                <h2 className="text-lg sm:text-xl font-black text-[var(--text-primary)]">
+                  Targeted Interview Prep Codex
+                </h2>
+                <p className="text-xs text-[var(--text-muted)] max-w-xl leading-relaxed">
+                  Curated screening questions across <strong>Node.js</strong>, <strong>JavaScript</strong> &amp; <strong>React 19</strong> with verified solutions and 160+ official documentation citations.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 shrink-0 w-full md:w-auto">
+              <Link
+                href="/interview-prep"
+                className="btn-industrial btn-industrial-primary py-3 px-6 text-xs font-mono font-semibold w-full md:w-auto text-center flex items-center justify-center gap-2"
+              >
+                <span>Explore Interview Prep</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
             </div>
           </div>
         </div>

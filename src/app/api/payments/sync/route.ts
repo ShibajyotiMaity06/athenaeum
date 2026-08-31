@@ -43,6 +43,8 @@ export async function POST(req: NextRequest) {
       const orderId = String(payment.order_id || "");
       const amount = Number(payment.amount || 39900);
       const currency = String(payment.currency || "INR");
+      const planNote = (payment.notes as Record<string, string>)?.plan;
+      const tier = planNote === "interview" ? "interview" : "full";
 
       await upsertOrder({
         id: orderId || `pay_order_${payment.id}`,
@@ -50,6 +52,7 @@ export async function POST(req: NextRequest) {
         provider: "razorpay",
         amount,
         currency,
+        tier,
         status: "paid",
         paymentId: String(payment.id),
         createdAt: new Date().toISOString(),
@@ -61,7 +64,8 @@ export async function POST(req: NextRequest) {
         orderId,
         paymentId: String(payment.id),
         amount,
-        currency
+        currency,
+        tier
       });
 
       return NextResponse.json({ ok: true, message: "Access successfully restored." });
@@ -89,6 +93,8 @@ export async function POST(req: NextRequest) {
         const paymentId = String(matched.id || "");
         const amount = Number(matched.amount || 39900);
         const currency = String(matched.currency || "INR");
+        const planNote = (matched.notes as Record<string, string>)?.plan;
+        const tier = planNote === "interview" ? "interview" : "full";
 
         await upsertOrder({
           id: orderId || `pay_order_${paymentId}`,
@@ -96,6 +102,7 @@ export async function POST(req: NextRequest) {
           provider: "razorpay",
           amount,
           currency,
+          tier,
           status: "paid",
           paymentId,
           createdAt: new Date().toISOString(),
@@ -107,7 +114,8 @@ export async function POST(req: NextRequest) {
           orderId,
           paymentId,
           amount,
-          currency
+          currency,
+          tier
         });
 
         return NextResponse.json({ ok: true, message: "Access successfully restored." });

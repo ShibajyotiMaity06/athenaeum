@@ -14,6 +14,42 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 1.0
     },
     {
+      url: `${baseUrl}/interview-prep`,
+      lastModified: lastMod,
+      changeFrequency: "weekly",
+      priority: 0.95
+    },
+    {
+      url: `${baseUrl}/interview-prep/nodejs`,
+      lastModified: lastMod,
+      changeFrequency: "weekly",
+      priority: 0.9
+    },
+    {
+      url: `${baseUrl}/interview-prep/javascript`,
+      lastModified: lastMod,
+      changeFrequency: "weekly",
+      priority: 0.9
+    },
+    {
+      url: `${baseUrl}/interview-prep/react`,
+      lastModified: lastMod,
+      changeFrequency: "weekly",
+      priority: 0.9
+    },
+    {
+      url: `${baseUrl}/interview-prep/sql`,
+      lastModified: lastMod,
+      changeFrequency: "weekly",
+      priority: 0.9
+    },
+    {
+      url: `${baseUrl}/interview-prep/dbms`,
+      lastModified: lastMod,
+      changeFrequency: "weekly",
+      priority: 0.9
+    },
+    {
       url: `${baseUrl}/pricing`,
       lastModified: lastMod,
       changeFrequency: "monthly",

@@ -10,10 +10,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "content:sync": "node scripts/sync-content.mjs",
-    "predev": "node scripts/sync-content.mjs",
-    "prebuild": "node scripts/sync-content.mjs",
-    "prestart": "node scripts/sync-content.mjs",
+    "content:sync": "node scripts/sync-content.mjs && node scripts/sync-interview.mjs",
+    "predev": "node scripts/sync-content.mjs && node scripts/sync-interview.mjs",
+    "prebuild": "node scripts/sync-content.mjs && node scripts/sync-interview.mjs",
+    "prestart": "node scripts/sync-content.mjs && node scripts/sync-interview.mjs",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

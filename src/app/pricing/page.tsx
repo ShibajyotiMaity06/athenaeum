@@ -104,6 +104,7 @@ export default async function PricingPage() {
             userEmail={user.email}
             userName={user.name}
             hasAccess={Boolean(user.access.granted)}
+            userTier={user.access?.tier || (user.access?.granted ? "full" : undefined)}
             sandbox={sandbox}
             keyId={process.env.RAZORPAY_KEY_ID || null}
             initialCurrency={initialCurrency}

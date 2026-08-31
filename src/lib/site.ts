@@ -15,13 +15,152 @@ export const SITE = {
   levelsCount: 3
 } as const;
 
-/** One-time, lifetime prices. Amounts are in minor units (paise / cents). */
-export const PRICING = {
-  INR: { amount: 39900, display: "₹399", note: "India — one-time, lifetime access, inclusive of all taxes" },
-  USD: { amount: 900, display: "$9", note: "International — one-time, lifetime access" }
+export type AccessTier = "full" | "interview";
+export type PricingPlan = "full" | "interview";
+
+export const PLANS = {
+  full: {
+    id: "full" as const,
+    name: "Full Scholar Access",
+    badge: "MOST POPULAR · ALL-ACCESS",
+    shortName: "All-Access Pass",
+    description: "Complete unrestricted lifetime access to all 3,600+ questions across 27+ technologies + Complete Interview Prep section + All future additions.",
+    INR: { amount: 39900, display: "₹399", note: "India — one-time, lifetime access, inclusive of all taxes" },
+    USD: { amount: 900, display: "$9", note: "International — one-time, lifetime access" },
+    features: [
+      "All 3,600+ deep-dive questions across 27+ technologies",
+      "Full unrestricted access to new Interview Prep section",
+      "Easy, Medium & Hard comprehensive verified answers",
+      "All official documentation citations & source references",
+      "Lifetime updates & all future codices included"
+    ]
+  },
+  interview: {
+    id: "interview" as const,
+    name: "Interview Prep Key",
+    badge: "TARGETED INTERVIEW PREP",
+    shortName: "Interview Pack",
+    description: "Full lifetime access to curated real-world interview questions across Node.js, JavaScript, React & modern tech with verified answers and sources.",
+    INR: { amount: 29900, display: "₹299", note: "India — one-time, lifetime access, inclusive of all taxes" },
+    USD: { amount: 700, display: "$7", note: "International — one-time, lifetime access" },
+    features: [
+      "Full access to complete Interview Prep codex",
+      "150+ high-frequency real-world technical interview questions",
+      "Node.js, JavaScript, React 19 & modern engineering stacks",
+      "160+ curated official documentation source URLs",
+      "Detailed architectural answers & practical code patterns"
+    ]
+  }
 } as const;
 
-export type CurrencyCode = keyof typeof PRICING;
+/** Default pricing (Full Scholar Pass) for backward compatibility */
+export const PRICING = PLANS.full;
+
+export type CurrencyCode = "INR" | "USD";
+
+export const PROMO_CODES: Record<string, { discountPercent: number; label: string }> = {
+  EFGH: { discountPercent: 30, label: "30% Scholar Discount" },
+  ATHENAEUM10: { discountPercent: 10, label: "10% Athenaeum Pass Discount" },
+  SCHOLAR10: { discountPercent: 10, label: "10% Scholar Community Discount" },
+  DEV10: { discountPercent: 10, label: "10% Developer Discount" },
+  EARLY10: { discountPercent: 10, label: "10% Early Bird Discount" },
+  INTERVIEW10: { discountPercent: 10, label: "10% Interview Prep Discount" }
+};
+
+export interface PromoCalculation {
+  valid: boolean;
+  code?: string;
+  plan: PricingPlan;
+  discountPercent: number;
+  originalAmount: number;
+  discountAmount: number;
+  finalAmount: number;
+  display: string;
+  originalDisplay: string;
+  savingsDisplay: string;
+  message?: string;
+}
+
+export function calculatePromoPrice(
+  planOrCurrency: PricingPlan | CurrencyCode = "full",
+  currencyOrPromo: CurrencyCode | string | null = "INR",
+  promoCodeInput?: string | null
+): PromoCalculation {
+  // Support flexible argument patterns:
+  // 1) calculatePromoPrice(plan, currency, promoCode)
+  // 2) calculatePromoPrice(currency, promoCode) -> defaults plan="full"
+  let plan: PricingPlan = "full";
+  let currency: CurrencyCode = "INR";
+  let promoRaw: string | null | undefined = undefined;
+
+  if (planOrCurrency === "INR" || planOrCurrency === "USD") {
+    currency = planOrCurrency;
+    promoRaw = typeof currencyOrPromo === "string" ? currencyOrPromo : promoCodeInput;
+  } else {
+    plan = planOrCurrency === "interview" ? "interview" : "full";
+    if (currencyOrPromo === "INR" || currencyOrPromo === "USD") {
+      currency = currencyOrPromo;
+    }
+    promoRaw = promoCodeInput;
+  }
+
+  const selectedPlan = PLANS[plan] || PLANS.full;
+  const base = selectedPlan[currency] || selectedPlan.INR;
+  const rawCode = promoRaw?.trim().toUpperCase();
+
+  const formatPrice = (minorUnits: number, curr: CurrencyCode) => {
+    const units = minorUnits / 100;
+    const formatted = units % 1 === 0 ? units.toString() : units.toFixed(2);
+    return curr === "INR" ? `₹${formatted}` : `$${formatted}`;
+  };
+
+  if (!rawCode) {
+    return {
+      valid: false,
+      plan,
+      discountPercent: 0,
+      originalAmount: base.amount,
+      discountAmount: 0,
+      finalAmount: base.amount,
+      display: base.display,
+      originalDisplay: base.display,
+      savingsDisplay: currency === "INR" ? "₹0" : "$0"
+    };
+  }
+
+  const promo = PROMO_CODES[rawCode];
+  if (!promo) {
+    return {
+      valid: false,
+      plan,
+      discountPercent: 0,
+      originalAmount: base.amount,
+      discountAmount: 0,
+      finalAmount: base.amount,
+      display: base.display,
+      originalDisplay: base.display,
+      savingsDisplay: currency === "INR" ? "₹0" : "$0",
+      message: "Invalid promo code"
+    };
+  }
+
+  const discountAmount = Math.round(base.amount * (promo.discountPercent / 100));
+  const finalAmount = base.amount - discountAmount;
+
+  return {
+    valid: true,
+    code: rawCode,
+    plan,
+    discountPercent: promo.discountPercent,
+    originalAmount: base.amount,
+    discountAmount,
+    finalAmount,
+    display: formatPrice(finalAmount, currency),
+    originalDisplay: base.display,
+    savingsDisplay: formatPrice(discountAmount, currency),
+    message: `Promo code ${rawCode} applied! ${promo.discountPercent}% discount.`
+  };
+}
 
 export const LEVELS = [
   {

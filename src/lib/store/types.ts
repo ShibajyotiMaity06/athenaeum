@@ -1,5 +1,8 @@
+export type AccessTier = "full" | "interview";
+
 export interface AccessGrant {
   granted: boolean;
+  tier?: AccessTier;
   provider: "admin" | "razorpay" | "sandbox" | null;
   orderId?: string;
   paymentId?: string;
@@ -25,6 +28,7 @@ export interface OrderRecord {
   amount: number;
   currency: string;
   status: "created" | "paid" | "failed";
+  tier?: AccessTier;
   paymentId?: string;
   createdAt: string;
   paidAt?: string;
@@ -33,3 +37,4 @@ export interface OrderRecord {
 export function newId(prefix = "usr"): string {
   return `${prefix}_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
 }
+

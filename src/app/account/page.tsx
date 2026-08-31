@@ -27,7 +27,9 @@ export default async function AccountPage() {
 
   const orders = await getOrdersByUser(user.id);
   const isAdmin = user.role === "admin";
-  const hasAccess = Boolean(user.access.granted || isAdmin);
+  const isFull = Boolean(isAdmin || (user.access.granted && (user.access.tier === "full" || !user.access.tier)));
+  const isInterview = Boolean(user.access.granted && user.access.tier === "interview");
+  const hasAccess = isFull || isInterview;
 
   return (
     <div className="mx-auto max-w-4xl px-4 sm:px-6 py-16">
@@ -46,6 +48,16 @@ export default async function AccountPage() {
               ADMIN
             </span>
           )}
+          {isFull && !isAdmin && (
+            <span className="ml-3 px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-600 border border-emerald-500/30 text-[10px] font-bold uppercase">
+              FULL SCHOLAR PASS
+            </span>
+          )}
+          {isInterview && (
+            <span className="ml-3 px-2 py-0.5 rounded bg-amber-500/10 text-amber-600 border border-amber-500/30 text-[10px] font-bold uppercase">
+              INTERVIEW PREP KEY
+            </span>
+          )}
         </p>
       </header>
 
@@ -62,22 +74,28 @@ export default async function AccountPage() {
                 </div>
                 <div>
                   <h2 className="text-xl font-bold text-[var(--text-primary)]">
-                    Lifetime Access Unlocked
+                    {isFull ? "Full Lifetime Scholar Access" : "Interview Prep Key Active"}
                   </h2>
                   <p className="text-xs text-[var(--text-muted)] mt-1 leading-relaxed">
-                    {isAdmin
-                      ? "Admin privileges active — unrestricted access to all codices."
-                      : `Scholar access verified via ${
-                          user.access.provider === "razorpay" ? "Razorpay" : "the sandbox ledger"
-                        }. All 3,600+ questions and future updates are unlocked.`}
+                    {isFull
+                      ? "All 3,600+ questions across 27+ technologies, full Interview Prep codex, and all future updates are unlocked."
+                      : "Full access to the Interview Prep codex across Node.js, JavaScript, React & more. Verified solutions & documentation sources are unlocked."}
                   </p>
                 </div>
               </div>
 
               <div className="pt-4 border-t border-[rgba(186,190,204,0.4)] flex flex-wrap gap-3">
-                <Link href="/#technologies" className="btn-industrial btn-industrial-primary py-2.5 px-5 text-xs">
-                  <span>Browse Questions</span>
+                <Link href="/interview-prep" className="btn-industrial btn-industrial-primary py-2.5 px-5 text-xs">
+                  <span>Interview Prep Codex</span>
                 </Link>
+                <Link href="/#technologies" className="btn-industrial btn-industrial-secondary py-2.5 px-5 text-xs">
+                  <span>Browse 3,600+ Questions</span>
+                </Link>
+                {isInterview && (
+                  <Link href="/pricing?plan=full" className="btn-industrial btn-industrial-ghost py-2.5 px-4 text-xs text-[var(--accent)] font-bold">
+                    <span>Upgrade to All-Access (₹399)</span>
+                  </Link>
+                )}
                 <LogoutButton />
               </div>
             </div>
@@ -92,14 +110,14 @@ export default async function AccountPage() {
                     Free Preview Active
                   </h2>
                   <p className="text-xs text-[var(--text-muted)] mt-1 leading-relaxed">
-                    You can read 5 questions per level across every technology. Unlock all 3,600+ questions for <GeoPrice className="font-bold text-[var(--text-primary)]" /> lifetime.
+                    You can read 5 questions per codex for free. Get the <strong>Interview Key (₹299)</strong> or <strong>Full Scholar Pass (₹399)</strong> for unrestricted lifetime access.
                   </p>
                 </div>
               </div>
 
               <div className="pt-4 border-t border-[rgba(186,190,204,0.4)] flex flex-wrap gap-3 items-center">
                 <Link href="/pricing" className="btn-industrial btn-industrial-primary py-3 px-6 text-xs">
-                  <span>Upgrade to Lifetime Access — <GeoPrice className="ml-1" /></span>
+                  <span>Choose Your Plan — ₹299 / ₹399</span>
                 </Link>
                 <LogoutButton />
               </div>

@@ -71,11 +71,6 @@ export async function getCurrentUser(): Promise<UserRecord | null> {
   return await getUserById(session.sub);
 }
 
-/**
- * Cookie policy: Secure everywhere in production EXCEPT loopback hosts,
- * so `npm start` on http://localhost remains fully usable while real
- * deployments (https) always get hardened cookies.
- */
 export function sessionCookieOptions(hostname: string, maxAge = 60 * 60 * 24 * 30) {
   const loopback =
     hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1";
@@ -87,3 +82,17 @@ export function sessionCookieOptions(hostname: string, maxAge = 60 * 60 * 24 * 3
     maxAge
   };
 }
+
+export function hasFullAccess(user?: UserRecord | null): boolean {
+  if (!user?.access?.granted) return false;
+  // If granted and tier is 'full' or undefined (legacy users), grant full access
+  return user.access.tier === "full" || !user.access.tier;
+}
+
+export function hasInterviewAccess(user?: UserRecord | null): boolean {
+  if (!user?.access?.granted) return false;
+  // Any user with interview tier, full tier, or legacy grant has interview access
+  return user.access.tier === "interview" || user.access.tier === "full" || !user.access.tier;
+}
+
+

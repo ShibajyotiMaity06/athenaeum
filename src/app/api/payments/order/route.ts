@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getCurrentUser } from "@/lib/auth";
+import { getCurrentUser, hasFullAccess } from "@/lib/auth";
 import { recordOrder } from "@/lib/db";
 import { createRazorpayOrder, razorpayConfigured } from "@/lib/razorpay";
-import { PRICING, type CurrencyCode } from "@/lib/site";
+import { calculatePromoPrice, PLANS, type CurrencyCode, type PricingPlan } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 
@@ -11,9 +11,30 @@ export async function POST(req: NextRequest) {
   if (!user) {
     return NextResponse.json({ ok: false, error: "Sign in before approaching the ledger." }, { status: 401 });
   }
-  if (user.access.granted) {
-    return NextResponse.json({ ok: false, error: "Your access is already sealed." }, { status: 409 });
+
+  let currency: CurrencyCode = "INR";
+  let plan: PricingPlan = "full";
+  let promoCode: string | undefined;
+
+  try {
+    const body = (await req.json()) as { currency?: CurrencyCode; plan?: PricingPlan; promoCode?: string };
+    if (body.currency === "INR" || body.currency === "USD") currency = body.currency;
+    if (body.plan === "interview" || body.plan === "full") plan = body.plan;
+    if (body.promoCode) promoCode = body.promoCode;
+  } catch {
+    /* defaults stand */
   }
+
+  // If user already has full scholar access, no need to purchase again
+  if (hasFullAccess(user)) {
+    return NextResponse.json({ ok: false, error: "Your full scholar access is already active." }, { status: 409 });
+  }
+
+  // If user already has interview access and tries to buy interview plan again
+  if (user.access?.granted && user.access.tier === "interview" && plan === "interview") {
+    return NextResponse.json({ ok: false, error: "Your Interview Prep key is already active." }, { status: 409 });
+  }
+
   if (!razorpayConfigured()) {
     return NextResponse.json(
       { ok: false, error: "The live ledger is not yet configured." },
@@ -21,32 +42,30 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  let currency: string = "INR";
-  try {
-    const body = (await req.json()) as { currency?: string };
-    if (body.currency && body.currency in PRICING) currency = body.currency;
-  } catch {
-    /* default currency stands */
-  }
-
-  const code = currency as CurrencyCode;
-  const price = PRICING[code];
+  const promoInfo = calculatePromoPrice(plan, currency, promoCode);
 
   try {
     const order = await createRazorpayOrder({
-      amount: price.amount,
-      currency: code,
-      receipt: `devprep_${Date.now().toString(36)}`,
-      notes: { platform: "DevPrep", userId: user.id, email: user.email }
+      amount: promoInfo.finalAmount,
+      currency,
+      receipt: `devprep_${plan}_${Date.now().toString(36)}`,
+      notes: {
+        platform: "DevPrep",
+        userId: user.id,
+        email: user.email,
+        plan,
+        promoCode: promoInfo.valid ? (promoInfo.code ?? "") : ""
+      }
     });
 
     await recordOrder({
       id: order.id!,
       userId: user.id,
       provider: "razorpay",
-      amount: order.amount ?? price.amount,
-      currency: order.currency ?? code,
+      amount: order.amount ?? promoInfo.finalAmount,
+      currency: order.currency ?? currency,
       status: "created",
+      tier: plan,
       createdAt: new Date().toISOString()
     });
 
@@ -55,8 +74,13 @@ export async function POST(req: NextRequest) {
       orderId: order.id,
       amount: order.amount,
       currency: order.currency,
+      tier: plan,
       keyId: process.env.RAZORPAY_KEY_ID,
-      display: price.display
+      display: promoInfo.display,
+      promoApplied: promoInfo.valid,
+      discountPercent: promoInfo.discountPercent,
+      originalDisplay: promoInfo.originalDisplay,
+      savingsDisplay: promoInfo.savingsDisplay
     });
   } catch (error) {
     const err = error as Error & { status?: number };

@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  serverExternalPackages: ["highlight.js", "marked", "marked-highlight"],
   reactStrictMode: true,
   poweredByHeader: false,
   async redirects() {

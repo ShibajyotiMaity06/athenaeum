@@ -38,12 +38,16 @@ export async function POST(req: NextRequest) {
   let order = await getOrderByProviderId(orderId);
   let amount = order?.amount ?? 39900;
   let currency = order?.currency ?? "INR";
+  let tier = order?.tier || "full";
 
   if (!order) {
     const rzpOrder = await fetchRazorpayOrder(orderId);
     if (rzpOrder) {
       amount = rzpOrder.amount ?? amount;
       currency = rzpOrder.currency ?? currency;
+      if (rzpOrder.notes?.plan === "interview" || rzpOrder.notes?.plan === "full") {
+        tier = rzpOrder.notes.plan;
+      }
     }
 
     await upsertOrder({
@@ -52,6 +56,7 @@ export async function POST(req: NextRequest) {
       provider: "razorpay",
       amount,
       currency,
+      tier,
       status: "paid",
       paymentId,
       createdAt: new Date().toISOString(),
@@ -61,13 +66,14 @@ export async function POST(req: NextRequest) {
     await markOrderPaid(orderId, paymentId);
   }
 
-  // 3. Guarantee user gets lifetime access
+  // 3. Guarantee user gets lifetime access for their tier
   await grantAccess(user.id, {
     provider: "razorpay",
     orderId,
     paymentId,
     amount,
-    currency
+    currency,
+    tier
   });
 
   return NextResponse.json({ ok: true });

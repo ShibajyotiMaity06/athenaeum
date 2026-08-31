@@ -2,7 +2,7 @@ import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { Marked } from "marked";
 import { markedHighlight } from "marked-highlight";
-import hljs from "highlight.js/lib/common";
+import hljs from "highlight.js";
 import {
   LEVELS,
   RELATED_TECH_MAP,
@@ -14,13 +14,19 @@ import {
 
 /* ── Markdown rendering (server-only) ─────────────────────────────────────── */
 
+const hljsLib = (hljs as unknown as { default?: typeof hljs })?.default || hljs;
+
 const marked = new Marked(
   markedHighlight({
     emptyLangClass: "hljs",
     langPrefix: "hljs language-",
     highlight(code, lang) {
-      const language = lang && hljs.getLanguage(lang) ? lang : "plaintext";
-      return hljs.highlight(code, { language }).value;
+      try {
+        const language = lang && hljsLib?.getLanguage?.(lang) ? lang : "plaintext";
+        return hljsLib?.highlight?.(code, { language })?.value || code;
+      } catch {
+        return code;
+      }
     }
   })
 );

@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getCurrentUser } from "@/lib/auth";
+import { getCurrentUser, hasFullAccess } from "@/lib/auth";
 import { grantAccess, recordOrder } from "@/lib/db";
 import { sandboxAllowed } from "@/lib/razorpay";
-import { PRICING, type CurrencyCode } from "@/lib/site";
+import { calculatePromoPrice, PLANS, type CurrencyCode, type PricingPlan } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 
@@ -23,28 +23,39 @@ export async function POST(req: NextRequest) {
   if (!user) {
     return NextResponse.json({ ok: false, error: "Session expired." }, { status: 401 });
   }
-  if (user.access.granted) {
-    return NextResponse.json({ ok: false, error: "Your access is already sealed." }, { status: 409 });
-  }
 
   let currency: CurrencyCode = "INR";
+  let plan: PricingPlan = "full";
+  let promoCode: string | undefined;
+
   try {
-    const body = (await req.json()) as { currency?: CurrencyCode };
-    if (body.currency && body.currency in PRICING) currency = body.currency;
+    const body = (await req.json()) as { currency?: CurrencyCode; plan?: PricingPlan; promoCode?: string };
+    if (body.currency === "INR" || body.currency === "USD") currency = body.currency;
+    if (body.plan === "interview" || body.plan === "full") plan = body.plan;
+    if (body.promoCode) promoCode = body.promoCode;
   } catch {
-    /* default stands */
+    /* defaults stand */
   }
 
-  const price = PRICING[currency];
-  const simulatedId = `sbx_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
+  if (hasFullAccess(user)) {
+    return NextResponse.json({ ok: false, error: "Your full scholar access is already active." }, { status: 409 });
+  }
+
+  if (user.access?.granted && user.access.tier === "interview" && plan === "interview") {
+    return NextResponse.json({ ok: false, error: "Your Interview Prep key is already active." }, { status: 409 });
+  }
+
+  const calculation = calculatePromoPrice(plan, currency, promoCode);
+  const simulatedId = `sbx_${plan}_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
 
   await recordOrder({
     id: simulatedId,
     userId: user.id,
     provider: "sandbox",
-    amount: price.amount,
+    amount: calculation.finalAmount,
     currency,
     status: "paid",
+    tier: plan,
     paymentId: `pay_simulated_${simulatedId.slice(4)}`,
     createdAt: new Date().toISOString(),
     paidAt: new Date().toISOString()
@@ -54,8 +65,9 @@ export async function POST(req: NextRequest) {
     provider: "sandbox",
     orderId: simulatedId,
     paymentId: `pay_simulated_${simulatedId.slice(4)}`,
-    amount: price.amount,
-    currency
+    amount: calculation.finalAmount,
+    currency,
+    tier: plan
   });
 
   return NextResponse.json({ ok: true });
