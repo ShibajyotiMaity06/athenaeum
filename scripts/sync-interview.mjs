@@ -64,6 +64,22 @@ export function normalizeTechSlug(rawTech = "") {
   if (clean === "sql" || clean === "postgresql" || clean === "mysql") {
     return "sql";
   }
+  if (
+    clean === "springboot" ||
+    clean === "spring boot" ||
+    clean === "spring-boot" ||
+    clean === "spring"
+  ) {
+    return "spring-boot";
+  }
+  if (
+    clean === "system design" ||
+    clean === "system-design" ||
+    clean === "systemdesign" ||
+    clean === "hld"
+  ) {
+    return "system-design";
+  }
   if (clean === "java" || clean === "core java" || clean === "core-java") {
     return "java";
   }
@@ -105,6 +121,20 @@ const STACK_METADATA = {
     description:
       "Production-grade Next.js interview questions covering App Router conventions, Server vs Client Components, Server Actions, streaming SSR with Suspense, caching layers, middleware routing, and SEO optimization.",
     icon: "nextjs"
+  },
+  "spring-boot": {
+    name: "Spring Boot",
+    headline: "Auto-Configuration, Actuator, Security 6, Microservices & Reactive Web",
+    description:
+      "Curated enterprise Spring Boot interview questions covering dependency injection, auto-configuration, actuators, Spring Security, transactions, caching, and microservice architectures.",
+    icon: "springboot"
+  },
+  "system-design": {
+    name: "System Design & Architecture",
+    headline: "Resilience & Scale, Distributed Systems, AI-Native Backends & Large-Scale Data Layers",
+    description:
+      "Curated real-world System Design interview questions spanning rate limiting for AI agents, end-to-end API idempotency, WhatsApp presence engine, Uber surge pricing, multi-region CRDT counters, prompt caching, 100TB sharding, and database decomposition.",
+    icon: "hld"
   },
   sql: {
     name: "SQL",
@@ -278,7 +308,8 @@ function parseDocsJson(raw) {
       const slug = normalizeTechSlug(rawTech);
       const rest = trimmed.slice(headerMatch[0].length).trim();
       try {
-        const questionsArray = JSON.parse(rest);
+        const sanitizedRest = rest.replace(/,(\s*[\]\}])/g, "$1");
+        const questionsArray = JSON.parse(sanitizedRest);
         if (Array.isArray(questionsArray)) {
           questionsArray.forEach((item, idx) => addItem(slug, item, idx));
           parsedAnySection = true;
@@ -418,7 +449,7 @@ export function syncInterviewData() {
     const allStacksIndex = [];
     const files = readdirSync(DATA_DIR).filter((f) => f.endsWith(".json") && f !== "index.json");
     
-    // Sort stacks order: nodejs, javascript, typescript, react, nextjs, java, sql, dbms, computer-networks, operating-systems
+    // Sort stacks order: nodejs, javascript, typescript, react, nextjs, java, spring-boot, sql, dbms, computer-networks, operating-systems, system-design
     const sortOrder = [
       "nodejs",
       "javascript",
@@ -426,10 +457,12 @@ export function syncInterviewData() {
       "react",
       "nextjs",
       "java",
+      "spring-boot",
       "sql",
       "dbms",
       "computer-networks",
-      "operating-systems"
+      "operating-systems",
+      "system-design"
     ];
     files.sort((a, b) => {
       const slugA = a.replace(".json", "");

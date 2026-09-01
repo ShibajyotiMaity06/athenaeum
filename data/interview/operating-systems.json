@@ -4,10 +4,10 @@
   "headline": "Processes, Threads, Concurrency, Deadlocks, Virtual Memory & Kernel Architecture",
   "description": "Core Operating Systems interview questions spanning process lifecycles, CPU scheduling algorithms, virtual memory paging, page fault handling, synchronization primitives, deadlocks, and system calls.",
   "icon": "os",
-  "totalQuestions": 35,
-  "easyCount": 10,
-  "mediumCount": 15,
-  "hardCount": 10,
+  "totalQuestions": 70,
+  "easyCount": 20,
+  "mediumCount": 30,
+  "hardCount": 20,
   "questions": [
     {
       "question": "What is an operating system, and what are its core responsibilities?",
@@ -628,6 +628,636 @@
         }
       ],
       "id": 35
+    },
+    {
+      "question": "What are the main types of operating systems (batch, time-sharing, distributed, real-time, network), and where is each typically used?",
+      "difficulty": "Easy",
+      "answer": "These categories describe how an OS schedules work and who it serves, and most real systems blend several of them.\n\n- Batch OS: jobs (program + data) are collected and grouped, then executed sequentially without user interaction during execution — an operator or scheduler feeds the system a batch of similar jobs. This was the dominant model on early mainframes (e.g., IBM OS/360) and survives today in things like nightly payroll runs or large offline data processing jobs, where throughput matters more than interactivity.\n- Time-sharing OS: CPU time is divided into small slices (quanta) and rapidly switched among multiple users/processes via CPU scheduling and multiprogramming, so each user gets the illusion of having the machine to themselves. Unix and Linux are classic examples — this is the model behind everyday multi-user, interactive computing.\n- Distributed OS: manages a group of physically separate, networked computers and presents them to users as a single, unified system, coordinating actions and sharing resources (files, compute, storage) via message passing across the network. Used in large-scale clusters, parallel computation, and systems requiring fault tolerance through redundancy across machines.\n- Real-time OS (RTOS): guarantees that tasks complete within strict, predictable time constraints (hard real-time: missing a deadline is a system failure, e.g., automotive control, avionics; soft real-time: occasional missed deadlines degrade quality but aren't catastrophic, e.g., multimedia streaming). Examples include QNX and VxWorks.\n- Network OS: runs on a server and explicitly manages shared resources (files, printers, security) for client machines over a network, giving each client control over its own resources locally while centralizing shared services — examples include Windows Server and Novell NetWare.\n\nIn an interview, it's worth noting that general-purpose OSes like Linux and Windows aren't purely one type — they incorporate time-sharing for interactive desktop use, distributed/network features for server and cloud roles, and can even host real-time extensions for specific workloads.",
+      "sources": [
+        {
+          "title": "Types of Operating Systems | Baeldung on Computer Science",
+          "url": "https://www.baeldung.com/cs/os-types",
+          "domain": "baeldung.com"
+        },
+        {
+          "title": "Types of Operating System - TutorialsPoint",
+          "url": "https://www.tutorialspoint.com/operating_system/os_types.htm",
+          "domain": "tutorialspoint.com"
+        }
+      ],
+      "id": 36
+    },
+    {
+      "question": "What is the difference between a monolithic kernel and a microkernel, at a basic level?",
+      "difficulty": "Easy",
+      "answer": "The difference is where OS services live and run.\n\nA monolithic kernel puts essentially all OS services — process management, memory management, file systems, device drivers, network protocols — into one large program running entirely in kernel space, sharing a single address space. Because everything is co-located, components can call each other directly (fast function calls) instead of going through message passing, which makes monolithic kernels generally faster. Linux is the textbook example. The downside is that since everything runs with full kernel privilege in the same address space, a bug or crash in any single component (like a faulty device driver) can bring down the entire system.\n\nA microkernel keeps only the most essential functionality in kernel space — typically basic inter-process communication (IPC), minimal scheduling, and minimal memory management — and pushes everything else (device drivers, file systems, network stacks) out into separate user-space processes. Because these services now run as isolated processes, if one of them crashes, it doesn't necessarily crash the whole system — only that service needs to be restarted. The trade-off is performance: services that used to be a direct function call now require IPC (message passing) between user-space processes and the kernel, which adds overhead. Examples include QNX and the Mach-based systems.\n\nA useful one-line summary for an interview: monolithic kernels trade fault isolation for speed; microkernels trade some speed for fault isolation and modularity.",
+      "sources": [
+        {
+          "title": "Monolithic Kernel and Key Differences From Microkernel - GeeksforGeeks",
+          "url": "https://www.geeksforgeeks.org/operating-systems/monolithic-kernel-and-key-differences-from-microkernel/",
+          "domain": "geeksforgeeks.org"
+        },
+        {
+          "title": "Monolithic vs Microkernel Architectures: An Overview - Wind River",
+          "url": "https://www.windriver.com/resource/overview-of-monolithic-and-microkernel-architectures",
+          "domain": "windriver.com"
+        }
+      ],
+      "id": 37
+    },
+    {
+      "question": "What is an inode, and what kind of information does it store about a file?",
+      "difficulty": "Easy",
+      "answer": "An inode (index node) is a data structure that a Unix/Linux-style file system uses to store all the metadata about a file, separate from the file's actual content (data blocks) and separate from its human-readable name. Every file on the file system has exactly one inode, uniquely identified by an inode number.\n\nAn inode typically stores: the file's size, file type (regular file, directory, symlink, etc.), permissions (owner, group, other read/write/execute bits), owner and group IDs, timestamps (creation, last modification, last access), a link count (how many directory entries/hard links point to this inode), and pointers to the actual data blocks on disk where the file's content is stored. Notably, the inode does not store the filename — the filename-to-inode mapping lives in the directory that contains the file, which is itself just a special file whose content is a list of (name, inode number) pairs.\n\nThis separation is what makes hard links possible: multiple directory entries (names) can point to the exact same inode, meaning they're really just multiple names for the same underlying file, sharing the same metadata and data blocks. You can inspect a file's inode number on Linux with `ls -i`.",
+      "sources": [
+        {
+          "title": "Symbolic Links vs Hard Links - Tyler's Guides",
+          "url": "https://tylersguides.com/guides/symbolic-links-vs-hard-links/",
+          "domain": "tylersguides.com"
+        },
+        {
+          "title": "Understanding Linux Filesystems: Inodes, Block Sizes, and Data Structures | Linux Journal",
+          "url": "https://www.linuxjournal.com/content/understanding-linux-filesystems-inodes-block-sizes-and-data-structures",
+          "domain": "linuxjournal.com"
+        }
+      ],
+      "id": 38
+    },
+    {
+      "question": "What is the difference between a hard link and a soft (symbolic) link?",
+      "difficulty": "Easy",
+      "answer": "Both let multiple names refer to the same underlying file, but they work at different levels.\n\nA hard link is essentially a second directory entry that points directly to the same inode as the original file — both names share the same inode number, the same metadata, and the same data blocks. There's no real distinction between the 'original' file and a hard link to it; they're equally valid names for the same underlying file. Consequences: editing the content through either name changes the same data (since they're literally the same file); deleting one name just removes that directory entry and decrements the inode's link count — the file's data isn't actually freed until the link count reaches zero (i.e., all names pointing to it are removed). Because inode numbers are only unique within a single file system, hard links cannot cross file system boundaries, and traditionally cannot be created to directories (to avoid creating cycles in the directory tree).\n\nA symbolic link (symlink/soft link) is a completely separate, small file with its own inode, whose content is just a text path pointing to another file by name. Reading through a symlink is a two-step lookup: the OS reads the path stored in the symlink, then resolves that path to find the target. This makes symlinks more flexible — they can point to files or directories, and can cross file systems (even pointing to a mount on a different device). But it also makes them more fragile: if the target file is deleted, renamed, or moved, the symlink becomes 'dangling' (broken), pointing to nothing, whereas a hard link is immune to this because it's tied directly to the inode, not a path name.",
+      "sources": [
+        {
+          "title": "A hard link and a symbolic link? What is the difference between them? | Van Phan, Medium",
+          "url": "https://medium.com/@673/a-hard-link-and-a-symbolic-link-what-is-the-difference-between-them-9f207654f2d9",
+          "domain": "medium.com"
+        },
+        {
+          "title": "Symbolic Links vs Hard Links - Tyler's Guides",
+          "url": "https://tylersguides.com/guides/symbolic-links-vs-hard-links/",
+          "domain": "tylersguides.com"
+        }
+      ],
+      "id": 39
+    },
+    {
+      "question": "What are the common IPC (inter-process communication) mechanisms, and what is each generally used for?",
+      "difficulty": "Easy",
+      "answer": "Since every process has its own private address space, IPC mechanisms exist to let processes exchange data and coordinate safely. The common ones:\n\n- Pipes: a unidirectional byte stream connecting two processes, with one writing and the other reading in FIFO order. Anonymous pipes are typically used between a parent and child process (e.g., shell pipelines like `ps aux | grep foo`); named pipes (FIFOs) extend this to unrelated processes via a filesystem path.\n- Message queues: a kernel-managed queue where processes send and receive discrete, structured messages, rather than a raw byte stream. Useful when you want message boundaries preserved and don't need the two processes to be running at exactly the same time.\n- Shared memory: multiple processes map the same region of physical memory into their own address spaces, allowing very fast data exchange since there's no copying through the kernel on every read/write — but this speed requires the processes to explicitly synchronize access themselves (e.g., with semaphores or mutexes) to avoid race conditions.\n- Semaphores: not really for data transfer, but for synchronizing access to shared resources (like the shared memory above) — coordinating which process can read/write and when.\n- Sockets: a general-purpose communication endpoint that works for both local IPC (Unix domain sockets) and communication between processes on different machines over a network (network sockets) — used whenever processes might not be on the same host, or when a familiar client-server model is convenient.\n- Signals: lightweight, asynchronous notifications the kernel delivers to a process to report an event (e.g., SIGTERM to request termination, SIGCHLD to notify a parent that a child exited) — used for simple event notification rather than data transfer.\n\nRule of thumb for an interview: shared memory is fastest but needs manual synchronization; pipes/message queues/sockets go through the kernel (slower but simpler to reason about); signals are for lightweight event notification, not data.",
+      "sources": [
+        {
+          "title": "Inter Process Communication (IPC) - GeeksforGeeks",
+          "url": "https://www.geeksforgeeks.org/operating-systems/inter-process-communication-ipc/",
+          "domain": "geeksforgeeks.org"
+        },
+        {
+          "title": "What is inter-process communication (IPC)? - Linux Audit",
+          "url": "https://linux-audit.com/what-is/ipc/",
+          "domain": "linux-audit.com"
+        }
+      ],
+      "id": 40
+    },
+    {
+      "question": "What is a daemon process?",
+      "difficulty": "Easy",
+      "answer": "A daemon is a background process that runs independently of any interactive terminal or user session, typically providing an ongoing system or application service rather than doing a one-off task. Characteristic traits: it starts automatically at boot (or on demand), detaches from the terminal that may have launched it so it isn't affected by that terminal closing or the user logging out, and it runs persistently — often for the entire uptime of the machine — waiting to handle requests, monitor resources, or perform scheduled work.\n\nCommon real-world examples on Linux include sshd (handles incoming SSH connections), httpd/nginx (serves web requests), cron/crond (runs scheduled jobs), and systemd-journald (collects system logs). By convention, many daemon process names end in 'd'.\n\nA process is traditionally turned into a daemon ('daemonized') through a sequence like: fork() to create a child, have the original parent exit (detaching the daemon from the shell that started it and giving it the special init process as its new parent), call setsid() to start a new session and detach from any controlling terminal, and typically redirect or close standard input/output/error since there's no terminal to interact with. Note that not every background process is a daemon — running `sleep 100 &` puts a process in the background, but it's still tied to your shell session and doesn't have the full detachment and persistence characteristics of a true daemon.",
+      "sources": [
+        {
+          "title": "Learn What Is a Daemon Process | Understanding Linux Daemons - Codefinity",
+          "url": "https://codefinity.com/courses/v2/8cff65ce-2c8d-4827-8931-a4f6f931b7a6/6a36e841-449c-406b-90af-a1849f9301f4/f62f3e7a-5b2e-4620-a80b-cf60d35927ed",
+          "domain": "codefinity.com"
+        },
+        {
+          "title": "What Is A Linux Daemon? (Unlocking Background Processes)",
+          "url": "https://laptopjudge.com/what-is-a-linux-daemon/",
+          "domain": "laptopjudge.com"
+        }
+      ],
+      "id": 41
+    },
+    {
+      "question": "What is the difference between the stack and the heap in a process's memory layout?",
+      "difficulty": "Easy",
+      "answer": "Both are regions of a process's address space used for storing data at runtime, but they're managed completely differently and used for different purposes.\n\nThe stack is used for function call management — each function call pushes a new stack frame containing local variables, function parameters, and the return address, and that frame is automatically popped off when the function returns. It's managed automatically by the compiler/runtime (via a stack pointer register that's adjusted on every push/pop), grows and shrinks in a strict last-in-first-out order, and has a fixed maximum size (governed by something like RLIMIT_STACK on Linux) — if it grows past that limit (e.g., from very deep or infinite recursion), you get a stack overflow. Stack allocation and deallocation is extremely fast since it's just moving a pointer.\n\nThe heap is used for dynamic memory allocation — memory the programmer explicitly requests at runtime because its size can't be known at compile time (e.g., via malloc/new in C/C++, or automatically by managed-language runtimes). It's managed manually (malloc/free, new/delete) or by a garbage collector, doesn't follow any strict ordering (blocks can be allocated and freed in any order), and can grow much larger than the stack (limited mainly by available virtual address space and physical memory). Because the heap allows arbitrary allocation/deallocation patterns, it's more prone to fragmentation and is generally slower to allocate from than the stack.\n\nIn a typical process layout, the stack starts near the top of the address space and grows downward, while the heap starts after the program's code and static data and grows upward — leaving a gap between them that shrinks as either one grows, which is what ultimately limits how large either can get.",
+      "sources": [
+        {
+          "title": "In-Memory Layout of a Program (Process) « Gabriele Tolomei",
+          "url": "https://gabrieletolomei.wordpress.com/miscellanea/operating-systems/in-memory-layout/",
+          "domain": "gabrieletolomei.wordpress.com"
+        },
+        {
+          "title": "Understanding Memory Management in Linux",
+          "url": "https://reliabilitywhisperer.substack.com/p/understanding-memory-management-in",
+          "domain": "reliabilitywhisperer.substack.com"
+        }
+      ],
+      "id": 42
+    },
+    {
+      "question": "What is swapping, and how is it different from paging?",
+      "difficulty": "Easy",
+      "answer": "Both move data between RAM and disk to free up physical memory, but they operate at different granularities.\n\nSwapping, in the strict/classical sense, moves an entire process's address space out to disk (the swap area) and back, as a single unit — the whole process is either fully resident in memory or fully written out to disk. This was how early Unix systems handled memory over-commitment: if a process needed to run but memory was full, an entire other process would be swapped out wholesale to make room.\n\nPaging moves memory in smaller, fixed-size chunks (pages, e.g., 4KB) rather than whole processes — only the specific pages a process is actively using need to be resident in RAM; the rest can remain on disk and be pulled in on demand (demand paging) when actually referenced, triggering a page fault. This is far more flexible and memory-efficient than swapping an entire process, since a process can run productively even with only part of its address space physically resident, and RAM can be shared much more finely among many processes.\n\nIn practice, on modern systems (including Linux), 'swapping' is often used informally to describe what is technically paging — the Linux kernel documentation itself notes that Linux implements paging (moving individual pages) but traditionally calls it 'swapping' in documentation and tooling (e.g., the swap partition/file, vmstat's 'swap' column). So in casual usage, 'swap space' refers to the disk area used to back paged-out memory, even though what's actually happening at the mechanism level is page-granularity, not whole-process granularity.",
+      "sources": [
+        {
+          "title": "Chapter 11: Swap Management - Understanding the Linux Virtual Memory Manager (kernel.org)",
+          "url": "https://www.kernel.org/doc/gorman/html/understand/understand014.html",
+          "domain": "kernel.org"
+        },
+        {
+          "title": "Linux Queries: What is the difference between Swapping and Paging?",
+          "url": "https://querieslinux.blogspot.com/2009/07/what-is-difference-between-swapping-and.html",
+          "domain": "querieslinux.blogspot.com"
+        }
+      ],
+      "id": 43
+    },
+    {
+      "question": "What is a signal in a Unix/Linux system, and what is it typically used for?",
+      "difficulty": "Easy",
+      "answer": "A signal is a lightweight, asynchronous notification the kernel (or another process) sends to a process to inform it that a specific event has occurred, without transferring any actual data — it's essentially a numbered interrupt delivered at the software level. When a process receives a signal, execution is interrupted and one of three things happens: the process runs a default action (which for most signals is to terminate, sometimes with a core dump), the process ignores it, or — for most signals — the process runs a custom handler function it registered in advance to react to the signal (e.g., perform cleanup before exiting).\n\nSignals are typically used for: requesting graceful termination (SIGTERM, which a process can catch and handle to clean up before exiting), reporting a user-initiated interrupt (SIGINT, sent when you press Ctrl+C), notifying a parent that a child process has exited (SIGCHLD, so the parent knows it's safe to call wait() and reap the child), reporting a fatal program error like an invalid memory access (SIGSEGV) or division by an illegal operation, and forcing immediate, un-catchable termination (SIGKILL) when a process needs to be stopped unconditionally.\n\nA key detail interviewers probe: not all signals can be caught. SIGKILL and SIGSTOP are handled directly by the kernel and cannot be caught, blocked, or ignored by the receiving process — this is a deliberate design choice so that an administrator (or the system) can always regain control over a process, even one that has gone haywire or is deliberately ignoring termination requests.",
+      "sources": [
+        {
+          "title": "SIGKILL vs SIGTERM: Master Process Termination in Linux and Kubernetes | SUSE Communities",
+          "url": "https://www.suse.com/c/observability-sigkill-vs-sigterm-a-developers-guide-to-process-termination/",
+          "domain": "suse.com"
+        },
+        {
+          "title": "What is inter-process communication (IPC)? - Linux Audit",
+          "url": "https://linux-audit.com/what-is/ipc/",
+          "domain": "linux-audit.com"
+        }
+      ],
+      "id": 44
+    },
+    {
+      "question": "What is the basic difference between a container and a virtual machine?",
+      "difficulty": "Easy",
+      "answer": "The core difference is what layer of the system each one virtualizes.\n\nA virtual machine (VM) virtualizes the hardware. A hypervisor (like VMware ESXi, Hyper-V, or KVM) sits on the physical machine and carves it into virtual hardware, on top of which each VM boots and runs its own complete, independent guest operating system (its own kernel included). Because each VM has its own kernel, VMs provide strong isolation from each other and from the host — but this comes at the cost of overhead: each VM needs to boot a full OS, and duplicates OS-level resources (memory footprint, kernel data structures) that could otherwise be shared.\n\nA container virtualizes at the operating system level instead. All containers on a host share the same underlying host kernel; a container is really just a regular process that has been given a restricted, isolated view of the system using two Linux kernel features: namespaces (which control what a process can see — its own process IDs, network interfaces, filesystem mounts, hostname, etc.) and cgroups (control groups, which limit what resources — CPU, memory, disk I/O — a process can actually use). Because there's no separate guest kernel or hardware emulation to boot, containers start in a fraction of a second and have far less memory/CPU overhead than VMs, making them ideal for packaging and running many lightweight, isolated application instances on the same host.\n\nThe important trade-off: because containers share the host kernel, the isolation boundary is weaker than a VM's — a kernel-level vulnerability can potentially be exploited to escape a container and affect the host or other containers, whereas escaping a VM requires breaking the hypervisor itself, a much harder and more hardware-enforced boundary.",
+      "sources": [
+        {
+          "title": "Docker Container Isolation · Dash0",
+          "url": "https://www.dash0.com/faq/docker-container-isolation",
+          "domain": "dash0.com"
+        },
+        {
+          "title": "How Docker Containers Work Under the Hood: Namespaces and Cgroups - Atlantbh",
+          "url": "https://atlantbh.com/blog/how-docker-containers-work-under-the-hood-namespaces-and-cgroups/",
+          "domain": "atlantbh.com"
+        }
+      ],
+      "id": 45
+    },
+    {
+      "question": "Explain the readers-writers problem. How is it different from the producer-consumer problem?",
+      "difficulty": "Medium",
+      "answer": "The readers-writers problem models a shared resource (classically, a database) accessed by two kinds of processes: readers, who only read the data and can safely do so concurrently with other readers since they don't modify anything, and writers, who need exclusive access because they modify the data — no other reader or writer can be accessing the data while a writer is writing. The synchronization goal is to allow maximum concurrency (multiple simultaneous readers) while still guaranteeing that writers get exclusive access and that data never gets corrupted by simultaneous reads and writes.\n\nA classic semaphore-based solution (the 'readers-preference' version) uses a mutex to protect a shared counter `readcnt` (the number of active readers) and a semaphore `wrt` that controls access to the actual resource: the first reader to arrive locks `wrt` (blocking writers), subsequent readers just increment `readcnt` and proceed, and the last reader to leave unlocks `wrt` (allowing a waiting writer in). Writers simply wait on `wrt` and hold it exclusively while writing. This version has a fairness problem, though: as long as readers keep arriving, `wrt` may never be released to a waiting writer, which can starve writers indefinitely — this motivates writer-preference or fully fair variants.\n\nThe key difference from producer-consumer: producer-consumer is fundamentally about a bounded buffer and data flow — producers create items and consumers remove them, with the buffer's fixed capacity creating two symmetric constraints (don't write to a full buffer, don't read from an empty one), and every participant (producer or consumer) needs the same kind of access (each item is written once and consumed once). Readers-writers, by contrast, isn't about a buffer or data flow at all — it's about read/write access control to a single persistent piece of shared data, and the two roles are asymmetric: many readers can safely coexist, but a writer needs total exclusivity. In short, producer-consumer solves a data-transfer/capacity problem, while readers-writers solves an access-control/concurrency-degree problem.",
+      "sources": [
+        {
+          "title": "Readers-Writers Problem - GeeksforGeeks",
+          "url": "https://www.geeksforgeeks.org/operating-systems/readers-writers-problem-set-1-introduction-and-readers-preference-solution/",
+          "domain": "geeksforgeeks.org"
+        },
+        {
+          "title": "Classical Problems of Synchronization with Semaphore Solution - GeeksforGeeks",
+          "url": "https://www.geeksforgeeks.org/operating-systems/classical-problems-of-synchronization-with-semaphore-solution/",
+          "domain": "geeksforgeeks.org"
+        }
+      ],
+      "id": 46
+    },
+    {
+      "question": "Explain the sleeping barber problem and the synchronization challenge it's meant to illustrate.",
+      "difficulty": "Medium",
+      "answer": "The sleeping barber problem, attributed to Dijkstra, models a barbershop with one barber, one barber's chair, and a fixed number (N) of waiting chairs. The rules: if there are no customers, the barber falls asleep in the barber chair; when a customer arrives, they wake the barber if he's asleep; if all waiting chairs are occupied, an arriving customer simply leaves (balks); otherwise the customer sits in a waiting chair until the barber is free.\n\nThe synchronization challenge it illustrates is coordinating producers and a consumer around a resource with a limited, countable capacity, combined with a 'sleep until needed' pattern for the server — very similar in spirit to producer-consumer, but the interesting subtlety is managing the barber's idle/asleep state safely alongside the waiting-room capacity check, without race conditions or deadlock. If handled incorrectly (e.g., checking the number of waiting customers and then acting on that count without proper mutual exclusion), you can get race conditions where two arriving customers both see a chair as free and both take the last seat, or the barber and a customer can end up waiting on each other indefinitely (deadlock), or a customer can be forgotten and wait forever even though a chair is free (starvation).\n\nThe standard semaphore-based solution uses three semaphores — `customers` (counts waiting customers, which the barber blocks on when idle), `barbers` (indicates the barber is ready/idle, which a customer waits on before sitting in the chair), and a `mutex` to protect a shared `waiting` counter — plus that plain integer `waiting` counter, because a semaphore's current value can't be read directly, so the code needs an explicit variable to check 'is there a free chair' before deciding whether to wait or leave. The barber loops: wait on `customers` (sleeping if none), then process a haircut; a customer entering checks `waiting < N` (under mutex) — if there's room, increments `waiting`, signals `customers` to wake the barber, then waits on `barbers` before getting the haircut; otherwise the customer just leaves.",
+      "sources": [
+        {
+          "title": "Sleeping Barber problem in Process Synchronization - GeeksforGeeks",
+          "url": "https://www.geeksforgeeks.org/operating-systems/sleeping-barber-problem-in-process-synchronization/",
+          "domain": "geeksforgeeks.org"
+        },
+        {
+          "title": "The Sleeping Barber Problem | Baeldung on Computer Science",
+          "url": "https://www.baeldung.com/cs/sleeping-barber-problem",
+          "domain": "baeldung.com"
+        }
+      ],
+      "id": 47
+    },
+    {
+      "question": "What is starvation, and how does the \"aging\" technique help prevent it in priority-based scheduling?",
+      "difficulty": "Medium",
+      "answer": "Starvation (also called indefinite blocking) occurs when a process is perpetually denied the resources it needs to make progress — most commonly, a low-priority process in a priority-based scheduler that never gets the CPU because a continuous stream of higher-priority processes keeps arriving and jumping the queue ahead of it. Unlike deadlock, where processes are mutually blocked and none can proceed, starvation can happen to just a single unlucky process while the rest of the system continues operating normally — which makes it easy to overlook until it causes a real problem (e.g., a background job that silently never runs).\n\nAging is the standard technique used to prevent this: the scheduler gradually increases the priority of a process the longer it waits in the ready queue, so that even an initially low-priority process will eventually accumulate enough priority to be scheduled. For example, if priorities range from 127 (lowest) to 0 (highest), a system might raise a waiting process's priority by 1 every fixed interval (e.g., every 15 minutes) — so even a process starting at the lowest priority is mathematically guaranteed to reach the highest priority level after a bounded amount of waiting time, regardless of how many higher-priority processes keep arriving.\n\nThe key insight for an interview: aging converts a pure priority scheduler (which can starve arbitrarily) into one with a fairness guarantee, by making 'time spent waiting' itself count toward priority — it doesn't eliminate the concept of priority, but it ensures priority isn't the only factor forever. This same idea (basing eventual scheduling on accumulated wait time) is also what powers the periodic priority boost in Multilevel Feedback Queue scheduling, which exists to solve exactly this same starvation risk for long-running, CPU-bound processes stuck at the bottom queue.",
+      "sources": [
+        {
+          "title": "Starvation and Aging in Operating Systems - GeeksforGeeks",
+          "url": "https://www.geeksforgeeks.org/operating-systems/starvation-and-aging-in-operating-systems/",
+          "domain": "geeksforgeeks.org"
+        },
+        {
+          "title": "Aging (scheduling) - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Aging_(scheduling)",
+          "domain": "en.wikipedia.org"
+        }
+      ],
+      "id": 48
+    },
+    {
+      "question": "Compare user-level threads and kernel-level threads, and explain the many-to-one, one-to-one, and many-to-many threading models.",
+      "difficulty": "Medium",
+      "answer": "User-level threads (ULTs) are created, scheduled, and managed entirely by a library in user space, without the kernel knowing they exist as separate schedulable entities — the kernel just sees a single process. This makes thread creation and context-switching between ULTs extremely fast (no system call, no kernel involvement), and it's portable across OSes since the threading logic lives in a user-space library rather than depending on kernel support. The major downside: since the kernel is unaware of individual ULTs, if one ULT makes a blocking system call, the kernel blocks the entire underlying process — all other ULTs in that process are blocked too, even though logically they should be free to keep running. ULTs also can't achieve true parallelism on multiple CPU cores by themselves, since the kernel only sees (and schedules) one entity.\n\nKernel-level threads (KLTs) are created and scheduled directly by the OS kernel — each thread is an independently schedulable entity the kernel is fully aware of. This allows true parallelism across multiple cores and means a blocking system call in one thread doesn't block its siblings (the kernel can schedule another ready thread from the same process). The cost is higher overhead: thread creation, scheduling, and context switches all require kernel involvement (system calls), which is slower than pure user-space thread switching.\n\nThe three classic mapping models describe how user-level threads relate to kernel-level threads:\n- Many-to-one: many ULTs map onto a single KLT. Simple and fast for context switching (all in user space), but inherits the ULT weaknesses — one blocking call blocks everyone, and there's no true multi-core parallelism, since the kernel only ever sees one thread. Early Java green threads used this model.\n- One-to-one: each ULT maps directly to its own dedicated KLT. This is the simplest architecture from the kernel's perspective (a traditional process scheduler just treats each thread as a schedulable unit) and gives true parallelism and no blocking-call problem, but thread creation is more expensive and heavily multi-threaded applications can create significant kernel resource pressure since every thread costs a kernel thread. This is what most modern general-purpose OSes (Linux NPTL, Windows) use by default for language-level threads (e.g., Java threads, POSIX threads).\n- Many-to-many: many ULTs are multiplexed onto a smaller or equal number of KLTs, with a user-space scheduler managing which ULTs run on which KLTs. This tries to combine the best of both — cheap, plentiful user-level threads for concurrency, while still exposing enough KLTs to the kernel for genuine multi-core parallelism and to avoid the single-blocking-call problem (if one ULT blocks, the runtime can move other ULTs to a different KLT). Go's goroutines are a well-known modern example of this hybrid approach, achieving both lightweight concurrency and true parallelism by multiplexing many goroutines onto a smaller pool of OS threads.",
+      "sources": [
+        {
+          "title": "User Level vs Kernel Level Threads - GeeksforGeeks",
+          "url": "https://www.geeksforgeeks.org/operating-systems/difference-between-user-level-thread-and-kernel-level-thread/",
+          "domain": "geeksforgeeks.org"
+        },
+        {
+          "title": "Multithreading Models - Oracle Java on Solaris 7 Developer's Guide",
+          "url": "https://docs.oracle.com/cd/E19620-01/805-4031/6j3qv1oej/index.html",
+          "domain": "docs.oracle.com"
+        }
+      ],
+      "id": 49
+    },
+    {
+      "question": "What is the buddy memory allocation algorithm used for kernel memory, and what is its main drawback?",
+      "difficulty": "Medium",
+      "answer": "The buddy system is a memory allocation algorithm the kernel uses to manage physical page allocation, designed to make merging freed memory back together fast and simple. It works by only ever dividing memory into blocks whose sizes are powers of two: starting from one large block (e.g., 256KB), a request is satisfied by repeatedly splitting the smallest available block in half until a block of the right size (the smallest power-of-two block that's still ≥ the request) is reached. For example, a 36KB request can only be satisfied by a 64KB block, since the next power-of-two size down (32KB) is too small.\n\nEach time a block is split in two, the resulting halves are called 'buddies' of each other — and this buddy relationship is exactly what makes freeing memory efficient: when a block is freed, the allocator checks whether its buddy is also free; if so, the two buddies are merged (coalesced) back into the larger block they originally came from, and this coalescing can cascade upward (a newly merged block can itself be merged with its own buddy) until no more merges are possible. Because a block's buddy address can be computed with simple, fast arithmetic (typically an XOR on the block's address), this coalescing check is cheap, which is the main appeal of the algorithm — it keeps large contiguous blocks available for future large requests instead of leaving memory permanently fragmented into small odd-sized pieces.\n\nThe main drawback is internal fragmentation: because allocations are always rounded up to the next power-of-two block size, a request is frequently granted more memory than it actually needs, and that excess is wasted (it can't be given to anyone else, since it's inside a block already allocated to this requester). In the 36KB-request-gets-64KB example, 28KB is wasted internally. This is exactly why production kernels like Linux layer a slab allocator on top of the buddy system — the slab allocator handles smaller, frequently-reused kernel objects (like inodes or task structs) far more space-efficiently, while the buddy system continues to handle large, page-granularity allocations underneath it.",
+      "sources": [
+        {
+          "title": "Allocating kernel memory (buddy system and slab system) - GeeksforGeeks",
+          "url": "https://www.geeksforgeeks.org/operating-systems/operating-system-allocating-kernel-memory-buddy-system-slab-system/",
+          "domain": "geeksforgeeks.org"
+        },
+        {
+          "title": "Linux Memory Management - The Buddy Allocator",
+          "url": "https://grimoire.carcano.ch/blog/memory-management-the-buddy-allocator/",
+          "domain": "grimoire.carcano.ch"
+        }
+      ],
+      "id": 50
+    },
+    {
+      "question": "What is the slab allocator, and what problem does it solve that the buddy system alone does not handle well?",
+      "difficulty": "Medium",
+      "answer": "The slab allocator is a memory allocation layer that sits on top of the buddy system, designed specifically to efficiently allocate and reuse small, fixed-size kernel objects — things like inodes, task/process descriptors, semaphores, and network buffers — that the kernel needs to create and destroy constantly and in large numbers.\n\nThe buddy system alone struggles here for two reasons: it only ever hands out power-of-two-sized blocks (a page or a multiple/fraction of one), so a kernel object of an arbitrary small size (say, a 50-byte semaphore structure) allocated directly via the buddy system would be wasteful due to internal fragmentation (rounding up to a much larger power-of-two block); and every allocation would also pay the cost of initializing the object from scratch and tearing it down completely on every free, even though the kernel creates and destroys the exact same kind of object thousands of times per second.\n\nThe slab allocator solves both problems by maintaining a separate cache for each type of kernel object. Each cache is backed by one or more 'slabs' — contiguous, page-aligned chunks of memory (obtained from the buddy allocator) that are subdivided into many fixed-size 'object' slots matching the size of that specific data structure. Crucially, when an object is freed, it isn't destroyed and returned to general memory — it's kept in the cache, already initialized, ready to be handed out again for the next request of the same object type, avoiding repeated initialization/destruction overhead. This gives three main benefits: it eliminates the internal fragmentation the buddy system alone would cause for small objects (since slots are exactly sized to the object, not rounded up to a page-based power of two); it speeds up allocation and deallocation significantly by reusing pre-initialized objects instead of allocating and initializing from scratch each time; and some implementations additionally use 'slab coloring' — offsetting where objects start within a slab — to spread objects across different CPU cache lines and improve cache utilization.",
+      "sources": [
+        {
+          "title": "Chapter 8: Slab Allocator - Understanding the Linux Virtual Memory Manager (kernel.org)",
+          "url": "https://www.kernel.org/doc/gorman/html/understand/understand011.html",
+          "domain": "kernel.org"
+        },
+        {
+          "title": "Operating System - Allocating Kernel Memory (Slab Allocation) - TutorialsPoint",
+          "url": "https://www.tutorialspoint.com/allocating-kernel-memory-buddy-system-and-slab-system",
+          "domain": "tutorialspoint.com"
+        }
+      ],
+      "id": 51
+    },
+    {
+      "question": "What is mmap(), and how does memory-mapped file I/O differ from using traditional read()/write() system calls?",
+      "difficulty": "Medium",
+      "answer": "mmap() is a system call that maps a file (or a portion of it) directly into a process's virtual address space, so the program can access the file's contents simply by reading and writing memory at that mapped address — as if the file were an array in RAM — instead of issuing explicit read()/write() system calls to move data between the file and an application-provided buffer.\n\nWith traditional read()/write(), every I/O operation is an explicit system call: the kernel typically copies data between its own page cache and the user-space buffer you provided, which means data effectively gets copied at least twice — once from disk into the kernel's page cache, and again from the kernel's buffer into your process's buffer (and vice versa for writes). Each read()/write() call also has fixed per-call overhead (the cost of the system call/mode switch itself).\n\nWith mmap(), the file's data is mapped directly onto pages the process can access, and the kernel handles bringing pages in from disk via ordinary demand paging: the first time the process touches a mapped page that isn't yet resident, a page fault occurs, and the OS transparently reads that page-sized chunk of the file from disk into memory and resumes execution. After the initial mapping call, no further system calls are needed to access the file's data — you just read or write memory directly, and (for a shared, writable mapping) the OS handles writing modified pages back to disk in the background. This eliminates the extra buffer-copy overhead of read()/write() and enables efficient random access to just the portions of a (potentially very large) file that are actually touched, without needing to read the whole file upfront — a form of lazy loading. mmap() also naturally supports sharing: multiple processes can map the same file, and (for shared mappings) writes by one process become visible to the others through the shared underlying pages.\n\nThe trade-offs: mmap() page faults can be less predictable/harder to control than explicit, synchronous read() calls (useful for some real-time or tightly-controlled I/O patterns), and mmap() isn't always faster in every workload — for small, sequential I/O, the simpler read()/write() path can sometimes perform comparably or better, so the right choice depends on the access pattern (random access to a large file favors mmap(); simple sequential streaming often does fine with read()/write()).",
+      "sources": [
+        {
+          "title": "Memory Mapped Files in OS - GeeksforGeeks",
+          "url": "https://www.geeksforgeeks.org/operating-systems/memory-mapped-files-in-os/",
+          "domain": "geeksforgeeks.org"
+        },
+        {
+          "title": "File Access: Memory-Mapped vs. I/O System Call Performance | Baeldung on Linux",
+          "url": "https://www.baeldung.com/linux/memory-mapped-vs-system-call",
+          "domain": "baeldung.com"
+        }
+      ],
+      "id": 52
+    },
+    {
+      "question": "What is a superblock in a file system, and what kind of metadata does it store?",
+      "difficulty": "Medium",
+      "answer": "The superblock is a special data structure, usually located at a well-known, fixed location near the start of a file system (or partition), that stores global metadata describing the file system as a whole — essentially the 'table of contents' the OS reads first when mounting a file system, before it can interpret anything else on the disk.\n\nTypical information stored in a superblock includes: the total size of the file system, the block size used, the total and free number of blocks and inodes, the location of the inode table and other core structures (like a journal, if the file system supports one), a 'magic number' identifying the file system type (so the OS can recognize and validate it), the file system's state (e.g., cleanly unmounted vs. needing a consistency check after a crash), and versioning/feature flags describing which optional file system features are enabled.\n\nBecause the superblock is so critical — if it's corrupted, the OS may not be able to figure out where anything else on the file system is — many file systems (like ext2/ext3/ext4) maintain redundant backup copies of the superblock at multiple locations across the disk (e.g., one per block group), so that if the primary superblock is damaged, tools like `fsck` or `e2fsck` can locate and use a backup copy to repair the file system. XFS follows a similar redundancy model, keeping a copy of the superblock in each of its allocation groups. When a file system is mounted, the superblock is read first to determine parameters like block size and journaling state — if it's unreadable or invalid, the mount operation fails outright.",
+      "sources": [
+        {
+          "title": "Superblock (file system) - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Superblock_(file_system)",
+          "domain": "en.wikipedia.org"
+        },
+        {
+          "title": "File System Implementation in Operating System - GeeksforGeeks",
+          "url": "https://www.geeksforgeeks.org/operating-systems/file-system-implementation-in-operating-system/",
+          "domain": "geeksforgeeks.org"
+        }
+      ],
+      "id": 53
+    },
+    {
+      "question": "Compare contiguous, linked, and indexed file allocation methods for storing files on disk.",
+      "difficulty": "Medium",
+      "answer": "These three methods differ in how they map a file's logical content to the physical disk blocks that hold it, and each makes a different trade-off between access speed, flexibility, and overhead.\n\nContiguous allocation stores a file's data in a single run of consecutive disk blocks, with the directory entry just needing to record the starting block and length. This gives excellent performance for sequential access (blocks are read in physical disk order, minimizing seek time) and also supports fast direct/random access (block k of the file is simply starting_block + k, a simple calculation). The major downside is external fragmentation: as files are created, grown, and deleted over time, free space becomes broken into scattered chunks, and even if total free space is sufficient, there may be no single contiguous run large enough for a new file — requiring costly compaction to fix. It also makes it hard to grow a file in place if the block immediately after it is already in use.\n\nLinked allocation stores a file as a linked list of disk blocks scattered anywhere on the disk, with each block containing a pointer to the next block in the file, and the directory entry recording just the first block. This completely avoids external fragmentation (any free block can be used, in any order) and makes it easy to grow files dynamically. The major downside is that it only supports efficient sequential access — to reach block k of the file, you must traverse k pointers sequentially from the start, since there's no way to jump directly to an arbitrary block; this also means many scattered disk seeks, hurting performance, and the pointers themselves consume some storage overhead in every block.\n\nIndexed allocation stores all of a file's block pointers together in one (or more, for large files) dedicated index block, rather than scattering pointers inside the data blocks themselves. The directory entry points to this index block, and any data block can then be found in one indirection step by looking up its pointer in the index — giving efficient direct/random access (unlike linked allocation) while still avoiding external fragmentation (unlike contiguous allocation), since data blocks can be anywhere. The main costs are the extra space needed for the index block itself, and for very large files a single index block may not have enough pointer slots, requiring multi-level indexing schemes (as used in traditional Unix inodes, with direct, single-indirect, double-indirect, and triple-indirect pointers) to handle files of widely varying sizes efficiently.",
+      "sources": [
+        {
+          "title": "File Allocation Methods - GeeksforGeeks",
+          "url": "https://www.geeksforgeeks.org/operating-systems/file-allocation-methods/",
+          "domain": "geeksforgeeks.org"
+        },
+        {
+          "title": "Understanding Linux Filesystems: Inodes, Block Sizes, and Data Structures | Linux Journal",
+          "url": "https://www.linuxjournal.com/content/understanding-linux-filesystems-inodes-block-sizes-and-data-structures",
+          "domain": "linuxjournal.com"
+        }
+      ],
+      "id": 54
+    },
+    {
+      "question": "What is journaling in a file system, and how does it help with crash recovery?",
+      "difficulty": "Medium",
+      "answer": "Journaling (also called write-ahead logging, borrowing the idea from database systems) is a technique file systems use to stay consistent even if the system crashes or loses power in the middle of an update. The core idea: before actually modifying the real on-disk file system structures, the file system first writes a short summary — a 'note' describing the update it's about to perform — into a dedicated log area called the journal. Only after that note is safely written does the file system go ahead and perform the actual update to the real data structures.\n\nThis matters because a single logical file system operation (like creating a file) often requires updating several separate on-disk structures — an inode, a bitmap tracking free blocks, and the actual data block, for example. If a crash happens partway through updating these structures without journaling, the file system can be left in an inconsistent state (e.g., an inode pointing to a block that was never actually marked as allocated), and the classic recovery tool, fsck, would need to scan the entire disk after every crash to find and fix such inconsistencies — extremely slow on large disks.\n\nWith journaling, recovery after a crash is much faster and more targeted: since every intended update was already logged to the journal before being applied, the OS just needs to scan the (much smaller) journal on reboot, not the entire file system. If a transaction's log entry indicates it was fully committed before the crash, the OS redoes (replays) that transaction to guarantee it's fully applied; if a transaction was only partially logged (never fully committed) when the crash happened, it's simply discarded, since it never really took effect. This is called redo logging, and while it does add a bit of extra write overhead during normal operation (writing the journal note before the actual update, sometimes duplicating the data written), it dramatically shrinks the time and unpredictability of crash recovery. Modes vary in what gets journaled: full data journaling (logging both metadata and file content, safest but slowest, used by ext3/ext4's data=journal mode) versus metadata-only journaling (the default in most systems, protecting file system structure consistency without the overhead of double-writing file content). Common real-world examples include ext3/ext4 and NTFS.",
+      "sources": [
+        {
+          "title": "Journaling or write-ahead logging - GeeksforGeeks",
+          "url": "https://www.geeksforgeeks.org/operating-systems/journaling-or-write-ahead-logging/",
+          "domain": "geeksforgeeks.org"
+        },
+        {
+          "title": "42: Crash Consistency: FSCK and Journaling (OSTEP, pages.cs.wisc.edu)",
+          "url": "https://pages.cs.wisc.edu/~remzi/OSTEP/file-journaling.pdf",
+          "domain": "pages.cs.wisc.edu"
+        }
+      ],
+      "id": 55
+    },
+    {
+      "question": "What is the difference between hard real-time and soft real-time systems? Give an example of each.",
+      "difficulty": "Medium",
+      "answer": "Both types of real-time systems care about meeting deadlines, but they differ in the consequences of missing one.\n\nIn a hard real-time system, every deadline must be met, every single time — missing even a single deadline is considered a system failure, potentially with catastrophic consequences (safety risk, equipment damage, or worse). Because the stakes are so high, hard real-time systems are engineered and formally analyzed (via schedulability tests) to guarantee, before deployment, that all deadlines will always be met under the system's assumptions. A classic example is a fly-by-wire aircraft flight control system: it must sample sensor data (airspeed, altitude, attitude) and compute control surface adjustments within a strict, bounded time window — if a computation runs late, the control algorithm can become unstable, with potentially fatal results. Automotive engine ignition timing and pacemaker control loops are similar examples.\n\nIn a soft real-time system, deadlines are important goals, but occasionally missing one is tolerable — it degrades the quality or user experience rather than causing outright failure, especially if the average behavior over time stays within acceptable bounds. A classic example is video/audio streaming or multimedia playback: if a video frame is decoded a few milliseconds late once in a while, the viewer might notice a brief stutter, but the system doesn't crash or become unsafe — it just degrades gracefully. Automated teller machine networks and typical multiplayer online games are other common examples, where an occasional missed deadline (a lagging frame, a delayed response) is annoying but not catastrophic.\n\nThis distinction directly affects scheduler design: hard real-time systems typically use scheduling algorithms (like Rate Monotonic Scheduling or Earliest Deadline First) paired with a formal schedulability test that must be satisfied before the system is even deployed, guaranteeing no task set that could miss a deadline is ever allowed to run; soft real-time systems can use less rigid scheduling and simply aim to minimize the frequency or severity (tardiness) of missed deadlines, since perfect guarantees aren't required.",
+      "sources": [
+        {
+          "title": "Hard vs. soft real-time in IEC 61508 embedded systems | Patsnap",
+          "url": "https://www.patsnap.com/resources/blog/articles/hard-vs-soft-real-time-in-iec-61508-embedded-systems/",
+          "domain": "patsnap.com"
+        },
+        {
+          "title": "hard real-time - an overview | ScienceDirect Topics",
+          "url": "https://www.sciencedirect.com/topics/computer-science/hard-real-time",
+          "domain": "sciencedirect.com"
+        }
+      ],
+      "id": 56
+    },
+    {
+      "question": "What is Rate Monotonic Scheduling, and how does it differ from Earliest Deadline First (EDF) scheduling?",
+      "difficulty": "Medium",
+      "answer": "Both are scheduling algorithms for periodic real-time tasks (tasks that repeat with a fixed period, each instance/job needing to finish by its deadline), but they differ in whether priorities are fixed or change dynamically.\n\nRate Monotonic Scheduling (RMS) is a static (fixed-priority) preemptive scheduling algorithm: each task is assigned a priority based on its period, once, and that priority never changes at runtime — the task with the shortest period gets the highest priority (hence 'rate monotonic': priority increases monotonically with the task's rate/frequency). Liu and Layland's classic 1973 result proved RMS is optimal among fixed-priority algorithms — if any static-priority assignment can schedule a given task set successfully, RMS can too. They also derived a simple sufficient schedulability test: a set of n periodic tasks is guaranteed schedulable under RMS if the total CPU utilization U = Σ(Ci/Ti) (where Ci is each task's worst-case execution time and Ti its period) is less than or equal to n(2^(1/n) − 1) — a bound that approaches roughly 69% as n grows large. This is a sufficient (not necessary) condition — task sets exceeding this bound may still be schedulable in practice, but can't be guaranteed safe by this simple test alone; tighter (but more complex) exact tests exist for cases where the bound is too pessimistic.\n\nEarliest Deadline First (EDF) is a dynamic-priority preemptive algorithm: at every scheduling decision, the task with the closest absolute deadline is run next, so a task's effective priority changes constantly as deadlines approach or as new jobs arrive. EDF is provably optimal among all scheduling algorithms (not just fixed-priority ones) for a single processor — if any scheduling algorithm can meet all deadlines for a task set, EDF can too — and it achieves this with a much better utilization bound: EDF can schedule any task set successfully as long as total utilization U ≤ 1 (100%), compared to RMS's ~69% guaranteed bound.\n\nThe practical trade-off interviewers look for: RMS is simpler to implement and analyze (fixed priorities map naturally onto ordinary OS priority schedulers) and has more predictable behavior under overload, but wastes some schedulable capacity due to its lower utilization bound; EDF achieves theoretically optimal CPU utilization but requires dynamically tracking and comparing deadlines on every scheduling decision (more runtime overhead) and its behavior during transient overload is less predictable, since which specific task misses a deadline under overload is harder to control than with a fixed priority scheme. EDF has gained more real-world traction in Linux via the SCHED_DEADLINE scheduling class, available since Linux 3.14.",
+      "sources": [
+        {
+          "title": "Hard vs. soft real-time in IEC 61508 embedded systems | Patsnap",
+          "url": "https://www.patsnap.com/resources/blog/articles/hard-vs-soft-real-time-in-iec-61508-embedded-systems/",
+          "domain": "patsnap.com"
+        },
+        {
+          "title": "Real-Time scheduling: from hard to soft real-time systems (arXiv)",
+          "url": "https://arxiv.org/pdf/1512.01978",
+          "domain": "arxiv.org"
+        }
+      ],
+      "id": 57
+    },
+    {
+      "question": "How do Linux containers achieve process isolation using namespaces and cgroups, and how does this differ from hypervisor-based virtualization?",
+      "difficulty": "Medium",
+      "answer": "Linux containers achieve isolation entirely through kernel features applied to ordinary processes — there's no separate virtual hardware or guest kernel involved.\n\nNamespaces control what a process can see. Each namespace type partitions a specific kind of global system resource so that a process inside the namespace gets its own private, isolated view of it, while processes outside continue to see the unpartitioned original. For example: the PID namespace gives a container its own process ID numbering, so a process inside can't see or signal processes in other containers or the host; the network namespace gives a container its own network interfaces, IP addresses, and routing/iptables rules, so two containers can independently bind to the same port without conflict; the mount namespace gives a container its own view of the filesystem hierarchy, making it think it has its own root filesystem; and there are similar namespaces for hostname (UTS), inter-process communication (IPC), and user/group ID mapping (user namespace).\n\ncgroups (control groups) control what a process can use — they let the kernel limit and account for the CPU, memory, disk I/O, and other resources a container (or group of processes) is allowed to consume, preventing one misbehaving or resource-hungry container from starving the host or other containers on the same machine.\n\nTogether, namespaces + cgroups make a container 'look and feel' like an isolated machine to the process running inside it, while in reality it's just a normal Linux process with a restricted view and capped resource usage — this is why containers start almost instantly and have minimal memory/CPU overhead compared to a VM.\n\nThe fundamental difference from hypervisor-based virtualization is what's actually shared. In hypervisor-based VMs, each VM boots and runs its own independent, full guest operating system kernel; the hypervisor (e.g., KVM, Hyper-V, ESXi) virtualizes the hardware itself, and the isolation boundary between VMs is enforced by the hypervisor at a layer below any OS kernel — escaping a VM means breaking the hypervisor, a hardware-backed and heavily hardened boundary. In containers, by contrast, every container on the host shares the exact same running host kernel; the isolation boundary is a set of in-kernel data structures (the namespace/cgroup restrictions), not a separate privilege layer — so a sufficiently severe kernel vulnerability can potentially let a process escape its container's restrictions entirely, since there's no second kernel standing between the container and the host. This is precisely the trade-off container platforms make: much lower overhead and faster startup, in exchange for a comparatively weaker isolation boundary than full hardware virtualization.",
+      "sources": [
+        {
+          "title": "How Docker Containers Work Under the Hood: Namespaces and Cgroups - Atlantbh",
+          "url": "https://atlantbh.com/blog/how-docker-containers-work-under-the-hood-namespaces-and-cgroups/",
+          "domain": "atlantbh.com"
+        },
+        {
+          "title": "Docker Container Isolation · Dash0",
+          "url": "https://www.dash0.com/faq/docker-container-isolation",
+          "domain": "dash0.com"
+        }
+      ],
+      "id": 58
+    },
+    {
+      "question": "What is the difference between SIGTERM and SIGKILL, and why can a well-behaved application handle one but not the other?",
+      "difficulty": "Medium",
+      "answer": "Both signals are used to ask a process to terminate, but they differ fundamentally in whether the target process gets any say in the matter.\n\nSIGTERM (signal 15) is the default, 'polite' termination signal — it's what the `kill` command sends by default, and by design it can be caught, blocked, or ignored by the receiving process. A well-behaved application registers a handler for SIGTERM to perform a graceful shutdown: finishing in-flight requests, closing open database connections or file handles, flushing buffered data or caches to disk, deleting temporary files, and only then exiting cleanly. This is why SIGTERM is the preferred way to stop services in tools like Docker and Kubernetes — it gives the application a chance to shut down without corrupting data or dropping in-progress work.\n\nSIGKILL (signal 9, the signal behind `kill -9`) forces immediate termination and, crucially, cannot be caught, blocked, or ignored by any process — it's enforced directly by the kernel, which is why 'you cannot make SIGKILL safe.' The kernel simply terminates the process without ever invoking any of its signal handlers or letting it run any cleanup code, so open files may be left in an inconsistent state, temporary files aren't removed, and in-memory data that hadn't been flushed to disk is simply lost. SIGSTOP is the only other signal with this same uncatchable property.\n\nThe reason SIGKILL is deliberately uncatchable is a security and reliability design decision: if a process could intercept and ignore SIGKILL, it could become effectively unkillable, and an administrator (or the system itself) would lose the ability to reliably reclaim resources from a runaway or unresponsive process. SIGKILL exists precisely as that last-resort, guaranteed mechanism. Best practice, reflected in how orchestration systems like systemd and Kubernetes work: always send SIGTERM first and give the process a reasonable timeout to shut down gracefully, and only escalate to SIGKILL if it fails to exit in time — using SIGKILL as a first resort risks corrupting application state that a graceful shutdown would have protected.",
+      "sources": [
+        {
+          "title": "SIGKILL vs SIGTERM: Master Process Termination in Linux and Kubernetes | SUSE Communities",
+          "url": "https://www.suse.com/c/observability-sigkill-vs-sigterm-a-developers-guide-to-process-termination/",
+          "domain": "suse.com"
+        },
+        {
+          "title": "Linux Signals: Understanding SIGINT, SIGTERM, and SIGKILL - FOSS Linux",
+          "url": "https://www.fosslinux.com/121761/the-abcs-of-linux-signals-sigint-sigterm-and-sigkill-explained.htm",
+          "domain": "fosslinux.com"
+        }
+      ],
+      "id": 59
+    },
+    {
+      "question": "Walk through the typical boot process of a system, from power-on to a running user session (firmware/BIOS-UEFI → bootloader → kernel → init).",
+      "difficulty": "Medium",
+      "answer": "The boot process is a sequence of stages, each handing off control to the next, ultimately transforming a powered-off machine into a running, interactive system.\n\n1. Firmware (BIOS or UEFI): the moment the CPU powers on, it begins executing firmware code stored in a chip on the motherboard — the legacy BIOS (Basic Input/Output System) on older machines, or the more modern UEFI (Unified Extensible Firmware Interface) on current hardware. This firmware runs POST (Power-On Self-Test), a diagnostic check of core hardware components (CPU, RAM, storage, keyboard, etc.), then initializes essential hardware like RAM and storage controllers so the rest of the boot process has a usable environment to run in.\n\n2. Locating and loading the bootloader: after POST, the firmware looks for a boot device and a bootloader to hand control to. On legacy BIOS systems, this means reading a boot sector (like the MBR — Master Boot Record) from the first bootable disk found. On UEFI systems, the firmware reads boot entries from NVRAM and loads an EFI executable directly from the EFI System Partition (ESP), skipping the older MBR-based mechanism. Either way, the firmware loads a small bootloader program (commonly GRUB2 on Linux systems) into memory and transfers execution to it.\n\n3. Bootloader: the bootloader's job is to locate, load, and start the actual OS kernel. It typically presents a menu (if configured for multiple boot options), reads the chosen kernel image (e.g., a compressed vmlinuz file) and an initial RAM disk/filesystem image (initrd/initramfs, which contains just enough drivers and tools to mount the real root filesystem) into memory, passes any kernel command-line parameters, and then transfers control to the kernel's entry point.\n\n4. Kernel initialization: the kernel takes over, initializing its internal subsystems (memory management, scheduler, device drivers), mounting the temporary initramfs as an early root filesystem, using it to load any additional drivers needed to access the real storage device, and then switching over ('pivoting') to mount the actual root filesystem from disk.\n\n5. init process: once the real root filesystem is mounted, the kernel starts the very first user-space process, traditionally called init (PID 1) — on most modern Linux distributions, this is systemd, which replaced the older SysVinit. This init process becomes the ancestor of every other process on the system (and the default parent that adopts orphaned processes), and its job is to bring the rest of the system up: starting system services and daemons in the correct dependency order (systemd does much of this in parallel to speed up boot), mounting remaining filesystems, configuring networking, and ultimately starting whatever gets the user to an interactive state — a login prompt, a graphical desktop environment, or a set of running server processes, depending on the configured target/runlevel.",
+      "sources": [
+        {
+          "title": "Guide to the Boot Process of a Linux System | Baeldung on Linux",
+          "url": "https://www.baeldung.com/linux/boot-process",
+          "domain": "baeldung.com"
+        },
+        {
+          "title": "An introduction to the Linux boot and startup processes | Opensource.com",
+          "url": "https://opensource.com/article/17/2/linux-boot-and-startup",
+          "domain": "opensource.com"
+        }
+      ],
+      "id": 60
+    },
+    {
+      "question": "What is the cache coherence problem in a multiprocessor system, and how does the MESI protocol solve it?",
+      "difficulty": "Hard",
+      "answer": "In a multiprocessor (or multi-core) system, each core typically has its own private cache to speed up memory access. This creates the cache coherence problem: if multiple cores each cache a copy of the same memory location, and one core modifies its cached copy, the other cores' cached copies become stale — they still hold the old value, and if those cores read from their cache without knowing it's out of date, they'll see incorrect, inconsistent data. Without a mechanism to keep these distributed cached copies consistent, correctness of any program relying on shared memory between cores would break down.\n\nMESI (the most widely used cache coherence protocol) solves this by giving every cache line one of four states, tracked per-cache, and defining strict rules for how a line transitions between states in response to local access or 'snooped' activity from other cores on the shared bus/interconnect:\n- Modified (M): this cache holds the only copy of the line, and it has been written to — it's 'dirty,' meaning its value differs from main memory, and this cache is now responsible for eventually writing it back before any other core is allowed to read the stale value in memory.\n- Exclusive (E): this cache holds the only copy of the line, but it's 'clean' — it matches main memory, and because no other cache has a copy, this core can freely write to it locally (transitioning to Modified) without needing to notify or invalidate anyone else.\n- Shared (S): the line may exist in this cache and one or more other caches simultaneously, and all copies are clean/consistent with main memory. A core can read a Shared line freely, but cannot write to it without first broadcasting an invalidation message to every other cache holding that line, forcing them to transition their copy to Invalid, before it can safely upgrade its own copy to Modified.\n- Invalid (I): the line is not valid in this cache — either it was never loaded, or it was invalidated because another core wrote to that address.\n\nThe protocol works by having cores 'snoop' on a shared bus (or equivalent interconnect) — every cache watches for read/write requests from other cores that touch addresses it has cached, and reacts by transitioning its own copy's state accordingly (e.g., moving from Exclusive/Modified down to Shared or Invalid when another core requests read/write access). This ensures that at any point, there's only ever one core allowed to have a Modified (dirty) copy of a line, and any core wanting to write must first ensure every other copy is invalidated — guaranteeing all cores ultimately observe a single, consistent view of memory. A commonly discussed limitation: MESI operates at cache-line granularity, not individual-variable granularity, so two threads modifying entirely different variables that happen to fall on the same cache line will still trigger unnecessary invalidation traffic between cores — a performance problem known as false sharing.",
+      "sources": [
+        {
+          "title": "Cache Coherence Protocols in Multiprocessor System - GeeksforGeeks",
+          "url": "https://www.geeksforgeeks.org/computer-organization-architecture/cache-coherence-protocols-in-multiprocessor-system/",
+          "domain": "geeksforgeeks.org"
+        },
+        {
+          "title": "Cache Coherence: How the MESI Protocol Keeps Multi-Core CPUs Consistent | CodeToDeploy, Medium",
+          "url": "https://medium.com/codetodeploy/cache-coherence-how-the-mesi-protocol-keeps-multi-core-cpus-consistent-a572fbdff5d2",
+          "domain": "medium.com"
+        }
+      ],
+      "id": 61
+    },
+    {
+      "question": "What is NUMA (Non-Uniform Memory Access), and how does it change the trade-offs an OS scheduler must make when placing threads and allocating memory?",
+      "difficulty": "Hard",
+      "answer": "NUMA is a memory architecture used in multi-socket (and some high-core-count) systems where physical memory is divided into multiple regions ('nodes'), each attached to a specific processor socket via its own local memory controller. A core can access memory local to its own node quickly, but accessing memory attached to a different node requires traversing an inter-socket interconnect, which is significantly slower (real-world figures cited for remote access are commonly several times the latency of local access, and remote-access performance degradation exceeding 30% compared to local access is a frequently cited figure for poorly-optimized workloads). This is the 'non-uniform' part: the cost of a memory access now depends on where, physically, the accessing core and the target memory happen to be relative to each other — a departure from the simpler Uniform Memory Access (UMA) model where every core sees memory at the same cost.\n\nThis fundamentally changes what an OS scheduler needs to optimize for. On a UMA system, a scheduler's main job is load balancing: keep cores similarly busy, and it mostly doesn't matter which core a thread runs on, since memory access cost is the same everywhere. On a NUMA system, the scheduler now has to balance two competing goals simultaneously: load balancing across cores (as before) and memory locality — keeping a thread running on a core that's close to (ideally, on the same node as) the memory it's actually using, since a poor placement can silently tank performance even if CPU utilization looks fine.\n\nThis creates genuine trade-offs, not just an additional constraint: sometimes the load-balancing-optimal placement (moving a thread to an idle core on a different node to keep utilization even) actively conflicts with the locality-optimal placement (keeping it near its data), and picking one can hurt the other. Migrating a thread to fix load imbalance also isn't free on NUMA — moving it to a different node means its cached data and any pages that later get accessed will now suffer remote-access latency (and the migration itself has direct costs, like cache invalidation), so the scheduler has to weigh whether a migration's load-balancing benefit outweighs the locality cost it introduces.\n\nModern OSes address this with NUMA-aware scheduling and memory placement mechanisms — Linux's Completely Fair Scheduler is paired with automatic NUMA balancing (which tracks page-fault statistics to infer where a thread's memory actually lives, and migrates either the thread or its pages to improve locality, but only when doing so won't introduce a worse load imbalance). This automatic balancing is a heuristic, not a perfect solution: the act of migrating threads or pages itself consumes CPU cycles and can cause performance jitter, which is why latency-sensitive workloads (e.g., trading systems, real-time control) often disable automatic NUMA balancing and instead use explicit thread/memory pinning (binding threads and their memory allocations to specific nodes manually) to get fully predictable, low-latency behavior at the cost of losing automatic adaptability.",
+      "sources": [
+        {
+          "title": "Mastering NUMA Optimization in Production Environments | Linux Guide, Medium",
+          "url": "https://linuxgd.medium.com/mastering-numa-optimization-in-production-environments-2477fec5c96e",
+          "domain": "linuxgd.medium.com"
+        },
+        {
+          "title": "Non-uniform memory access - Wikipedia",
+          "url": "https://en.wikipedia.org/wiki/Non-uniform_memory_access",
+          "domain": "en.wikipedia.org"
+        }
+      ],
+      "id": 62
+    },
+    {
+      "question": "Explain how a stack-based buffer overflow attack works, and how mitigations like stack canaries, ASLR, and DEP/NX work together to make exploitation harder.",
+      "difficulty": "Hard",
+      "answer": "A stack-based buffer overflow exploits the fact that, in unsafe languages like C, writing to a fixed-size buffer on the stack (e.g., via strcpy() without bounds checking) doesn't automatically stop at the buffer's declared size — if an attacker supplies more input than the buffer can hold, the excess data spills over and overwrites whatever is adjacent to it in the stack frame: other local variables, saved registers, and critically, the saved return address that tells the CPU where to resume execution when the current function returns. By carefully crafting the overflow's contents, an attacker can overwrite that saved return address with the address of injected malicious code (shellcode) they've also placed on the stack, so that when the function returns, the CPU jumps to and executes the attacker's code instead of returning to the legitimate caller — hijacking control flow.\n\nModern mitigations attack this technique at multiple independent points, so that all of them typically need to be bypassed together for a reliable exploit:\n- Stack canaries: the compiler inserts a random, secret value (the canary) on the stack between local buffers and the saved return address, and checks that this value is unchanged right before the function returns. If a buffer overflow has occurred, it will almost certainly have overwritten (corrupted) the canary on its way to the return address, and the integrity check will catch this and abort the process before the corrupted return address is ever used. This is a detection mechanism — it doesn't prevent the overflow itself, but stops it from being exploited via the classic return-address overwrite. It has known bypasses (leaking the canary's value via a separate vulnerability, like a format-string bug, lets an attacker overwrite it with the correct value and evade detection).\n- DEP/NX (Data Execution Prevention / No-eXecute bit): marks memory regions like the stack and heap as non-executable at the hardware level, so even if an attacker successfully places shellcode in memory and redirects execution there, the CPU refuses to execute instructions from that region. This directly blocks the 'inject code onto the stack and jump to it' technique — but attackers responded with return-oriented programming (ROP), which doesn't inject new code at all; instead it chains together small existing snippets of legitimate, already-executable code already present in the program/libraries ('gadgets') to achieve arbitrary behavior without ever executing newly-injected instructions.\n- ASLR (Address Space Layout Randomization): randomizes the base addresses of the stack, heap, and loaded libraries each time a program runs, so an attacker can't reliably predict where anything is in memory. This makes ROP attacks much harder, since building a working gadget chain (as DEP/NX forces attackers to do) requires knowing the addresses of those gadgets in memory — addresses that now change on every run. ASLR can be undermined if the program leaks even a single memory address (e.g., via an information-disclosure bug), since that leak can be used to calculate the randomized base offset and defeat the randomization for the rest of the exploit.\n\nThe reason these are described as working 'together': each mitigation closes off the most direct path an attacker would otherwise take, but each also has known, narrower bypasses. Stack canaries stop naive return-address overwrites but can be leaked; DEP/NX stops code injection but is bypassed by ROP; ASLR makes ROP much harder but can be defeated by an address leak. A successful modern exploit against a hardened target typically has to defeat several of these layers in combination (e.g., leak an address to defeat ASLR, then build a ROP chain to defeat DEP/NX), which is precisely why layering them together, rather than relying on any single one, meaningfully raises the bar for exploitation even though no individual mitigation is a complete guarantee.",
+      "sources": [
+        {
+          "title": "Understanding Stack-Based Buffer Overflows: From Basics to Exploitation | Can Özkan, Medium",
+          "url": "https://can-ozkan.medium.com/understanding-stack-based-buffer-overflows-from-basics-to-exploitation-f1f25a3cdb04",
+          "domain": "can-ozkan.medium.com"
+        },
+        {
+          "title": "How to mitigate buffer overflow vulnerabilities | Infosec",
+          "url": "https://www.infosecinstitute.com/resources/secure-coding/how-to-mitigate-buffer-overflow-vulnerabilities/",
+          "domain": "infosecinstitute.com"
+        }
+      ],
+      "id": 63
+    },
+    {
+      "question": "Compare monolithic, microkernel, and hybrid kernel designs in terms of performance, fault isolation, and security — why can a single faulty driver crash a monolithic kernel but not necessarily a microkernel?",
+      "difficulty": "Hard",
+      "answer": "The three designs sit on a spectrum of how much OS functionality runs with full kernel privilege in a shared address space, versus isolated in separate, restricted user-space processes — and that placement decision drives all three of performance, fault isolation, and security.\n\nMonolithic kernels (Linux, traditional Unix, BSDs) run essentially everything — process/memory management, file systems, network stacks, and device drivers — in kernel space, sharing one address space and running with full hardware privilege. Performance is the main advantage: components call each other directly as ordinary function calls, with no message-passing or context-switching overhead between them. The cost is fault isolation and security: because a device driver runs with exactly the same privilege and address-space access as the rest of the kernel, a bug in a driver — a wild pointer write, an out-of-bounds access, a crash — can corrupt kernel memory or bring down the entire system, since there's no protection boundary between the driver and the core kernel. A single faulty driver can crash a monolithic kernel precisely because the driver isn't sandboxed at all; it's running with the same trust and address space as the scheduler, memory manager, and everything else.\n\nMicrokernels (QNX, seL4, Mach-based designs) keep only the bare minimum in kernel space — basic IPC, minimal scheduling, minimal memory management — and push everything else, including device drivers, file systems, and network stacks, into separate, isolated user-space processes that communicate with the kernel and each other via message passing. This is where fault isolation comes from: if a driver, running as an ordinary (if privileged) user-space process, crashes, it doesn't have direct access to corrupt kernel or other services' memory — the OS can typically detect the failure and simply restart that one service, without the rest of the system going down. The trade-off is performance: operations that used to be a direct function call in a monolithic design now require IPC — crossing address-space and often privilege boundaries — which is measurably slower, sometimes described as an 'IPC tax.' Security-wise, microkernels also shrink the amount of code running with maximal privilege (the trusted computing base) — seL4, for instance, is small enough (under roughly 9,000 lines of C) to have undergone formal, machine-checked correctness verification, something impractical for a multi-million-line monolithic kernel.\n\nHybrid kernels (Windows NT, Apple's XNU used in macOS/iOS) attempt to get some of both: they retain a fundamentally monolithic structure — most services still run in kernel space for performance — but selectively borrow microkernel ideas, such as message-passing-style internal interfaces, isolating specific subsystems as separate processes, or (in XNU's case) literally combining a Mach microkernel core with a BSD-derived layer that itself runs in kernel space. The result is closer to monolithic performance while gaining some of the modularity benefits of a microkernel design for specific components — though critics (including Linus Torvalds) have argued the 'hybrid' label is sometimes more marketing than a fundamentally distinct architecture, since most operating system services in these systems still run in kernel space, without the strong fault-isolation guarantees a true microkernel provides.",
+      "sources": [
+        {
+          "title": "Monolithic Kernel and Key Differences From Microkernel - GeeksforGeeks",
+          "url": "https://www.geeksforgeeks.org/operating-systems/monolithic-kernel-and-key-differences-from-microkernel/",
+          "domain": "geeksforgeeks.org"
+        },
+        {
+          "title": "Hybrid Kernel - OSDev Wiki",
+          "url": "https://wiki.osdev.org/Hybrid_Kernel",
+          "domain": "wiki.osdev.org"
+        }
+      ],
+      "id": 64
+    },
+    {
+      "question": "Why do production kernels (e.g., Linux) typically use both a buddy allocator and a slab allocator for kernel memory rather than just one?",
+      "difficulty": "Hard",
+      "answer": "The two allocators solve different-shaped problems, and neither one is efficient at the job the other is good at — which is why production kernels layer them together rather than picking just one.\n\nThe buddy allocator is designed for managing physical page-frame allocation at a coarse granularity: it hands out memory in power-of-two-sized blocks (measured in pages), and its defining strength is making coalescing (merging freed blocks back together) fast and simple via the buddy-address relationship, which keeps large contiguous regions available for big allocations (e.g., allocating memory for a large I/O buffer, or backing a slab cache itself). But this power-of-two granularity is a poor fit for the kernel's actual day-to-day allocation pattern: the kernel constantly creates and destroys huge numbers of small, fixed-size objects — inodes, task_struct process descriptors, semaphores, network packet buffers — often only tens to a few hundred bytes each. Handing out a full page (or worse, rounding up to a larger power-of-two block) for each of these small objects directly via the buddy allocator would waste enormous amounts of memory to internal fragmentation, and would also force the kernel to fully initialize and tear down each object's internal state on every single allocation and free, even though the exact same kind of object is being churned through constantly.\n\nThe slab allocator is built to solve exactly that mismatch: it requests larger, page-aligned chunks of memory from the buddy allocator (so it still relies on the buddy system underneath), but then subdivides each chunk into many small, precisely-sized 'slots' matching one specific kernel object type, maintaining a dedicated cache per object type. Freed objects aren't destroyed and handed back to the buddy allocator — they stay in the cache, still initialized, ready to be immediately reused for the next allocation request of that same type. This eliminates the internal fragmentation the buddy allocator alone would cause for small objects (slots are sized exactly to the object, not rounded to a page-based power of two), and it eliminates repeated initialization/teardown overhead by reusing already-initialized objects — both of which the buddy allocator has no mechanism to address on its own, since it only knows about page-granularity, power-of-two blocks, with no concept of object type or reuse.\n\nSo the layered design lets each allocator do what it's actually good at: the buddy allocator efficiently manages and coalesces large, page-granularity physical memory (avoiding external fragmentation across the whole system), while the slab allocator, built on top of it, efficiently manages the high-churn, small, fixed-size object allocations that dominate everyday kernel activity, avoiding both internal fragmentation and repeated allocation overhead that the buddy system alone would incur for that workload.",
+      "sources": [
+        {
+          "title": "Chapter 8: Slab Allocator - Understanding the Linux Virtual Memory Manager (kernel.org)",
+          "url": "https://www.kernel.org/doc/gorman/html/understand/understand011.html",
+          "domain": "kernel.org"
+        },
+        {
+          "title": "Allocating kernel memory (buddy system and slab system) - GeeksforGeeks",
+          "url": "https://www.geeksforgeeks.org/operating-systems/operating-system-allocating-kernel-memory-buddy-system-slab-system/",
+          "domain": "geeksforgeeks.org"
+        }
+      ],
+      "id": 65
+    },
+    {
+      "question": "What are the security trade-offs of container isolation (shared host kernel) versus VM isolation (separate guest kernel via a hypervisor), and what techniques exist to harden container isolation closer to VM-level?",
+      "difficulty": "Hard",
+      "answer": "The core security trade-off comes down to what an attacker has to break to escape their sandbox.\n\nWith standard containers, every container on a host shares the exact same running kernel — isolation is enforced entirely by kernel-level bookkeeping (namespaces restricting what a process can see, cgroups restricting what it can use). Because containers share the kernel, the entire Linux kernel's syscall surface (historically cited as 400+ syscalls) is reachable from inside a container, and any sufficiently severe kernel vulnerability reachable through that surface can potentially let a malicious or compromised container process break out of its namespace/cgroup restrictions and directly attack the host or other co-located containers — because there is no second, independent kernel standing between the container and the host to contain the damage.\n\nWith VMs, each VM boots its own full, independent guest kernel, and the hypervisor virtualizes hardware beneath that guest kernel entirely. To escape a VM and reach the host, an attacker generally has to find and exploit a vulnerability in the hypervisor itself — a much smaller, more specialized, and more heavily hardened piece of software specifically designed to defend that trust boundary — rather than the enormous, general-purpose surface of a full OS kernel. This is why VMs are traditionally considered to offer stronger isolation for genuinely untrusted, multi-tenant, or adversarial workloads, at the cost of higher overhead (each VM needs to boot and run its own OS instance) and slower startup than a lightweight container.\n\nBecause raw containers can be too weak a boundary for untrusted code (user-uploaded code, LLM-generated code, multi-tenant SaaS workloads), several hardening approaches have emerged that try to move container-like workloads closer to VM-level isolation without fully paying the VM overhead cost:\n- gVisor: implements a user-space kernel (called Sentry) that intercepts all of a sandboxed application's system calls and emulates the Linux syscall interface itself, rather than passing those calls through to the real host kernel. An attacker inside a gVisor sandbox has to break out of the Sentry (a much smaller, more constrained piece of Go code) rather than directly reach the host kernel — the Sentry's own seccomp profile typically only allows on the order of 50 host syscalls, compared to 400+ exposed by a bare container. The trade-off is added runtime overhead (especially for syscall-heavy or I/O-heavy workloads) since every syscall now goes through an extra layer of interception and emulation.\n- Kata Containers / Firecracker microVMs: run each container-like workload inside its own genuinely separate, lightweight virtual machine with its own guest kernel (using a fast, minimal VMM like QEMU/Cloud Hypervisor or Firecracker), while still presenting a container-compatible interface (e.g., integrating with Kubernetes as a RuntimeClass) to the rest of the tooling. Because there's a real guest kernel and hypervisor boundary, this achieves isolation much closer to a genuine VM — a kernel exploit inside the workload can generally only escape to the guest kernel, not directly to the host — at a performance and resource cost between a bare container and a full traditional VM.\n\nThe practical choice in production systems (e.g., platforms running untrusted AI agent code or multi-tenant functions) is a defense-in-depth one: many organizations run trusted, first-party workloads on standard containers, and reserve gVisor or Kata/Firecracker microVMs specifically for workloads executing code they don't fully trust, accepting the added overhead in exchange for a meaningfully stronger isolation boundary.",
+      "sources": [
+        {
+          "title": "Kata, gVisor, or Firecracker? Container Isolation Guide - Edera",
+          "url": "https://edera.dev/stories/kata-vs-firecracker-vs-gvisor-isolation-compared",
+          "domain": "edera.dev"
+        },
+        {
+          "title": "Kata Containers vs gVisor: security and performance trade-offs – Secure Machinery",
+          "url": "https://securemachinery.com/2026/07/04/kata-containers-vs-gvisor-security-architecture-performance-full/",
+          "domain": "securemachinery.com"
+        }
+      ],
+      "id": 66
+    },
+    {
+      "question": "How would you design a scheduler to guarantee that a set of periodic tasks always meets hard deadlines, and what does the schedulability test for Rate Monotonic Scheduling tell you?",
+      "difficulty": "Hard",
+      "answer": "For hard real-time guarantees, the design goal isn't just 'schedule tasks reasonably' — it's to be able to formally prove, before deployment, that every task will always meet its deadline under worst-case conditions, since a missed deadline is treated as a system failure. This requires three ingredients working together: a well-defined task model, a scheduling policy, and a schedulability test that mathematically certifies the policy will work for that specific task set.\n\nThe standard task model assumes a set of independent, periodic tasks, where each task i has a period Ti (how often it releases a new job/instance), a worst-case execution time Ci (the longest it could ever take to run one instance), and (commonly) a deadline equal to its period — i.e., each instance of the task must finish before the next one is released.\n\nFor the scheduling policy, Rate Monotonic Scheduling (RMS) is the standard choice for a fixed-priority design: assign each task a static priority based on its period, with shorter-period tasks getting higher priority. RMS is attractive for hard real-time systems specifically because Liu and Layland proved it is optimal among all fixed-priority algorithms — if any static-priority assignment can successfully schedule a given task set, RMS's period-based assignment will too, so you never lose schedulability by choosing RMS specifically among fixed-priority options.\n\nThe schedulability test is what turns this into a provable guarantee rather than a hopeful design. Liu and Layland's classic sufficient test says: a set of n periodic tasks is guaranteed to always meet its deadlines under RMS if the total CPU utilization U = Σ(Ci / Ti) is less than or equal to n(2^(1/n) − 1). This bound starts at 100% for a single task and decreases as n grows, converging toward roughly 69.3% (ln 2) as n becomes large — meaning that, in the worst case, RMS can only be formally guaranteed to safely utilize up to about 69% of the CPU's capacity, even though the tasks might, in a specific favorable case, actually be schedulable at much higher utilization. This is a sufficient condition, not a necessary one: a task set with utilization above this bound isn't necessarily unschedulable — it might still work fine — but the simple bound alone can't prove it, so tighter (though more computationally expensive) exact schedulability tests, like response-time analysis or the hyperbolic bound, exist to certify additional task sets that the simple Liu-Layland bound would pessimistically reject.\n\nPutting this together as a design: (1) characterize every task's worst-case execution time and period as precisely as possible (an overly optimistic Ci estimate undermines the entire guarantee); (2) assign fixed priorities by RMS (shortest period = highest priority); (3) run the utilization-based schedulability test (or a tighter exact test if the simple bound rejects a task set that's actually fine) before ever deploying the system, as an admission-control gate — if the task set doesn't pass, either reduce a task's execution time, adjust periods, or reject a task from the system rather than risk a real-time deadline violation in production; and (4) if maximum CPU utilization matters more than analysis simplicity, consider Earliest Deadline First (EDF) instead — it's optimal for any scheduling algorithm (not just fixed-priority) and can safely use up to 100% CPU utilization, at the cost of dynamic-priority runtime overhead and less predictable behavior specifically during transient overload conditions.",
+      "sources": [
+        {
+          "title": "The Liu and Layland Bound | Bohrium",
+          "url": "https://www.bohrium.com/en/sciencepedia/feynman/keyword/liu_and_layland_bound",
+          "domain": "bohrium.com"
+        },
+        {
+          "title": "Schedulability Test for Soft Real-Time Systems under Multiprocessor Environment by using an Earliest Deadline First Scheduling Algorithm (arXiv)",
+          "url": "https://arxiv.org/pdf/1205.0124",
+          "domain": "arxiv.org"
+        }
+      ],
+      "id": 67
+    },
+    {
+      "question": "The many-to-many threading model tries to combine the benefits of user-level and kernel-level threads — what problem does it solve, and why have most modern production systems (e.g., Linux, the JVM) moved toward a one-to-one model instead?",
+      "difficulty": "Hard",
+      "answer": "The many-to-many model exists to solve a real tension between the two pure models: many-to-one (all user threads on a single kernel thread) gives cheap, plentiful concurrency but cannot achieve true parallelism across multiple cores and suffers from the 'one blocking call blocks everyone' problem, since the kernel only ever sees one schedulable entity; one-to-one (every user thread backed by its own kernel thread) fixes both of those problems but makes thread creation and context switching relatively expensive, since every thread now costs real kernel resources and every switch requires kernel involvement — becoming a real constraint for applications wanting to create very large numbers of lightweight, short-lived concurrent tasks.\n\nMany-to-many tries to get the best of both: a user-space scheduler multiplexes potentially many user-level threads onto a smaller (but more than one) pool of kernel threads. This means an application can create a huge number of cheap user-level threads (fast to create, fast to switch between in user space) while the underlying runtime still exposes enough real kernel threads to the OS to achieve genuine multi-core parallelism, and — critically — to avoid the single-blocking-call problem: if one user-level thread blocks on a system call, the runtime can continue running other user-level threads on a different kernel thread instead of freezing the whole process. Go's goroutine scheduler is the most prominent modern example, multiplexing potentially hundreds of thousands of lightweight goroutines onto a much smaller pool of OS threads (typically sized close to the number of CPU cores), giving programmers cheap, plentiful concurrency without sacrificing parallelism.\n\nDespite these theoretical advantages, most general-purpose, production operating environments — the Linux NPTL threading implementation, and the JVM's threading model — settled on one-to-one rather than many-to-many, for a few practical reasons: many-to-many is significantly more complex to implement correctly, since the runtime now needs its own user-space scheduler, its own thread-state machine, and careful coordination with the kernel to avoid subtle bugs (this complexity cost is nontrivial and historically a source of hard-to-debug issues, as seen with early hybrid/M:N pthread implementations); modern kernels have also become progressively cheaper at creating and scheduling native threads than they were decades ago, narrowing the performance gap that originally motivated M:N models; and a one-to-one model is simply easier to reason about and debug, since OS-level tools (like debuggers, profilers, and the kernel scheduler itself) directly see and can inspect every actual application thread, without needing extra runtime-specific tooling to peer inside a user-space scheduler's private bookkeeping. In short: the theoretical benefits of many-to-many are real, but for general-purpose production systems, the implementation and debugging complexity outweighed those benefits once kernel-level threading became cheap enough — whereas newer, purpose-built runtimes like Go's still find the trade-off worthwhile for their specific goroutine-heavy concurrency model.",
+      "sources": [
+        {
+          "title": "Multithreading Models - Oracle Java on Solaris 7 Developer's Guide",
+          "url": "https://docs.oracle.com/cd/E19620-01/805-4031/6j3qv1oej/index.html",
+          "domain": "docs.oracle.com"
+        },
+        {
+          "title": "The Anatomy of Golang Goroutines | Isuru Cumaranathunga, CodeX Medium",
+          "url": "https://medium.com/codex/the-anatomy-of-golang-goroutines-58cf8b6bf813",
+          "domain": "medium.com"
+        }
+      ],
+      "id": 68
+    },
+    {
+      "question": "Walk through what happens at the hardware/OS level when a program dereferences an invalid pointer and crashes with a segmentation fault — how does the MMU/page table trigger the fault, and how does the kernel distinguish a real SIGSEGV from a legitimate case like copy-on-write or stack growth?",
+      "difficulty": "Hard",
+      "answer": "When a program executes an instruction that reads or writes memory, the CPU passes the virtual address to the Memory Management Unit (MMU) to translate it into a physical address, consulting the process's page table (via the TLB first, for speed) along the way. This translation can fail or be flagged as illegal in a few different ways: the virtual address might not correspond to any page table entry at all (the address was simply never mapped — a classic wild or null pointer dereference); or the entry might exist but the access violates its protection bits (e.g., attempting to write to a page marked read-only, like the program's code segment, or attempting to execute a non-executable page). Either case causes the MMU to raise a hardware-level fault, called a page fault, trapping into the kernel — the CPU saves the faulting virtual address (in a register like CR2 on x86) along with an error code describing the nature of the access (read vs. write, user-mode vs. kernel-mode, whether the page table entry existed at all), and hands control to the kernel's page fault handler.\n\nHere's the key subtlety: not every page fault is illegal. Page faults are also the exact same mechanism the kernel relies on for several completely normal, expected operations — demand paging (a page marked 'not present' because it hasn't been loaded from disk yet), copy-on-write (a page deliberately marked read-only after a fork(), specifically so that the first write to it traps into the kernel to trigger the lazy copy), and dynamic stack growth (accessing a guard page just past the current end of the stack, specifically so the kernel can notice and extend the stack automatically). So when the kernel's fault handler runs, it doesn't assume the fault is an error — it first inspects the faulting address and the process's memory map (its list of valid virtual memory areas/VMAs and their permissions) to classify what actually happened:\n\n- If the address falls within a valid VMA, and the fault is explainable by an expected condition — the page simply hasn't been loaded yet (demand paging), or it's a copy-on-write page being written to for the first time, or it's a guard page just below a growable stack region and the process hasn't exceeded its stack size limit (e.g., RLIMIT_STACK) — the kernel treats this as a minor/legitimate fault and services it silently: it allocates and maps a new physical page (copying data if needed for COW, or extending the stack), updates the page table (and TLB), and simply resumes the faulting instruction, which now succeeds transparently as if nothing unusual happened. The application never even knows a fault occurred.\n- If the address doesn't fall within any valid VMA at all, or the access violates that VMA's permissions in a way that isn't one of these expected cases (e.g., writing to a genuinely read-only code segment, or the stack has already grown to its configured limit), the kernel classifies this as a real illegal access. Rather than servicing it like a normal fault, the kernel delivers the SIGSEGV signal to the offending process (or SIGBUS for certain alignment/mapping-related errors) — and unless the process has installed a custom signal handler, the default action terminates the process, typically producing the familiar 'Segmentation fault (core dumped)' message.\n\nThe important interview-level insight: the CPU/MMU hardware only reports 'the translation/permission check failed here' — it has no concept of 'this is fine' vs. 'this is a bug.' All of that classification logic — deciding whether a given page fault represents legitimate lazy-loading behavior or an actual programming error — lives entirely in the kernel's software fault handler, which is why the exact same underlying hardware mechanism (a page fault trap) is responsible both for silently making virtual memory work efficiently, and for catching and reporting real memory-safety bugs.",
+      "sources": [
+        {
+          "title": "Cause Analysis of Segmentation Faults on Linux | Daniel Yang, Medium",
+          "url": "https://medium.com/@xinyijun/cause-analysis-of-segmentation-fault-on-linux-1d69e59bb0e3",
+          "domain": "medium.com"
+        },
+        {
+          "title": "Why Stack Overflow in Linux Causes Segmentation Fault (SIGSEGV) Instead of Stack Overflow? — linuxvox.com",
+          "url": "https://linuxvox.com/blog/why-stack-overflow-causes-segmentation-fault-instead-of-stack-overflow-in-linux/",
+          "domain": "linuxvox.com"
+        }
+      ],
+      "id": 69
+    },
+    {
+      "question": "In the readers-writers problem, a \"writer-priority\" solution avoids writer starvation — what does this cost readers, and how would you design a fairer solution?",
+      "difficulty": "Hard",
+      "answer": "The classic readers-preference solution to the readers-writers problem lets any number of readers read concurrently, and only blocks a writer once at least one reader is active — but as long as new readers keep arriving before the current batch finishes, the shared resource may never actually become free for a waiting writer, since the reader-count-based logic only checks 'is anyone reading right now,' not 'has a writer been waiting a long time.' This means a steady stream of readers can starve a writer indefinitely, even though each individual reader's access is brief.\n\nA writer-priority (writer-preference) solution flips this bias to fix that specific problem: once a writer is waiting, no new reader is allowed to start reading, even if the resource is technically idle for readers at that moment — new readers are forced to queue up behind the waiting writer. This guarantees writers can't be starved: as soon as any in-progress readers finish, the waiting writer gets in before any newly-arrived readers are allowed to jump ahead. Typically this is implemented with an additional semaphore/flag that a writer sets as soon as it starts waiting; readers must check this flag before entering their own critical section, and block if a writer is waiting or active.\n\nThe cost to readers is direct: writer-priority can now starve readers instead. If writers arrive frequently enough, a reader that arrives may find a writer already waiting (or another writer arrives right after it starts waiting) and have to wait indefinitely, even during periods where, from a pure data-safety standpoint, it would have been perfectly safe to let it read immediately. So writer-priority doesn't actually solve the general starvation problem — it just moves which role can be starved, trading reader starvation risk for writer starvation risk, rather than eliminating unfairness altogether.\n\nA genuinely fairer solution needs to guarantee bounded waiting for both roles, typically by enforcing strict arrival-order (FIFO) fairness rather than favoring either role categorically. A common approach: maintain a single queue (or ticket/turnstile mechanism) that both readers and writers must pass through in strict arrival order before being allowed into their respective access logic — a reader or writer that arrives is only allowed to proceed once every request that arrived before it has been granted access, regardless of whether those earlier-arrived requests were reads or writes. Practically, this can be implemented with a 'turnstile' semaphore that every request (reader or writer) must acquire and release quickly upon arrival, before doing any further waiting specific to their role — this ensures that even if many readers are already active, a newly-arriving reader can't cut in front of an earlier-arrived writer (and vice versa), since everyone is serialized through the same fair, FIFO-ordered gate first. This bounds the maximum wait for any single request to, at most, the number of distinct earlier-arrived requests ahead of it — genuinely preventing indefinite starvation of either role, at the cost of slightly more synchronization overhead (the extra turnstile step) and somewhat reduced maximum reader concurrency compared to pure readers-preference, since a burst of readers can no longer freely cut ahead of an interleaved writer request.",
+      "sources": [
+        {
+          "title": "Readers-Writers Problem - GeeksforGeeks",
+          "url": "https://www.geeksforgeeks.org/operating-systems/readers-writers-problem-set-1-introduction-and-readers-preference-solution/",
+          "domain": "geeksforgeeks.org"
+        },
+        {
+          "title": "Fair Solution to the Reader-Writer-Problem with Semaphores only (arXiv)",
+          "url": "https://arxiv.org/pdf/cs/0303005",
+          "domain": "arxiv.org"
+        }
+      ],
+      "id": 70
     }
   ],
   "sources": [
@@ -695,6 +1325,78 @@
       "title": "The Translation Lookaside Buffer - CS 61C Course Notes",
       "url": "https://notes.cs61c.org/content/vm/tlb/",
       "domain": "notes.cs61c.org",
+      "count": 2
+    },
+    {
+      "title": "Monolithic Kernel and Key Differences From Microkernel - GeeksforGeeks",
+      "url": "https://www.geeksforgeeks.org/operating-systems/monolithic-kernel-and-key-differences-from-microkernel/",
+      "domain": "geeksforgeeks.org",
+      "count": 2
+    },
+    {
+      "title": "Symbolic Links vs Hard Links - Tyler's Guides",
+      "url": "https://tylersguides.com/guides/symbolic-links-vs-hard-links/",
+      "domain": "tylersguides.com",
+      "count": 2
+    },
+    {
+      "title": "Understanding Linux Filesystems: Inodes, Block Sizes, and Data Structures | Linux Journal",
+      "url": "https://www.linuxjournal.com/content/understanding-linux-filesystems-inodes-block-sizes-and-data-structures",
+      "domain": "linuxjournal.com",
+      "count": 2
+    },
+    {
+      "title": "What is inter-process communication (IPC)? - Linux Audit",
+      "url": "https://linux-audit.com/what-is/ipc/",
+      "domain": "linux-audit.com",
+      "count": 2
+    },
+    {
+      "title": "SIGKILL vs SIGTERM: Master Process Termination in Linux and Kubernetes | SUSE Communities",
+      "url": "https://www.suse.com/c/observability-sigkill-vs-sigterm-a-developers-guide-to-process-termination/",
+      "domain": "suse.com",
+      "count": 2
+    },
+    {
+      "title": "Docker Container Isolation · Dash0",
+      "url": "https://www.dash0.com/faq/docker-container-isolation",
+      "domain": "dash0.com",
+      "count": 2
+    },
+    {
+      "title": "How Docker Containers Work Under the Hood: Namespaces and Cgroups - Atlantbh",
+      "url": "https://atlantbh.com/blog/how-docker-containers-work-under-the-hood-namespaces-and-cgroups/",
+      "domain": "atlantbh.com",
+      "count": 2
+    },
+    {
+      "title": "Readers-Writers Problem - GeeksforGeeks",
+      "url": "https://www.geeksforgeeks.org/operating-systems/readers-writers-problem-set-1-introduction-and-readers-preference-solution/",
+      "domain": "geeksforgeeks.org",
+      "count": 2
+    },
+    {
+      "title": "Multithreading Models - Oracle Java on Solaris 7 Developer's Guide",
+      "url": "https://docs.oracle.com/cd/E19620-01/805-4031/6j3qv1oej/index.html",
+      "domain": "docs.oracle.com",
+      "count": 2
+    },
+    {
+      "title": "Allocating kernel memory (buddy system and slab system) - GeeksforGeeks",
+      "url": "https://www.geeksforgeeks.org/operating-systems/operating-system-allocating-kernel-memory-buddy-system-slab-system/",
+      "domain": "geeksforgeeks.org",
+      "count": 2
+    },
+    {
+      "title": "Chapter 8: Slab Allocator - Understanding the Linux Virtual Memory Manager (kernel.org)",
+      "url": "https://www.kernel.org/doc/gorman/html/understand/understand011.html",
+      "domain": "kernel.org",
+      "count": 2
+    },
+    {
+      "title": "Hard vs. soft real-time in IEC 61508 embedded systems | Patsnap",
+      "url": "https://www.patsnap.com/resources/blog/articles/hard-vs-soft-real-time-in-iec-61508-embedded-systems/",
+      "domain": "patsnap.com",
       "count": 2
     },
     {
@@ -953,6 +1655,282 @@
       "title": "RAID Levels Explained: RAID 0, 1, 5, 6, 10 Compared | Xinnor",
       "url": "https://xinnor.io/blog/a-guide-to-raid-pt-2-raid-levels-explained/",
       "domain": "xinnor.io",
+      "count": 1
+    },
+    {
+      "title": "Types of Operating Systems | Baeldung on Computer Science",
+      "url": "https://www.baeldung.com/cs/os-types",
+      "domain": "baeldung.com",
+      "count": 1
+    },
+    {
+      "title": "Types of Operating System - TutorialsPoint",
+      "url": "https://www.tutorialspoint.com/operating_system/os_types.htm",
+      "domain": "tutorialspoint.com",
+      "count": 1
+    },
+    {
+      "title": "Monolithic vs Microkernel Architectures: An Overview - Wind River",
+      "url": "https://www.windriver.com/resource/overview-of-monolithic-and-microkernel-architectures",
+      "domain": "windriver.com",
+      "count": 1
+    },
+    {
+      "title": "A hard link and a symbolic link? What is the difference between them? | Van Phan, Medium",
+      "url": "https://medium.com/@673/a-hard-link-and-a-symbolic-link-what-is-the-difference-between-them-9f207654f2d9",
+      "domain": "medium.com",
+      "count": 1
+    },
+    {
+      "title": "Inter Process Communication (IPC) - GeeksforGeeks",
+      "url": "https://www.geeksforgeeks.org/operating-systems/inter-process-communication-ipc/",
+      "domain": "geeksforgeeks.org",
+      "count": 1
+    },
+    {
+      "title": "Learn What Is a Daemon Process | Understanding Linux Daemons - Codefinity",
+      "url": "https://codefinity.com/courses/v2/8cff65ce-2c8d-4827-8931-a4f6f931b7a6/6a36e841-449c-406b-90af-a1849f9301f4/f62f3e7a-5b2e-4620-a80b-cf60d35927ed",
+      "domain": "codefinity.com",
+      "count": 1
+    },
+    {
+      "title": "What Is A Linux Daemon? (Unlocking Background Processes)",
+      "url": "https://laptopjudge.com/what-is-a-linux-daemon/",
+      "domain": "laptopjudge.com",
+      "count": 1
+    },
+    {
+      "title": "In-Memory Layout of a Program (Process) « Gabriele Tolomei",
+      "url": "https://gabrieletolomei.wordpress.com/miscellanea/operating-systems/in-memory-layout/",
+      "domain": "gabrieletolomei.wordpress.com",
+      "count": 1
+    },
+    {
+      "title": "Understanding Memory Management in Linux",
+      "url": "https://reliabilitywhisperer.substack.com/p/understanding-memory-management-in",
+      "domain": "reliabilitywhisperer.substack.com",
+      "count": 1
+    },
+    {
+      "title": "Chapter 11: Swap Management - Understanding the Linux Virtual Memory Manager (kernel.org)",
+      "url": "https://www.kernel.org/doc/gorman/html/understand/understand014.html",
+      "domain": "kernel.org",
+      "count": 1
+    },
+    {
+      "title": "Linux Queries: What is the difference between Swapping and Paging?",
+      "url": "https://querieslinux.blogspot.com/2009/07/what-is-difference-between-swapping-and.html",
+      "domain": "querieslinux.blogspot.com",
+      "count": 1
+    },
+    {
+      "title": "Classical Problems of Synchronization with Semaphore Solution - GeeksforGeeks",
+      "url": "https://www.geeksforgeeks.org/operating-systems/classical-problems-of-synchronization-with-semaphore-solution/",
+      "domain": "geeksforgeeks.org",
+      "count": 1
+    },
+    {
+      "title": "Sleeping Barber problem in Process Synchronization - GeeksforGeeks",
+      "url": "https://www.geeksforgeeks.org/operating-systems/sleeping-barber-problem-in-process-synchronization/",
+      "domain": "geeksforgeeks.org",
+      "count": 1
+    },
+    {
+      "title": "The Sleeping Barber Problem | Baeldung on Computer Science",
+      "url": "https://www.baeldung.com/cs/sleeping-barber-problem",
+      "domain": "baeldung.com",
+      "count": 1
+    },
+    {
+      "title": "Starvation and Aging in Operating Systems - GeeksforGeeks",
+      "url": "https://www.geeksforgeeks.org/operating-systems/starvation-and-aging-in-operating-systems/",
+      "domain": "geeksforgeeks.org",
+      "count": 1
+    },
+    {
+      "title": "Aging (scheduling) - Wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Aging_(scheduling)",
+      "domain": "en.wikipedia.org",
+      "count": 1
+    },
+    {
+      "title": "User Level vs Kernel Level Threads - GeeksforGeeks",
+      "url": "https://www.geeksforgeeks.org/operating-systems/difference-between-user-level-thread-and-kernel-level-thread/",
+      "domain": "geeksforgeeks.org",
+      "count": 1
+    },
+    {
+      "title": "Linux Memory Management - The Buddy Allocator",
+      "url": "https://grimoire.carcano.ch/blog/memory-management-the-buddy-allocator/",
+      "domain": "grimoire.carcano.ch",
+      "count": 1
+    },
+    {
+      "title": "Operating System - Allocating Kernel Memory (Slab Allocation) - TutorialsPoint",
+      "url": "https://www.tutorialspoint.com/allocating-kernel-memory-buddy-system-and-slab-system",
+      "domain": "tutorialspoint.com",
+      "count": 1
+    },
+    {
+      "title": "Memory Mapped Files in OS - GeeksforGeeks",
+      "url": "https://www.geeksforgeeks.org/operating-systems/memory-mapped-files-in-os/",
+      "domain": "geeksforgeeks.org",
+      "count": 1
+    },
+    {
+      "title": "File Access: Memory-Mapped vs. I/O System Call Performance | Baeldung on Linux",
+      "url": "https://www.baeldung.com/linux/memory-mapped-vs-system-call",
+      "domain": "baeldung.com",
+      "count": 1
+    },
+    {
+      "title": "Superblock (file system) - Wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Superblock_(file_system)",
+      "domain": "en.wikipedia.org",
+      "count": 1
+    },
+    {
+      "title": "File System Implementation in Operating System - GeeksforGeeks",
+      "url": "https://www.geeksforgeeks.org/operating-systems/file-system-implementation-in-operating-system/",
+      "domain": "geeksforgeeks.org",
+      "count": 1
+    },
+    {
+      "title": "File Allocation Methods - GeeksforGeeks",
+      "url": "https://www.geeksforgeeks.org/operating-systems/file-allocation-methods/",
+      "domain": "geeksforgeeks.org",
+      "count": 1
+    },
+    {
+      "title": "Journaling or write-ahead logging - GeeksforGeeks",
+      "url": "https://www.geeksforgeeks.org/operating-systems/journaling-or-write-ahead-logging/",
+      "domain": "geeksforgeeks.org",
+      "count": 1
+    },
+    {
+      "title": "42: Crash Consistency: FSCK and Journaling (OSTEP, pages.cs.wisc.edu)",
+      "url": "https://pages.cs.wisc.edu/~remzi/OSTEP/file-journaling.pdf",
+      "domain": "pages.cs.wisc.edu",
+      "count": 1
+    },
+    {
+      "title": "hard real-time - an overview | ScienceDirect Topics",
+      "url": "https://www.sciencedirect.com/topics/computer-science/hard-real-time",
+      "domain": "sciencedirect.com",
+      "count": 1
+    },
+    {
+      "title": "Real-Time scheduling: from hard to soft real-time systems (arXiv)",
+      "url": "https://arxiv.org/pdf/1512.01978",
+      "domain": "arxiv.org",
+      "count": 1
+    },
+    {
+      "title": "Linux Signals: Understanding SIGINT, SIGTERM, and SIGKILL - FOSS Linux",
+      "url": "https://www.fosslinux.com/121761/the-abcs-of-linux-signals-sigint-sigterm-and-sigkill-explained.htm",
+      "domain": "fosslinux.com",
+      "count": 1
+    },
+    {
+      "title": "Guide to the Boot Process of a Linux System | Baeldung on Linux",
+      "url": "https://www.baeldung.com/linux/boot-process",
+      "domain": "baeldung.com",
+      "count": 1
+    },
+    {
+      "title": "An introduction to the Linux boot and startup processes | Opensource.com",
+      "url": "https://opensource.com/article/17/2/linux-boot-and-startup",
+      "domain": "opensource.com",
+      "count": 1
+    },
+    {
+      "title": "Cache Coherence Protocols in Multiprocessor System - GeeksforGeeks",
+      "url": "https://www.geeksforgeeks.org/computer-organization-architecture/cache-coherence-protocols-in-multiprocessor-system/",
+      "domain": "geeksforgeeks.org",
+      "count": 1
+    },
+    {
+      "title": "Cache Coherence: How the MESI Protocol Keeps Multi-Core CPUs Consistent | CodeToDeploy, Medium",
+      "url": "https://medium.com/codetodeploy/cache-coherence-how-the-mesi-protocol-keeps-multi-core-cpus-consistent-a572fbdff5d2",
+      "domain": "medium.com",
+      "count": 1
+    },
+    {
+      "title": "Mastering NUMA Optimization in Production Environments | Linux Guide, Medium",
+      "url": "https://linuxgd.medium.com/mastering-numa-optimization-in-production-environments-2477fec5c96e",
+      "domain": "linuxgd.medium.com",
+      "count": 1
+    },
+    {
+      "title": "Non-uniform memory access - Wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Non-uniform_memory_access",
+      "domain": "en.wikipedia.org",
+      "count": 1
+    },
+    {
+      "title": "Understanding Stack-Based Buffer Overflows: From Basics to Exploitation | Can Özkan, Medium",
+      "url": "https://can-ozkan.medium.com/understanding-stack-based-buffer-overflows-from-basics-to-exploitation-f1f25a3cdb04",
+      "domain": "can-ozkan.medium.com",
+      "count": 1
+    },
+    {
+      "title": "How to mitigate buffer overflow vulnerabilities | Infosec",
+      "url": "https://www.infosecinstitute.com/resources/secure-coding/how-to-mitigate-buffer-overflow-vulnerabilities/",
+      "domain": "infosecinstitute.com",
+      "count": 1
+    },
+    {
+      "title": "Hybrid Kernel - OSDev Wiki",
+      "url": "https://wiki.osdev.org/Hybrid_Kernel",
+      "domain": "wiki.osdev.org",
+      "count": 1
+    },
+    {
+      "title": "Kata, gVisor, or Firecracker? Container Isolation Guide - Edera",
+      "url": "https://edera.dev/stories/kata-vs-firecracker-vs-gvisor-isolation-compared",
+      "domain": "edera.dev",
+      "count": 1
+    },
+    {
+      "title": "Kata Containers vs gVisor: security and performance trade-offs – Secure Machinery",
+      "url": "https://securemachinery.com/2026/07/04/kata-containers-vs-gvisor-security-architecture-performance-full/",
+      "domain": "securemachinery.com",
+      "count": 1
+    },
+    {
+      "title": "The Liu and Layland Bound | Bohrium",
+      "url": "https://www.bohrium.com/en/sciencepedia/feynman/keyword/liu_and_layland_bound",
+      "domain": "bohrium.com",
+      "count": 1
+    },
+    {
+      "title": "Schedulability Test for Soft Real-Time Systems under Multiprocessor Environment by using an Earliest Deadline First Scheduling Algorithm (arXiv)",
+      "url": "https://arxiv.org/pdf/1205.0124",
+      "domain": "arxiv.org",
+      "count": 1
+    },
+    {
+      "title": "The Anatomy of Golang Goroutines | Isuru Cumaranathunga, CodeX Medium",
+      "url": "https://medium.com/codex/the-anatomy-of-golang-goroutines-58cf8b6bf813",
+      "domain": "medium.com",
+      "count": 1
+    },
+    {
+      "title": "Cause Analysis of Segmentation Faults on Linux | Daniel Yang, Medium",
+      "url": "https://medium.com/@xinyijun/cause-analysis-of-segmentation-fault-on-linux-1d69e59bb0e3",
+      "domain": "medium.com",
+      "count": 1
+    },
+    {
+      "title": "Why Stack Overflow in Linux Causes Segmentation Fault (SIGSEGV) Instead of Stack Overflow? — linuxvox.com",
+      "url": "https://linuxvox.com/blog/why-stack-overflow-causes-segmentation-fault-instead-of-stack-overflow-in-linux/",
+      "domain": "linuxvox.com",
+      "count": 1
+    },
+    {
+      "title": "Fair Solution to the Reader-Writer-Problem with Semaphores only (arXiv)",
+      "url": "https://arxiv.org/pdf/cs/0303005",
+      "domain": "arxiv.org",
       "count": 1
     }
   ]

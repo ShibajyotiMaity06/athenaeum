@@ -45,10 +45,12 @@ export function loadInterviewData(): InterviewStack[] {
       "react",
       "nextjs",
       "java",
+      "spring-boot",
       "sql",
       "dbms",
       "computer-networks",
-      "operating-systems"
+      "operating-systems",
+      "system-design"
     ];
     stacks.sort((a, b) => {
       const idxA = order.indexOf(a.slug);
@@ -83,7 +85,9 @@ export function getInterviewStack(slug: string): InterviewStack | null {
         ((slug === "networks" || slug === "computernetworks" || slug === "cn") && s.slug === "computer-networks") ||
         ((slug === "os" || slug === "operatingsystems" || slug === "opratingsystems") && s.slug === "operating-systems") ||
         ((slug === "ts" || slug === "type-script") && s.slug === "typescript") ||
-        ((slug === "next" || slug === "next-js") && s.slug === "nextjs")
+        ((slug === "next" || slug === "next-js") && s.slug === "nextjs") ||
+        ((slug === "spring" || slug === "springboot" || slug === "spring-boot") && s.slug === "spring-boot") ||
+        ((slug === "hld" || slug === "systemdesign" || slug === "system-design" || slug === "backend-system-design") && s.slug === "system-design")
     ) ?? null
   );
 }

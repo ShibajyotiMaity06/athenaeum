@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, BookOpen, CheckCircle2, Layers, Lock, Sparkles, Terminal, Code2, Cpu, Database, Server, Coffee, Network, FileCode2, Globe, Monitor } from "lucide-react";
+import { ArrowRight, BookOpen, CheckCircle2, Layers, Lock, Sparkles, Terminal, Code2, Cpu, Database, Server, Coffee, Network, FileCode2, Globe, Monitor, Leaf } from "lucide-react";
 import { getInterviewStacks, FREE_QUESTIONS_LIMIT } from "@/lib/interview-data";
 import { getCurrentUser, hasInterviewAccess } from "@/lib/auth";
 import { SITE, PLANS } from "@/lib/site";
@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Interview Prep Codex — Curated Real-World Technical Questions | DevPrep",
   description:
-    "500+ high-frequency, real-world technical interview questions across Node.js, JavaScript, TypeScript, React 19, Next.js, Java, SQL, DBMS, Computer Networks, and Operating Systems with verified model solutions and documentation citations.",
+    "500+ high-frequency, real-world technical interview questions across Node.js, JavaScript, TypeScript, React 19, Next.js, Java, Spring Boot, SQL, DBMS, Computer Networks, Operating Systems, and System Design with verified model solutions and documentation citations.",
   alternates: { canonical: `${SITE.url}/interview-prep` }
 };
 
@@ -37,6 +37,10 @@ export default async function InterviewPrepHubPage() {
         return <Globe className="w-6 h-6 text-teal-400" />;
       case "java":
         return <Coffee className="w-6 h-6 text-orange-500" />;
+      case "springboot":
+      case "spring-boot":
+      case "spring":
+        return <Leaf className="w-6 h-6 text-emerald-500" />;
       case "sql":
         return <Database className="w-6 h-6 text-blue-500" />;
       case "dbms":
@@ -48,6 +52,10 @@ export default async function InterviewPrepHubPage() {
       case "os":
       case "operating-systems":
         return <Monitor className="w-6 h-6 text-rose-500" />;
+      case "hld":
+      case "systemdesign":
+      case "system-design":
+        return <Layers className="w-6 h-6 text-purple-400" />;
       default:
         return <BookOpen className="w-6 h-6 text-[var(--accent)]" />;
     }
@@ -191,7 +199,7 @@ export default async function InterviewPrepHubPage() {
               </div>
 
               <p className="mt-2 text-xs text-[var(--text-muted)] leading-relaxed">
-                Python, Golang, System Design, Docker &amp; Kubernetes, and Rust interview question sets are actively being curated and benchmarked against official specs.
+                Python, Golang, Docker &amp; Kubernetes, Rust, and Cloud Architecture interview question sets are actively being curated and benchmarked against official specs.
               </p>
 
               <div className="mt-5 flex flex-wrap items-center gap-1.5 font-mono text-[11px]">
@@ -202,7 +210,7 @@ export default async function InterviewPrepHubPage() {
                   + Golang
                 </span>
                 <span className="px-2 py-0.5 rounded bg-[var(--bg-secondary)] text-[var(--text-muted)] border border-[rgba(186,190,204,0.3)]">
-                  + System Design
+                  + Docker &amp; K8s
                 </span>
               </div>
             </div>

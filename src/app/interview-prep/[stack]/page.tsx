@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, BookOpen, Layers, ShieldCheck, Sparkles, Terminal, Code2, Cpu, Database, Server, Coffee, Network, FileCode2, Globe, Monitor } from "lucide-react";
+import { ArrowLeft, BookOpen, Layers, ShieldCheck, Sparkles, Terminal, Code2, Cpu, Database, Server, Coffee, Network, FileCode2, Globe, Monitor, Leaf } from "lucide-react";
 import { getInterviewStack, getInterviewStacks } from "@/lib/interview-data";
 import { getCurrentUser, hasInterviewAccess } from "@/lib/auth";
 import { SITE } from "@/lib/site";
@@ -52,6 +52,10 @@ export default async function InterviewStackPage({ params }: Props) {
         return <Globe className="w-8 h-8 text-teal-400" />;
       case "java":
         return <Coffee className="w-8 h-8 text-orange-500" />;
+      case "springboot":
+      case "spring-boot":
+      case "spring":
+        return <Leaf className="w-8 h-8 text-emerald-500" />;
       case "sql":
         return <Database className="w-8 h-8 text-blue-500" />;
       case "dbms":
@@ -63,6 +67,10 @@ export default async function InterviewStackPage({ params }: Props) {
       case "os":
       case "operating-systems":
         return <Monitor className="w-8 h-8 text-rose-500" />;
+      case "hld":
+      case "systemdesign":
+      case "system-design":
+        return <Layers className="w-8 h-8 text-purple-400" />;
       default:
         return <BookOpen className="w-8 h-8 text-[var(--accent)]" />;
     }

@@ -53,11 +53,11 @@
     "headline": "App Router, Server Actions, SSR/SSG/ISR, Middleware, Caching & Performance",
     "description": "Production-grade Next.js interview questions covering App Router conventions, Server vs Client Components, Server Actions, streaming SSR with Suspense, caching layers, middleware routing, and SEO optimization.",
     "icon": "nextjs",
-    "totalQuestions": 35,
-    "easyCount": 10,
-    "mediumCount": 15,
-    "hardCount": 10,
-    "sourcesCount": 74
+    "totalQuestions": 70,
+    "easyCount": 20,
+    "mediumCount": 30,
+    "hardCount": 20,
+    "sourcesCount": 124
   },
   {
     "slug": "java",
@@ -70,6 +70,18 @@
     "mediumCount": 50,
     "hardCount": 25,
     "sourcesCount": 126
+  },
+  {
+    "slug": "spring-boot",
+    "name": "Spring Boot",
+    "headline": "Auto-Configuration, Actuator, Security 6, Microservices & Reactive Web",
+    "description": "Curated enterprise Spring Boot interview questions covering dependency injection, auto-configuration, actuators, Spring Security, transactions, caching, and microservice architectures.",
+    "icon": "springboot",
+    "totalQuestions": 66,
+    "easyCount": 20,
+    "mediumCount": 30,
+    "hardCount": 16,
+    "sourcesCount": 60
   },
   {
     "slug": "sql",
@@ -113,10 +125,22 @@
     "headline": "Processes, Threads, Concurrency, Deadlocks, Virtual Memory & Kernel Architecture",
     "description": "Core Operating Systems interview questions spanning process lifecycles, CPU scheduling algorithms, virtual memory paging, page fault handling, synchronization primitives, deadlocks, and system calls.",
     "icon": "os",
-    "totalQuestions": 35,
-    "easyCount": 10,
-    "mediumCount": 15,
+    "totalQuestions": 70,
+    "easyCount": 20,
+    "mediumCount": 30,
+    "hardCount": 20,
+    "sourcesCount": 112
+  },
+  {
+    "slug": "system-design",
+    "name": "System Design & Architecture",
+    "headline": "Resilience & Scale, Distributed Systems, AI-Native Backends & Large-Scale Data Layers",
+    "description": "Curated real-world System Design interview questions spanning rate limiting for AI agents, end-to-end API idempotency, WhatsApp presence engine, Uber surge pricing, multi-region CRDT counters, prompt caching, 100TB sharding, and database decomposition.",
+    "icon": "hld",
+    "totalQuestions": 19,
+    "easyCount": 0,
+    "mediumCount": 9,
     "hardCount": 10,
-    "sourcesCount": 54
+    "sourcesCount": 19
   }
 ]

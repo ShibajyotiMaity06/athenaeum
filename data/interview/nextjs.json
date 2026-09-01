@@ -4,10 +4,10 @@
   "headline": "App Router, Server Actions, SSR/SSG/ISR, Middleware, Caching & Performance",
   "description": "Production-grade Next.js interview questions covering App Router conventions, Server vs Client Components, Server Actions, streaming SSR with Suspense, caching layers, middleware routing, and SEO optimization.",
   "icon": "nextjs",
-  "totalQuestions": 35,
-  "easyCount": 10,
-  "mediumCount": 15,
-  "hardCount": 10,
+  "totalQuestions": 70,
+  "easyCount": 20,
+  "mediumCount": 30,
+  "hardCount": 20,
   "questions": [
     {
       "question": "What is Next.js, and how does it differ from using plain React with a bundler like Vite?",
@@ -733,6 +733,636 @@
         }
       ],
       "id": 35
+    },
+    {
+      "question": "What are getStaticProps, getServerSideProps, and getInitialProps in the Pages Router, and how do they differ from each other?",
+      "difficulty": "Easy",
+      "answer": "These are the three data-fetching functions from the Pages Router (pre-App Router). `getStaticProps` runs at build time (or during ISR regeneration) and pre-renders the page to static HTML — ideal for content that doesn't change per-request, and it can accept a `revalidate` option for ISR. `getServerSideProps` runs on every request, exclusively on the server, and is used when the page needs fresh, request-specific data (session, query params) at the cost of a server round-trip per visit; pages using it can't be served from a CDN cache. `getInitialProps` is the oldest, legacy API: it runs on the server for the initial load, but also re-runs on the client during client-side navigations (via `next/link`/`next/router`) — meaning its code ships to the browser and can leak logic/secrets if you're not careful, and pages using it lose Automatic Static Optimization. The docs explicitly recommend against `getInitialProps` for new code, in favor of `getStaticProps` or `getServerSideProps`; it's kept only for backward compatibility. In the App Router, all three are superseded by simply fetching data directly inside async Server Components.",
+      "sources": [
+        {
+          "title": "Functions: getInitialProps | Next.js",
+          "url": "https://nextjs.org/docs/pages/api-reference/functions/get-initial-props",
+          "domain": "nextjs.org"
+        },
+        {
+          "title": "Data fetching in Next.js with getServerSideProps and getStaticProps - LogRocket Blog",
+          "url": "https://blog.logrocket.com/data-fetching-next-js-getserversideprops-getstaticprops/",
+          "domain": "blog.logrocket.com"
+        }
+      ],
+      "id": 36
+    },
+    {
+      "question": "What does next.config.js control, and what are some common options you'd configure there (e.g., redirects, rewrites, image domains)?",
+      "difficulty": "Easy",
+      "answer": "`next.config.js` (or `.mjs`/`.ts`) is a Node.js module at the project root that configures how Next.js builds and serves the app; it runs during the build/server phases and is never shipped to the browser. Common options: `redirects()` — returns an array of source→destination redirect rules that change the URL the browser sees (302/307/308); `rewrites()` — maps an incoming path to a different destination transparently, without changing the URL shown to the user (useful for proxying to an external service or incrementally migrating a legacy site); `images.remotePatterns` — an allowlist of external hostnames/paths `next/image` is permitted to optimize (the modern replacement for the deprecated `images.domains`); `output: 'standalone'` — produces a minimal, self-contained build folder for Docker/self-hosting; `headers()` — attach custom HTTP headers (security headers, caching directives) to matched paths; and `basePath`/`trailingSlash` for deployment under a subpath. Since it's a Node module, you can also read environment variables or import Node built-ins directly inside it.",
+      "sources": [
+        {
+          "title": "next.config.js | Next.js",
+          "url": "https://mintlify.wiki/vercel/next.js/api-reference/config/next-config-js",
+          "domain": "mintlify.wiki"
+        },
+        {
+          "title": "next.config.js: rewrites | Next.js",
+          "url": "https://nextjs.org/docs/app/api-reference/config/next-config-js/rewrites",
+          "domain": "nextjs.org"
+        }
+      ],
+      "id": 37
+    },
+    {
+      "question": "What is the public directory used for in a Next.js project?",
+      "difficulty": "Easy",
+      "answer": "The top-level `public/` folder is for static assets that should be served as-is, unprocessed, at the root of your domain — files placed there are referenced starting from `/`. For example, `public/hero.png` is accessible at `yoursite.com/hero.png` and can be referenced in code as `<img src=\"/hero.png\" />` (or passed as the `src` to `next/image`). It's the right place for things like `favicon.ico`, `robots.txt` (if not using the `robots.ts` convention), manifest files, and any images or downloadable files you want served directly without going through Next.js's build pipeline or bundling — unlike files imported into components, nothing in `public/` is transformed, minified, or content-hashed automatically.",
+      "sources": [
+        {
+          "title": "App Router: Optimizing Fonts and Images | Next.js",
+          "url": "https://nextjs.org/learn/dashboard-app/optimizing-fonts-images",
+          "domain": "nextjs.org"
+        },
+        {
+          "title": "NextjsDocs.md · GitHub",
+          "url": "https://gist.github.com/arazabedi/87cbc8aae2ca6dad92beb5e72deb0c88",
+          "domain": "gist.github.com"
+        }
+      ],
+      "id": 38
+    },
+    {
+      "question": "What styling approaches does Next.js support out of the box (CSS Modules, global CSS, Sass, Tailwind, styled-jsx)?",
+      "difficulty": "Easy",
+      "answer": "Next.js supports several styling approaches natively, without extra bundler configuration. Global CSS: a plain `.css` file imported once (typically in the root layout) applies app-wide. CSS Modules: any file named `*.module.css` (or `.module.scss`) automatically scopes class names to the component that imports it, avoiding naming collisions — this works in both Server and Client Components since it's statically extracted at build time with zero runtime JS. Sass is supported out of the box for both `.scss`/`.sass` files and Sass-flavored CSS Modules once you install the `sass` package. Tailwind CSS integrates via PostCSS and is offered as a setup option in `create-next-app`. CSS-in-JS: `styled-jsx` is bundled with Next.js itself for scoped, component-colocated styles; libraries like styled-components and Emotion are also supported but only inside Client Components — most CSS-in-JS libraries rely on runtime style injection, which isn't compatible with React Server Components, so using them in the App Router requires setting up a client-side style registry to collect and flush styles into the `<head>` during SSR.",
+      "sources": [
+        {
+          "title": "Getting Started: CSS | Next.js",
+          "url": "https://nextjs.org/docs/app/getting-started/css",
+          "domain": "nextjs.org"
+        },
+        {
+          "title": "CSS-in-JS - Next.js",
+          "url": "https://mintlify.wiki/vercel/next.js/app/styling/css-in-js",
+          "domain": "mintlify.wiki"
+        }
+      ],
+      "id": 39
+    },
+    {
+      "question": "What is next/font, and why is it preferred over loading Google Fonts through a <link> tag?",
+      "difficulty": "Easy",
+      "answer": "`next/font` is Next.js's built-in font optimization system: instead of the browser fetching fonts from Google's servers at runtime, `next/font` downloads the font files at build time and self-hosts them alongside your other static assets, so the browser only ever requests them from your own domain. This gives two concrete wins over a `<link href=\"https://fonts.googleapis.com/...\">` tag: no external network request means no extra DNS lookup/round-trip and better privacy (no data sent to Google on page load), and — more importantly for interviews — zero layout shift, achieved via an automatically calculated CSS `size-adjust` fallback font that closely matches the real font's metrics, so text doesn't visibly jump in size when the real font finishes loading. Usage: `import { Geist } from 'next/font/google'; const geist = Geist({ subsets: ['latin'] })`, then apply `geist.className` to `<html>` in the root layout to apply it app-wide (or to a smaller subtree to scope it). `next/font/local` supports the same optimizations for self-hosted font files.",
+      "sources": [
+        {
+          "title": "Getting Started: Fonts | Next.js",
+          "url": "https://nextjs.org/docs/app/getting-started/fonts",
+          "domain": "nextjs.org"
+        },
+        {
+          "title": "Optimizing: Fonts | Next.js",
+          "url": "https://nextjs.org/docs/14/app/building-your-application/optimizing/fonts",
+          "domain": "nextjs.org"
+        }
+      ],
+      "id": 40
+    },
+    {
+      "question": "What is a Route Group (e.g., a folder named (marketing)) in the App Router, and why would you use one?",
+      "difficulty": "Easy",
+      "answer": "A Route Group is a folder whose name is wrapped in parentheses — e.g., `(marketing)` — which tells Next.js to use that folder purely for organization: it does not appear in the resulting URL. So `app/(marketing)/about/page.tsx` still resolves to `/about`, not `/marketing/about`. The main reasons to use one: grouping routes by team, feature area, or intent while keeping the file tree tidy without polluting the URL structure; scoping a `layout.tsx` to only a subset of routes at the same URL level (e.g., giving `(shop)` its own layout distinct from `(marketing)`'s); and — most notably — defining multiple root layouts in one app, each with its own `<html>`/`<body>`, for sections with a genuinely different look and feel (a marketing site shell vs. a dashboard app shell). One gotcha: since route groups are invisible to the URL, two groups can't resolve to the same path — `(marketing)/about/page.js` and `(shop)/about/page.js` would both map to `/about` and fail the build — and navigating between two different root layouts triggers a full page reload rather than a client-side transition.",
+      "sources": [
+        {
+          "title": "Routing: Route Groups | Next.js",
+          "url": "https://nextjs.org/docs/14/app/building-your-application/routing/route-groups",
+          "domain": "nextjs.org"
+        },
+        {
+          "title": "Getting Started: Project Structure | Next.js",
+          "url": "https://nextjs.org/docs/app/getting-started/project-structure",
+          "domain": "nextjs.org"
+        }
+      ],
+      "id": 41
+    },
+    {
+      "question": "What is the difference between running next dev, next build, and next start?",
+      "difficulty": "Easy",
+      "answer": "`next dev` starts the local development server with Hot Module Reloading, verbose error overlays, and (unlike production) compiles routes lazily/on-demand as you actually navigate to them, so the dev server can start quickly without pre-compiling the entire app. `next build` produces an optimized production build: it type-checks, lints, minifies, statically generates any eligible pages, and outputs a build report per route showing its JS size and 'First Load JS' (how much JS a fresh visitor downloads). `next start` then boots a production Node.js server that serves the output of `next build` — it does not compile anything itself, so you must always run `next build` first, and `next start` will fail or serve stale output otherwise. In short: `dev` for local iteration, `build` to compile for production, `start` to actually run that compiled production build (this is distinct from static export or platforms like Vercel that skip `next start` entirely in favor of serverless functions).",
+      "sources": [
+        {
+          "title": "next CLI | Next.js v15 Docs",
+          "url": "https://nextjs.im/docs/15/pages/api-reference/cli/next/",
+          "domain": "nextjs.im"
+        },
+        {
+          "title": "Guides: Development Environment | Next.js",
+          "url": "https://nextjs.org/docs/app/guides/local-development",
+          "domain": "nextjs.org"
+        }
+      ],
+      "id": 42
+    },
+    {
+      "question": "What is the next/script component used for, and what do its loading strategies (beforeInteractive, afterInteractive, lazyOnload) control?",
+      "difficulty": "Easy",
+      "answer": "`next/script` is a wrapper around the native `<script>` tag purpose-built for loading third-party scripts (analytics, ads, chat widgets, payment SDKs) with fine-grained control over when they load relative to page interactivity, so they don't block or degrade Core Web Vitals. The `strategy` prop controls timing: `beforeInteractive` injects and executes the script before any Next.js code runs and before hydration — reserved for truly critical scripts (bot detection, consent managers) and must be placed in the root layout, since it blocks initial interactivity; `afterInteractive` (the default) loads the script early but after some hydration has occurred, suitable for most analytics tags; `lazyOnload` defers loading until the browser is idle, ideal for low-priority scripts like chat widgets or social embeds that aren't needed immediately. A fourth, experimental `worker` strategy offloads the script to a web worker (via Partytown) to keep it off the main thread entirely, though it isn't yet stable in the App Router. Choosing the wrong strategy — e.g., defaulting everything to `beforeInteractive` — is a common real-world mistake that reintroduces the very render-blocking behavior `next/script` is meant to avoid.",
+      "sources": [
+        {
+          "title": "Components: Script Component | Next.js",
+          "url": "https://nextjs.org/docs/app/api-reference/components/script",
+          "domain": "nextjs.org"
+        },
+        {
+          "title": "Optimizing third-party script loading in Next.js | Chrome for Developers",
+          "url": "https://developer.chrome.com/blog/script-component",
+          "domain": "developer.chrome.com"
+        }
+      ],
+      "id": 43
+    },
+    {
+      "question": "Can the app and pages directories coexist in the same Next.js project, and why would a team want that?",
+      "difficulty": "Easy",
+      "answer": "Yes — Next.js explicitly supports having both an `app/` and a `pages/` directory in the same project, and this is the officially recommended way to migrate an existing Pages Router app to the App Router. Next.js prioritizes routes in `app/` over `pages/` when both could theoretically resolve to the same path (though having both define the same URL is otherwise an error you must avoid). Teams want this because it enables incremental adoption: instead of a risky big-bang rewrite, you can move one route at a time into `app/`, test it in production, and only then move to the next, while the rest of the application keeps working exactly as before under `pages/`. This lets a large production codebase gradually gain App Router benefits (Server Components, streaming, nested layouts) without a multi-week migration freeze, and lets teams stop the migration at any point if priorities shift, since both routers remain fully functional side by side indefinitely.",
+      "sources": [
+        {
+          "title": "Migrating: App Router | Next.js",
+          "url": "https://nextjs.org/docs/app/guides/migrating/app-router-migration",
+          "domain": "nextjs.org"
+        },
+        {
+          "title": "Migrating from Pages Router to App Router: An Incremental Guide | Clerk",
+          "url": "https://clerk.com/blog/migrating-pages-router-to-app-router-an-incremental-guide",
+          "domain": "clerk.com"
+        }
+      ],
+      "id": 44
+    },
+    {
+      "question": "What is next/dynamic, and what basic problem does it solve?",
+      "difficulty": "Easy",
+      "answer": "`next/dynamic` is Next.js's wrapper around React's `lazy()` plus `Suspense` for code-splitting components: instead of bundling a component into the initial JavaScript payload, `dynamic(() => import('./Heavy'))` tells Next.js to load that component's code in a separate chunk, fetched only when it's actually needed. The basic problem it solves is initial bundle bloat — if every component a page could possibly render (a rarely-opened modal, a heavy chart library, an admin-only panel) is bundled eagerly, users pay the download/parse cost for code they may never use. By deferring those components to a separate chunk loaded on demand (e.g., when a user clicks a button to open a modal), the initial page load stays smaller and faster, at the cost of a brief loading state (which you can customize with a `loading` component) the first time that chunk is actually requested.",
+      "sources": [
+        {
+          "title": "Guides: Lazy Loading | Next.js",
+          "url": "https://nextjs.org/docs/app/guides/lazy-loading",
+          "domain": "nextjs.org"
+        },
+        {
+          "title": "Perfecting the Loading Experience with next/dynamic and React Suspense",
+          "url": "https://dev.to/mariahello/perfecting-the-loading-experience-with-nextdynamic-and-react-suspense-8jp",
+          "domain": "dev.to"
+        }
+      ],
+      "id": 45
+    },
+    {
+      "question": "How do you use next/dynamic with ssr: false to skip server-side rendering for a component, and when is this actually necessary?",
+      "difficulty": "Medium",
+      "answer": "You pass `{ ssr: false }` as a second argument: `const Map = dynamic(() => import('./Map'), { ssr: false })`. This tells Next.js to skip rendering that component on the server entirely — it renders `null` (or your custom `loading` fallback) during SSR, and the real component only mounts once the code has loaded in the browser. It's genuinely necessary for components that depend on browser-only globals that don't exist during server rendering — libraries that read `window`, `document`, or browser APIs directly at module-load or render time (many mapping libraries like Leaflet, rich text editors, charting libraries with canvas access, or anything wrapping the `window` object) will throw a `ReferenceError` or crash during SSR without this. One important constraint: `ssr: false` cannot be used inside a Server Component (it will error, since the whole point of Server Components is that there's no client-side runtime to bail out into) — the `dynamic()` call with `ssr: false` must be made from a Client Component. Overusing this defeats streaming SSR and hurts SEO/initial content for that piece of UI, so it should be scoped to genuinely browser-dependent widgets, not used as a general performance shortcut.",
+      "sources": [
+        {
+          "title": "Guides: Lazy Loading | Next.js",
+          "url": "https://nextjs.org/docs/app/guides/lazy-loading",
+          "domain": "nextjs.org"
+        },
+        {
+          "title": "Perfecting the Loading Experience with next/dynamic and React Suspense",
+          "url": "https://dev.to/mariahello/perfecting-the-loading-experience-with-nextdynamic-and-react-suspense-8jp",
+          "domain": "dev.to"
+        }
+      ],
+      "id": 46
+    },
+    {
+      "question": "How do you type a page's params and searchParams in TypeScript in the App Router, and what changed when Next.js 15 made these values Promises?",
+      "difficulty": "Medium",
+      "answer": "In current Next.js versions, `params` and `searchParams` passed to a page/layout component are Promises, so both the type and the access pattern changed: `export default async function Page({ params, searchParams }: { params: Promise<{ id: string }>, searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) { const { id } = await params; const query = await searchParams; ... }`. Before Next.js 15, these were plain synchronous objects (`params: { id: string }`), so this is a real breaking change that surfaces immediately as a type error (`Property 'id' does not exist on type Promise<...>`) if you upgrade without updating the destructuring, and a very common early gotcha for teams migrating. The change was made to support upcoming rendering optimizations where params/searchParams may not be resolvable synchronously (e.g., under Partial Prerendering, where a dynamic value like `searchParams` is only known once the request actually arrives). To reduce hand-written typing, Next.js also generates helper types per route — e.g., `PageProps<'/blog/[slug]'>` — that infer the correct `params`/`searchParams` shape directly from your route's folder structure, so you don't have to manually keep the type in sync with the file path.",
+      "sources": [
+        {
+          "title": "Functions: generateMetadata | Next.js",
+          "url": "https://nextjs.org/docs/app/api-reference/functions/generate-metadata",
+          "domain": "nextjs.org"
+        },
+        {
+          "title": "PageProps type inference discussion · vercel/next.js #71997",
+          "url": "https://github.com/vercel/next.js/discussions/71997",
+          "domain": "github.com"
+        }
+      ],
+      "id": 47
+    },
+    {
+      "question": "What does output: \"standalone\" in next.config.js produce, and why is it commonly used when deploying with Docker?",
+      "difficulty": "Medium",
+      "answer": "Setting `output: 'standalone'` tells Next.js to trace exactly which files (from `node_modules`, your source, and dependencies) are actually needed to run the app in production, and copy only those into a self-contained `.next/standalone` folder along with a minimal `server.js` entry point. Without it, deploying to a container normally means shipping the full `node_modules` folder (often hundreds of MB, including devDependencies and unused transitive packages) plus your whole source tree. With `standalone`, the traced output is dramatically smaller and includes everything needed to run `node server.js` with no separate `npm install` step in the final image — you then manually copy the `public/` folder and `.next/static` assets alongside it (these aren't included automatically, which is a common Dockerfile mistake). This is exactly the shape Docker multi-stage builds want: a small final image with only runtime artifacts, no build tools, no dev dependencies, and no wasted layer size — meaningfully faster image pulls and container cold starts compared to shipping a full unpruned `node_modules`. In monorepos, you typically also need `outputFileTracingRoot` set to the workspace root so the tracer can find shared packages living outside the app's own folder.",
+      "sources": [
+        {
+          "title": "next.config.js | Next.js",
+          "url": "https://mintlify.wiki/vercel/next.js/api-reference/config/next-config-js",
+          "domain": "mintlify.wiki"
+        },
+        {
+          "title": "Docker documentation: Next.js",
+          "url": "https://docs.docker.com/guides/nextjs/",
+          "domain": "docs.docker.com"
+        }
+      ],
+      "id": 48
+    },
+    {
+      "question": "How would you implement basic internationalized (i18n) routing in a Next.js app, and what needs separate handling for metadata, the sitemap, and robots.txt?",
+      "difficulty": "Medium",
+      "answer": "The App Router removed the built-in i18n routing config that the Pages Router had, so internationalized routing today is implemented manually (or via a library like `next-intl`) using a top-level dynamic segment: `app/[locale]/layout.tsx` and `app/[locale]/page.tsx`, matched to URLs like `/en/about` and `/de/about`. You typically pair this with a `proxy.ts` (or `middleware.ts` on pre-16 versions) that inspects the `Accept-Language` header or a locale cookie to redirect `/about` to the appropriate `/en/about` on first visit, and with `generateStaticParams()` at the `[locale]` layout to pre-render each supported locale at build time. This routing piece alone doesn't cover the rest of your SEO surface: `generateMetadata()` needs to read the resolved `locale` param and return translated `title`/`description` per locale, plus set `alternates.languages` so each page correctly declares its `hreflang` equivalents in other locales; `sitemap.ts` needs to enumerate URLs for every locale (not just the default) so crawlers discover all language variants, typically using the `alternates.languages` field on each sitemap entry; and `robots.ts` needs to make sure disallow rules apply consistently across all locale prefixes (e.g., blocking `/*/admin` rather than just `/admin`) rather than accidentally only protecting the default-locale path.",
+      "sources": [
+        {
+          "title": "Next.js App Router internationalization (i18n) | next-intl",
+          "url": "https://next-intl.dev/docs/getting-started/app-router",
+          "domain": "next-intl.dev"
+        },
+        {
+          "title": "Setup locale-based routing | next-intl",
+          "url": "https://next-intl.dev/docs/routing/setup",
+          "domain": "next-intl.dev"
+        }
+      ],
+      "id": 49
+    },
+    {
+      "question": "What are the sitemap.ts and robots.ts file conventions used for in the App Router?",
+      "difficulty": "Medium",
+      "answer": "Both are metadata file conventions that let you generate SEO files as typed code instead of hand-maintained static files. `app/sitemap.ts` exports a default function returning an array (or async array) of objects — `{ url, lastModified, changeFrequency, priority, alternates }` — and Next.js automatically serializes it into a valid `/sitemap.xml`, typed via the `MetadataRoute.Sitemap` type. Because it's just code, the sitemap can be generated dynamically from your database at build or request time, so it never goes stale the way a hand-edited XML file does. If a site has more URLs than a single sitemap file should hold (the sitemaps protocol caps at 50,000 URLs per file), you export a `generateSitemaps()` function that returns a list of sitemap IDs, and Next.js generates one file per ID plus an index automatically. `app/robots.ts` similarly exports a default function returning a `MetadataRoute.Robots` object with `rules` (per-user-agent `allow`/`disallow` paths) and a `sitemap` field pointing crawlers to the sitemap URL — commonly used to block admin/cart/API routes from indexing while explicitly declaring the sitemap's location so bots discover it without manual submission. Both files are cached by default (like a regular static Route Handler) unless they use a request-time API or a dynamic config option, and Next.js throws a build error if you have both a static `sitemap.xml`/`robots.txt` file and the corresponding `.ts` convention in the same segment.",
+      "sources": [
+        {
+          "title": "Metadata Files: sitemap.xml | Next.js",
+          "url": "https://nextjs.org/docs/app/api-reference/file-conventions/metadata/sitemap",
+          "domain": "nextjs.org"
+        },
+        {
+          "title": "Metadata Files: robots.txt | Next.js",
+          "url": "https://nextjs.org/docs/app/api-reference/file-conventions/metadata/robots",
+          "domain": "nextjs.org"
+        }
+      ],
+      "id": 50
+    },
+    {
+      "question": "Why can't you pass a function or a non-serializable value (like a class instance) as a prop from a Server Component to a Client Component?",
+      "difficulty": "Medium",
+      "answer": "The boundary between a Server Component and a Client Component isn't a normal JavaScript function call — the Server Component's rendered output is serialized into the React Server Component (RSC) payload and sent over the network (or written to the response stream) to be reconstructed on the client, similar in spirit to a JSON API response. Functions can't be serialized this way: a closure capturing server-side state, a database client, or a callback referencing server-only resources has no meaningful representation on the client, so passing one as a prop throws an error ('Functions cannot be passed directly to Client Components'). The same applies to class instances (e.g., a Date-like custom class, an ORM model instance, a `Map`/`Set` in some serialization contexts) — the RSC serializer only understands plain, JSON-like data structures (plus a few special cases like Promises for streaming and certain typed arrays), not arbitrary class prototypes or methods. The one deliberate exception is Server Actions: a `'use server'` function passed as a prop is specially handled — Next.js replaces it with a reference/ID the client can invoke, rather than trying to serialize the function body itself, which is how a form's `action={myServerAction}` works even though it looks like passing a function across the boundary.",
+      "sources": [
+        {
+          "title": "Getting Started: Server and Client Components | Next.js",
+          "url": "https://nextjs.org/docs/app/getting-started/server-and-client-components",
+          "domain": "nextjs.org"
+        },
+        {
+          "title": "Server Components in Client Components Explained",
+          "url": "https://rishibakshi.hashnode.dev/wrapping-server-components-in-client-components-what-happens",
+          "domain": "rishibakshi.hashnode.dev"
+        }
+      ],
+      "id": 51
+    },
+    {
+      "question": "What is a Data Access Layer (DAL) pattern in a Next.js app, and why is it recommended to centralize authorization checks there rather than scattering them across middleware and pages?",
+      "difficulty": "Medium",
+      "answer": "A Data Access Layer is a dedicated, server-only module (typically marked with `import 'server-only'` to guarantee it can never accidentally be bundled into client code) that centralizes every place your app reads or writes data — and, critically, verifies the current user's session/authorization inside that same module before returning anything, rather than trusting that some earlier layer (a page, a layout, Middleware) already checked. A common pattern is a `verifySession()` function wrapped in React's `cache()` so it dedupes to a single check per render pass, called at the top of every data-fetching function: `getUserOrders()`, `getBillingInfo()`, etc. The reason this is recommended over scattering checks in Middleware or individual pages is that both of those are fragile single points of failure: Middleware can be architecturally bypassed (a real CVE showed a crafted header could skip it entirely) and doesn't intercept Server Actions invoked directly from the client; a page-level check doesn't automatically extend to Server Actions defined within that page, since those are compiled into independently-callable endpoints; and layouts don't re-run their checks on every navigation within the same segment, so a check placed only in a layout can go stale across route changes. Centralizing in the DAL means the authorization check travels with the data itself — no matter which Server Component, Server Action, or Route Handler ends up calling that data function, the same verification always runs.",
+      "sources": [
+        {
+          "title": "Guides: Authentication | Next.js",
+          "url": "https://nextjs.org/docs/app/guides/authentication",
+          "domain": "nextjs.org"
+        },
+        {
+          "title": "Next.js Authentication Best Practices in 2025",
+          "url": "https://dev.to/franciscomoretti/nextjs-authentication-best-practices-in-2025-o00",
+          "domain": "dev.to"
+        }
+      ],
+      "id": 52
+    },
+    {
+      "question": "How do you handle CORS in a Next.js Route Handler?",
+      "difficulty": "Medium",
+      "answer": "By default, Route Handlers follow the same-origin model like any HTTP server — there's no automatic cross-origin allowance, so a request from a different origin will be blocked by the browser unless you explicitly return the right CORS headers. Inside the Route Handler, you set `Access-Control-Allow-Origin` (either a specific origin or `*`), `Access-Control-Allow-Methods`, and `Access-Control-Allow-Headers` on the `Response`, and — critically — you must also export an `OPTIONS` handler to answer the browser's preflight request for any 'complex' request (non-GET/POST-with-simple-headers, or requests carrying custom headers like `Authorization`): `export async function OPTIONS() { return new Response(null, { headers: corsHeaders }) }`. If you need the same CORS policy applied consistently across many routes rather than repeating this in every `route.ts` file, the common approach is centralizing it in Middleware/Proxy, checking `request.method === 'OPTIONS'` for the preflight case and otherwise appending the headers to the response for every matched path — or configuring static `headers()` rules in `next.config.js` for paths that don't need per-request logic. A frequent real bug is forgetting the `OPTIONS` export for authenticated endpoints: the actual GET/POST handler having correct CORS headers doesn't help if the preflight `OPTIONS` request itself 404s or lacks those headers, since the browser never gets to the real request.",
+      "sources": [
+        {
+          "title": "How to enable cors in Nextjs 13 Route Handlers · vercel/next.js Discussion #47933",
+          "url": "https://github.com/vercel/next.js/discussions/47933",
+          "domain": "github.com"
+        },
+        {
+          "title": "Using CORS in Next.js to handle cross-origin requests - LogRocket Blog",
+          "url": "https://blog.logrocket.com/using-cors-next-js-handle-cross-origin-requests/",
+          "domain": "blog.logrocket.com"
+        }
+      ],
+      "id": 53
+    },
+    {
+      "question": "What is useOptimistic, and how would you use it with a Server Action to show an instant UI update before the mutation actually completes?",
+      "difficulty": "Medium",
+      "answer": "`useOptimistic` is a React hook that lets you render a temporary, 'optimistic' version of some state immediately, while the real async operation (typically a Server Action) is still in flight — think of it like `useState`, except it automatically reverts to the real value once the underlying transition settles. You call it with the current confirmed state and a function describing how to compute the optimistic version: `const [optimisticItems, addOptimistic] = useOptimistic(items, (state, newItem) => [...state, newItem])`. Inside an event handler (wrapped in `startTransition`, or implicitly via a form action), you call `addOptimistic(newItem)` to update the UI instantly, then `await` the actual Server Action that performs the real mutation and eventually revalidates the data. For example, a like button: `setOptimisticPost(!optimisticPost.likedByUser)` flips the heart icon immediately, then `await toggleLike(post.id)` runs the real database update in the background. The key behavior to know for an interview: rollback is automatic, but only if the Server Action actually throws — if your action instead returns an error object (a common pattern for form validation) rather than throwing, the optimistic state will not automatically revert, and you need your own logic (a `try/catch` or checking the returned error) to reset it.",
+      "sources": [
+        {
+          "title": "Data Fetching: Server Actions and Mutations | Next.js",
+          "url": "https://nextjs.org/docs/13/app/building-your-application/data-fetching/server-actions-and-mutations",
+          "domain": "nextjs.org"
+        },
+        {
+          "title": "Optimistic Updates in Next.js 14: useOptimistic, Server Actions, and Automatic Rollback",
+          "url": "https://dev.to/whoffagents/optimistic-updates-in-nextjs-14-useoptimistic-server-actions-and-automatic-rollback-5hbl",
+          "domain": "dev.to"
+        }
+      ],
+      "id": 54
+    },
+    {
+      "question": "What's the difference between using useFormStatus/useActionState for a form versus handling submission with a traditional onSubmit handler and local state?",
+      "difficulty": "Medium",
+      "answer": "A traditional approach wires an `onSubmit` handler that calls `event.preventDefault()`, manually tracks `isLoading`/`error` state with `useState`, and imperatively calls an API — this works but means every form reimplements the same loading/error/reset boilerplate, and it doesn't function at all without JavaScript. `useActionState` (React 19) is designed specifically around Server Actions: `const [state, formAction, pending] = useActionState(myServerAction, initialState)` wraps the action, automatically tracks a `pending` boolean while it runs, and threads the action's return value back as `state` — you attach `formAction` directly to the form's `action` prop (`<form action={formAction}>`) instead of writing an `onSubmit` handler at all, which means the form still works via a real HTML POST if JS hasn't loaded yet (progressive enhancement). `useFormStatus` complements this for a submit button that lives in a separate child component: rather than prop-drilling a `pending` boolean down from the parent form, `useFormStatus()` called inside a component rendered within a `<form>` reads that form's pending state directly (`const { pending } = useFormStatus()`), which is convenient for a reusable `<SubmitButton>` shared across many forms. The practical trade-off: `useActionState`/`useFormStatus` only work with actual `<form>` elements and Server (or client) Actions, and `useActionState` must be called in a Client Component even when the form itself could otherwise be server-rendered.",
+      "sources": [
+        {
+          "title": "Guides: Forms | Next.js",
+          "url": "https://nextjs.org/docs/app/guides/forms",
+          "domain": "nextjs.org"
+        },
+        {
+          "title": "useFormStatus – React",
+          "url": "https://react.dev/reference/react-dom/hooks/useFormStatus",
+          "domain": "react.dev"
+        }
+      ],
+      "id": 55
+    },
+    {
+      "question": "Since Server Actions are always invoked via POST, what built-in CSRF protection does Next.js provide by comparing the Origin and Host headers, and what should you still verify yourself?",
+      "difficulty": "Medium",
+      "answer": "Because every Server Action call is a POST request under the hood, Next.js has built-in origin verification: for any Server Action invocation, it compares the request's `Origin` header against the `Host` header (and any configured `serverActions.allowedOrigins`), and rejects the request if they don't match — this blocks the classic CSRF pattern where a malicious site tries to trigger your Server Action via a hidden auto-submitting form, since the browser will send the attacker's origin, not your app's. Each Server Action's server-side identifier is also encrypted with a per-build key (which can be pinned across instances via `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` for multi-server self-hosted deployments), and Server Actions not referenced anywhere in your rendered output are dead-code-eliminated so they aren't even reachable. What this origin check does not do is authenticate or authorize the request — it only confirms the request came from your own site's origin, not that the caller has permission to perform the action, and it doesn't protect against a legitimate, authenticated user's session being abused for something they're not supposed to do, or against a script running on your own origin (e.g., an XSS payload) calling the action. You still need to independently verify the user's session/authorization inside the action itself (ideally via a shared Data Access Layer) and validate/sanitize all input, since the Origin check only rules out cross-site forgery, not same-origin misuse.",
+      "sources": [
+        {
+          "title": "Guides: Server Actions | Next.js",
+          "url": "https://nextjs.org/docs/app/guides/server-actions",
+          "domain": "nextjs.org"
+        },
+        {
+          "title": "Next.js 16 Optimistic UI Tutorial: Server Actions 2026 | Nerd Level Tech",
+          "url": "https://nerdleveltech.com/nextjs-16-server-actions-react-19-optimistic-ui-tutorial",
+          "domain": "nerdleveltech.com"
+        }
+      ],
+      "id": 56
+    },
+    {
+      "question": "What is Turbopack, and what problem is it solving compared to Webpack in Next.js's dev server and production builds?",
+      "difficulty": "Medium",
+      "answer": "Turbopack is Vercel's Rust-based successor to Webpack, built around an incremental computation engine that caches at a fine-grained (function/module) level so that when you change one file, it recomputes only what's actually affected by that change rather than re-bundling large portions of the dependency graph. The problem it targets is compile-time performance at scale: as a Webpack-based Next.js app grows, both cold dev-server startup and hot-reload latency after a file edit tend to degrade noticeably, because Webpack's bundling model does more redundant recomputation on each change. Turbopack was introduced as an opt-in dev-server bundler and, as of Next.js 16 (October 2025), became the default bundler for both `next dev` and `next build`, with subsequent releases (16.1–16.3) adding stable filesystem-based persistent caching and further reducing dev-server memory usage (Vercel reported roughly 90% lower memory on some large internal apps after the 16.3 caching work). In practical numbers reported by the Next.js team, teams have seen multi-hundred-percent improvements in compile time and Fast Refresh latency on large codebases after adopting Turbopack. Webpack remains fully supported and configurable via `next.config.js`, so teams with heavy custom Webpack configuration, unsupported loaders/plugins, or a verified incompatibility can continue using it explicitly.",
+      "sources": [
+        {
+          "title": "Turbopack in 2026: The Complete Guide to Next.js's Rust-Powered Bundler",
+          "url": "https://dev.to/pockit_tools/turbopack-in-2026-the-complete-guide-to-nextjss-rust-powered-bundler-oda",
+          "domain": "dev.to"
+        },
+        {
+          "title": "Next.js 16.2 Turbopack: The Anatomy of a 400% Improvement in Compile Times",
+          "url": "https://dev.to/mericcintosun/nextjs-162-turbopack-the-anatomy-of-a-400-improvement-in-compile-times-5hnd",
+          "domain": "dev.to"
+        }
+      ],
+      "id": 57
+    },
+    {
+      "question": "How would you write a unit test for a synchronous Client Component in a Next.js App Router project using Jest and React Testing Library?",
+      "difficulty": "Medium",
+      "answer": "For a plain, synchronous Client Component (no `async`/`await` in the component function itself), Jest with React Testing Library works essentially the same as testing any React component: you configure Jest with the `next/jest` transformer (which automatically handles Next.js's SWC compilation, CSS/image imports, and environment variables so you don't hand-configure Babel), set the test environment to `jsdom`, then render the component and assert on the output. For example: `import { render, screen } from '@testing-library/react'; import Counter from './Counter'; test('increments on click', () => { render(<Counter />); fireEvent.click(screen.getByRole('button')); expect(screen.getByText('1')).toBeInTheDocument(); })`. This works cleanly because a synchronous Client Component behaves like ordinary React — it doesn't depend on the request lifecycle, server-only data fetching, or React's async Server Component rendering path, which is the specific thing Jest currently cannot render. Any Server Component dependencies (data-fetching functions, `cookies()`/`headers()` calls) should be mocked at the module boundary rather than imported directly, since those APIs only work inside the actual Next.js server runtime.",
+      "sources": [
+        {
+          "title": "Guides: Testing | Next.js",
+          "url": "https://nextjs.org/docs/app/guides/testing",
+          "domain": "nextjs.org"
+        },
+        {
+          "title": "Guides: Jest | Next.js",
+          "url": "https://nextjs.org/docs/pages/guides/testing/jest",
+          "domain": "nextjs.org"
+        }
+      ],
+      "id": 58
+    },
+    {
+      "question": "What is instrumentation.ts used for in Next.js?",
+      "difficulty": "Medium",
+      "answer": "`instrumentation.ts` (placed at the project root, or inside `src/`, but never inside `app/` or `pages/`) is a special file where you export a `register()` function that Next.js calls exactly once, when a new server instance boots — before it starts handling any requests. It's the designated integration point for observability tooling: the most common use is initializing an OpenTelemetry SDK (often via Vercel's `@vercel/otel` package) so that Next.js's internal operations (data fetching, route handlers, Server Actions) get automatically wrapped in traces/spans and exported to your APM backend (Datadog, Sentry, SigNoz, etc.). Because OpenTelemetry's Node SDK isn't compatible with the Edge Runtime, a common pattern is guarding the import with `if (process.env.NEXT_RUNTIME === 'nodejs')` (often via a dynamic `import()`) so Edge-deployed code paths don't try to bundle Node-only tracing modules. Since Next.js 15, `instrumentation.ts` is auto-detected without needing the old `experimental.instrumentationHook` flag, and Next.js 15 also added an `onRequestError` export to the same file — a hook that fires whenever a server-side error is thrown from a Route Handler, Server Action, Server Component, or Middleware, useful for centralized error reporting without wrapping every entry point manually.",
+      "sources": [
+        {
+          "title": "Guides: Instrumentation | Next.js",
+          "url": "https://nextjs.org/docs/pages/guides/instrumentation",
+          "domain": "nextjs.org"
+        },
+        {
+          "title": "Next.js instrumentation.ts: Monitoring Guide (2026) | Nurbak",
+          "url": "https://nurbak.com/en/blog/nextjs-instrumentation-ts-monitoring/",
+          "domain": "nurbak.com"
+        }
+      ],
+      "id": 59
+    },
+    {
+      "question": "In a Turborepo monorepo with a shared UI package, why can't components in that shared package directly call Next.js-only APIs like cookies(), headers(), or redirect()?",
+      "difficulty": "Medium",
+      "answer": "`cookies()`, `headers()`, and `redirect()` (from `next/headers` and `next/navigation`) aren't generic React or Node APIs — they're tied to Next.js's specific request-scoped rendering context, which only exists while a component is actually being rendered by the Next.js server runtime for a real incoming request. A shared UI package in a Turborepo workspace is typically framework-agnostic by design (so it can be published/consumed by multiple apps, some of which might not even be Next.js), and it's compiled/type-checked independently of any particular app's runtime — it has no access to the request context that these functions expect, so calling them there would either fail to resolve at build time (no `next` dependency available in that package's context) or throw at runtime outside of a valid Next.js render. The architectural solution is to keep the shared package purely presentational (accepting data as props) and have the Next.js-specific data access — reading cookies, redirecting, checking headers — happen in the consuming app's own Server Components or Server Actions, which then pass the resolved data down into the shared UI components. This also keeps the shared package testable and reusable outside of Next.js entirely, which is usually the whole point of extracting it into its own workspace package.",
+      "sources": [
+        {
+          "title": "Mastering Route Groups in NextJS 14 - dev.to context on Next.js-specific APIs",
+          "url": "https://dev.to/shawon/mastering-route-groups-in-nextjs-14-1oae",
+          "domain": "dev.to"
+        },
+        {
+          "title": "Next.js docs: Functions: cookies",
+          "url": "https://nextjs.org/docs/app/api-reference/functions/cookies",
+          "domain": "nextjs.org"
+        }
+      ],
+      "id": 60
+    },
+    {
+      "question": "Async Server Components (e.g., an async function page.tsx) currently can't be rendered by Jest or React Testing Library. Why not, and what testing strategy would you use instead to get meaningful coverage of App Router pages?",
+      "difficulty": "Hard",
+      "answer": "Jest and React Testing Library are built around React's client-side/synchronous rendering APIs (`ReactDOM.render`/`createRoot`) — they call your component function directly and expect a React element tree back synchronously. An `async function Page()` returns a Promise, not a React element, and React's actual mechanism for resolving async Server Components (streaming them through the RSC renderer, resolving `await`s tied to the server request lifecycle) is fundamentally different from anything the synchronous React DOM renderer that Testing Library drives can execute — there's no supported way to 'await' a Server Component into a renderable tree in that environment today, which the Next.js documentation itself acknowledges as a current gap for unit testing. The practical strategy is to split testing by layer: for the business logic inside a Server Component (data transformations, fetch calls), extract that logic into plain, testable functions/modules you can unit test directly without rendering React at all; for synchronous, presentational Client Components nested inside the page, unit test those normally with Jest/RTL since they don't have this limitation; and for the actual rendered output of full pages — including async Server Components, streaming, and Suspense behavior — use an end-to-end tool like Playwright or Cypress, which runs a real browser against a real running Next.js server and therefore exercises the full, genuine rendering pipeline rather than trying to simulate it. This layered approach (unit tests for logic and leaf components, E2E for full-page integration) is the officially recommended pattern rather than waiting for full async-RSC unit-testing support.",
+      "sources": [
+        {
+          "title": "Guides: Testing | Next.js",
+          "url": "https://nextjs.org/docs/app/guides/testing",
+          "domain": "nextjs.org"
+        },
+        {
+          "title": "Async Server Components can't be unit tested · vercel/next.js Discussion #49603",
+          "url": "https://github.com/vercel/next.js/discussions/49603",
+          "domain": "github.com"
+        }
+      ],
+      "id": 61
+    },
+    {
+      "question": "A Server Action is reachable as a direct POST endpoint even if the page that exports it has an authentication check, and even if the action isn't imported anywhere else. Explain why this is true given how Next.js compiles and exposes Server Actions, and what it means for where authorization checks must actually live.",
+      "difficulty": "Hard",
+      "answer": "When you mark a function `'use server'`, the Next.js compiler extracts it and registers it as an independently callable server endpoint identified by an encrypted action ID, regardless of how many components import or reference it in your source code — the compiled output isn't 'a function that only runs when this specific page renders,' it's a standalone POST handler that Next.js's client-side runtime knows how to invoke by ID. Any check you put in the page's own rendering logic (e.g., `if (!session) redirect('/login')` at the top of a Server Component) only governs whether that page renders — it says nothing about the compiled Server Action itself, because the action is invoked out-of-band from the page's render, triggered by a form submission or a direct client call to `/`(the encrypted action route), not by re-running the page's authentication logic. This is explicitly called out in Next.js's own security guidance: a page-level auth check does not extend to the Server Actions defined within it. Practically, an attacker who obtains (or brute-forces/observes) a valid action ID from your client bundle can invoke it directly via a crafted POST request, bypassing whatever gate exists on the page that happens to render a form pointing at it. The consequence for architecture: authorization cannot live only at the page or layout level — every Server Action must independently re-verify the caller's session and permissions at the top of its own function body (ideally by calling into a shared, server-only Data Access Layer), treating each action exactly like an unauthenticated-by-default public API endpoint until it proves otherwise.",
+      "sources": [
+        {
+          "title": "Guides: Data Security | Next.js",
+          "url": "https://nextjs.org/docs/app/guides/data-security",
+          "domain": "nextjs.org"
+        },
+        {
+          "title": "Next.js Server Action Security | Arcjet Blog",
+          "url": "https://blog.arcjet.com/next-js-server-action-security/",
+          "domain": "blog.arcjet.com"
+        }
+      ],
+      "id": 62
+    },
+    {
+      "question": "A page reads searchParams deep inside a nested Client Component, which forces the entire route to render dynamically. Walk through how you'd refactor using Suspense boundaries and/or Partial Prerendering so only the part that genuinely needs request-time data opts out of static rendering.",
+      "difficulty": "Hard",
+      "answer": "The root cause is that `useSearchParams()` reads request-time information that can't be known ahead of a prerender, and without a `<Suspense>` boundary immediately around the component calling it, Next.js has no place to 'cut' the static shell from the dynamic part — so it either fails the production build with a missing-Suspense error, or (depending on version/config) forces the whole route into full client-side rendering. The fix is isolation: extract the specific component that calls `useSearchParams()` into its own small, self-contained Client Component (e.g., `<SearchFilters />`), and wrap only that component in `<Suspense fallback={<FiltersSkeleton />}>` at the point in the parent Server Component tree where it's rendered — not wrapping the whole page. Everything outside that boundary (headers, static content, other widgets that don't touch request-time data) remains eligible for static generation and gets prerendered ahead of time; only the isolated `<SearchFilters />` boundary is treated as a dynamic 'hole' that renders per-request and streams in. Under Partial Prerendering (or Cache Components in Next.js 16), this is exactly the mechanism the framework is built around: the static shell (everything outside Suspense boundaries) is served instantly from cache/CDN, while each Suspense-wrapped dynamic region streams in independently as it resolves — so a route with a search-driven filter bar can still serve its overall layout and content statically while only the filter results genuinely wait on the URL's query string. The key discipline is keeping the Suspense boundary as tight as possible around the actual dynamic dependency, rather than wrapping a large ancestor component, which would needlessly pull unrelated static content into the dynamic path.",
+      "sources": [
+        {
+          "title": "Missing Suspense boundary with useSearchParams | Next.js",
+          "url": "https://nextjs.org/docs/messages/missing-suspense-with-csr-bailout",
+          "domain": "nextjs.org"
+        },
+        {
+          "title": "Getting started with Partial Prerendering | Vercel",
+          "url": "https://vercel.com/docs/partial-prerendering/quickstart",
+          "domain": "vercel.com"
+        }
+      ],
+      "id": 63
+    },
+    {
+      "question": "Design the Dockerfile and CI/CD pipeline for self-hosting a Next.js app using output: \"standalone\". What breaks if you skip standalone mode, and how do you handle secrets that Server Actions need at runtime versus ones baked in at build time?",
+      "difficulty": "Hard",
+      "answer": "A standard standalone Dockerfile uses multi-stage builds: a `deps` stage installs dependencies, a `builder` stage runs `next build` with `output: 'standalone'` set in `next.config.js`, and a slim final `runner` stage (often `node:alpine`) copies only three things out of the builder — `.next/standalone` (the traced app + minimal `server.js`), `.next/static` (which is not included in the standalone trace and must be copied manually to `.next/static` in the final image), and `public/` (also not auto-included). The final image then runs `node server.js` rather than `next start`. If you skip `output: 'standalone'` and instead try to containerize a normal build, you either have to ship the entire `node_modules` (bloating the image and slowing cold starts/pulls significantly) or the container fails outright because `next start` expects the full, untraced build output and dependency tree that a naive partial copy won't include — missing static assets and missing `.next/static` are the two most common resulting failures if the Dockerfile isn't adjusted for standalone's specific output shape. For CI/CD, the pipeline builds the image (running `next build` inside the `builder` stage, meaning any `NEXT_PUBLIC_*` variables must be supplied as build-args/build-time secrets since they're statically inlined into the client bundle at that point), pushes it to a registry, and deploys; genuinely runtime-only secrets (database URLs, API keys used only in Server Actions/Route Handlers) should not be baked into the image at all — they're injected at container start via the orchestrator's secret manager (env vars supplied by Kubernetes Secrets, ECS task definitions, etc.), read fresh by `process.env` when the Node.js process boots, which works because non-`NEXT_PUBLIC_` server-side env vars are read at request/runtime, not statically inlined at build time the way public ones are.",
+      "sources": [
+        {
+          "title": "Docker documentation: Next.js",
+          "url": "https://docs.docker.com/guides/nextjs/",
+          "domain": "docs.docker.com"
+        },
+        {
+          "title": "next.config.js | Next.js (output: standalone, outputFileTracingRoot)",
+          "url": "https://mintlify.wiki/vercel/next.js/api-reference/config/next-config-js",
+          "domain": "mintlify.wiki"
+        }
+      ],
+      "id": 64
+    },
+    {
+      "question": "In a Turborepo monorepo with multiple Next.js apps sharing a UI package, what are the trade-offs of sharing entire App Router pages/layouts versus only sharing presentational components, and how does Turborepo's caching behave when that shared package changes frequently?",
+      "difficulty": "Hard",
+      "answer": "Sharing only presentational components (buttons, cards, form primitives with no Next.js-specific imports) keeps the shared package framework-agnostic and easy to reason about: it has no dependency on `next/navigation`, `cookies()`, or the App Router's rendering model, so it's trivially testable in isolation, safely consumable even by a non-Next.js app in the same monorepo, and changes to it are low-risk since it can't accidentally couple two apps' routing behavior together. Sharing entire pages or layouts goes further and can reduce genuine duplication for apps that are near-identical (e.g., a white-labeled product with several near-clone storefronts), but it couples the consuming apps tightly to Next.js App Router conventions inside a shared package, makes it harder for one app to diverge without forking the shared page, and can leak app-specific concerns (data fetching assumptions, specific env vars) into what's supposed to be reusable code — a change intended for one app's page can silently break another app that imports the same shared layout. On the caching side, Turborepo hashes each package's inputs (source files plus its dependency graph) to decide whether a task's output can be replayed from cache; because every app in the workspace depends on the shared UI package, any change to that package invalidates the Turborepo cache for every app's `build`/`test`/`lint` tasks that depend on it — even a one-line CSS tweak in a shared `<Button>` forces every consuming app to rebuild, since Turborepo can't know from the hash alone that the change didn't actually affect a given app's output. Teams with a genuinely fast-moving shared package can end up conceding some of Turborepo's cache-hit benefit for the sake of correctness (never serving a stale build with an outdated shared component), which is a real practical trade-off worth naming explicitly rather than assuming caching just works for free once Turborepo is set up.",
+      "sources": [
+        {
+          "title": "Mastering Route Groups in Next.js — architecture patterns for shared code",
+          "url": "https://prateekbadjatya.medium.com/mastering-route-groups-in-next-js-organizing-clean-urls-and-scalable-codebases-5c92affb8794",
+          "domain": "prateekbadjatya.medium.com"
+        },
+        {
+          "title": "Next.js docs: Guides: Authentication (server-only boundary rationale)",
+          "url": "https://nextjs.org/docs/app/guides/authentication",
+          "domain": "nextjs.org"
+        }
+      ],
+      "id": 65
+    },
+    {
+      "question": "How would you architect multi-locale routing (URL structure, localized metadata/sitemap/robots, hreflang tags) in the App Router to avoid duplicate-content SEO issues across locales?",
+      "difficulty": "Hard",
+      "answer": "The foundation is a top-level `app/[locale]/...` dynamic segment so every route exists once per locale as a distinct URL (`/en/pricing`, `/de/pricing`), rather than serving the same URL with different content based on a cookie or header — search engines need distinct, crawlable URLs per language to index each variant separately, which is why locale-in-URL is preferred over locale-in-cookie for anything you want indexed. A `proxy.ts`/`middleware.ts` (using `next-intl`'s `createMiddleware` or hand-rolled logic) handles locale detection on first visit and redirects `/pricing` to the user's best-matching locale, while `generateStaticParams()` at the `[locale]` layout pre-renders every supported locale at build time. For metadata, `generateMetadata()` in each page reads the resolved `locale` param, returns translated title/description, and — this is the part that actually prevents duplicate-content penalties — sets `alternates.languages` to list every locale variant of that same page with its canonical URL, which Next.js renders as `<link rel=\"alternate\" hreflang=\"...\">` tags; this explicitly tells search engines 'these pages are translations of each other, not duplicate content competing for the same query.' The sitemap (`sitemap.ts`) needs every locale's URL enumerated, ideally also carrying the same `alternates.languages` data per entry so crawlers get the hreflang relationship from the sitemap as well as from in-page tags. `robots.ts` needs its disallow rules to apply across all locale prefixes uniformly (pattern-matching `/*/admin` rather than a single hardcoded `/admin`), since a rule written only for the default locale's path structure will silently fail to protect the same route under other locale prefixes — a subtle, easy-to-miss gap that leaves non-default-locale admin/private routes exposed to crawling even though the default locale's equivalent is correctly blocked.",
+      "sources": [
+        {
+          "title": "Next.js App Router internationalization (i18n) | next-intl",
+          "url": "https://next-intl.dev/docs/getting-started/app-router",
+          "domain": "next-intl.dev"
+        },
+        {
+          "title": "Next.js Internationalization for App Router and Pages Router | Weglot",
+          "url": "https://www.weglot.com/blog/nextjs-internationalization",
+          "domain": "weglot.com"
+        }
+      ],
+      "id": 66
+    },
+    {
+      "question": "How does useOptimistic behave if a user triggers two Server Action mutations in quick succession and the second one resolves before the first? How would you handle the resulting race condition and potential rollback?",
+      "difficulty": "Hard",
+      "answer": "`useOptimistic` layers a temporary optimistic value on top of the real, confirmed state passed into the hook, and it recomputes/reverts based on the current confirmed state whenever that underlying state prop changes — it doesn't inherently track 'which specific optimistic update belongs to which in-flight request.' If two mutations fire in quick succession (e.g., a user double-clicks 'like' rapidly, or edits a field twice before the first save lands) and they resolve out of order, the danger is that the first (now-stale) response's revalidation can overwrite the optimistic UI state that was already correctly reflecting the second, more recent action — visually 'reverting' progress the user thinks already succeeded, or briefly flashing an incorrect intermediate state. React's documented behavior is that an optimistic update only automatically rolls back if the action actually throws; if the first action resolves successfully but with stale data after the second action has already optimistically moved the UI forward, there's no built-in mechanism to detect and discard that stale resolution. The practical mitigations: disable or debounce the trigger while a mutation of the same kind is already pending (`useTransition`'s `isPending` combined with disabling the button, or `useFormStatus`'s `pending`) so a second identical action can't even fire until the first completes; if concurrent distinct mutations are legitimate (e.g., editing different fields), key your optimistic reducer function so each update is applied relative to the current optimistic state rather than a captured stale closure, ensuring updates compose rather than clobber each other; and for anything where staleness genuinely matters (financial data, inventory counts), have the server-side mutation include a version/timestamp check so an out-of-order request is rejected server-side rather than relying on client-side sequencing alone — the client should treat the server's authoritative response, once revalidated via `revalidatePath`/`revalidateTag`, as the source of truth that ultimately overrides any optimistic guess.",
+      "sources": [
+        {
+          "title": "Optimistic Updates in Next.js 14: useOptimistic, Server Actions, and Automatic Rollback",
+          "url": "https://dev.to/whoffagents/optimistic-updates-in-nextjs-14-useoptimistic-server-actions-and-automatic-rollback-5hbl",
+          "domain": "dev.to"
+        },
+        {
+          "title": "React useOptimistic: Optimistic UI Patterns That Actually Work (2026)",
+          "url": "https://dev.to/stacknotice/react-useoptimistic-optimistic-ui-patterns-that-actually-work-2026-5460",
+          "domain": "dev.to"
+        }
+      ],
+      "id": 67
+    },
+    {
+      "question": "What does Turbopack change about persistent caching and incremental builds compared to Webpack, and in what scenarios might you still choose Webpack for a Next.js production build?",
+      "difficulty": "Hard",
+      "answer": "Turbopack's core architectural bet is fine-grained, function-level memoization: rather than Webpack's module-graph bundling model where a change can require reprocessing a wide swath of dependent modules, Turbopack tracks exactly which computations depend on which inputs and only recomputes the affected subset when a file changes. Initially this caching lived in memory only, meaning a fresh `next dev` or `next build` still paid a cold-start cost even if nothing had actually changed since the last run; starting with Next.js 16.1, filesystem-based persistent caching became stable, and Next.js 16.3 extended that persistent cache to cover `next build` itself, not just the dev server — meaning a CI pipeline that persists the `.next` cache directory between runs (a normal CI cache step) lets subsequent builds skip recompiling the roughly 95% of a large app that didn't change in a given PR, with Vercel reporting production builds up to several times faster in their own dogfooding once this landed, alongside a reported ~90% reduction in dev-server memory usage from related eviction work in the same release line. You'd still choose Webpack for a production build in a few concrete scenarios: your app depends on Webpack-specific loaders, plugins, or custom `webpack()` config in `next.config.js` that doesn't have a Turbopack equivalent yet; you've hit a verified Turbopack compatibility bug in your specific dependency graph and need a stable fallback while it's fixed upstream; or you're on an older Next.js version where Turbopack production builds were still experimental/preview rather than the default — the safe hybrid many teams use during a transition period is Turbopack for `next dev` (where the DX win is largest and lowest-risk) while keeping `next build` on Webpack until their specific toolchain is fully verified against Turbopack in CI.",
+      "sources": [
+        {
+          "title": "Turbopack in 2026: The Complete Guide to Next.js's Rust-Powered Bundler",
+          "url": "https://dev.to/pockit_tools/turbopack-in-2026-the-complete-guide-to-nextjss-rust-powered-bundler-oda",
+          "domain": "dev.to"
+        },
+        {
+          "title": "Next.js 16.3: Turbopack Persistent Cache and Agent Tools",
+          "url": "https://www.digitalapplied.com/blog/nextjs-16-3-agent-native-turbopack-persistent-cache-2026",
+          "domain": "digitalapplied.com"
+        }
+      ],
+      "id": 68
+    },
+    {
+      "question": "A Next.js app deployed on serverless functions is exhausting its Postgres connection limit under load. Explain why serverless invocation patterns cause this, and how solutions like connection pooling proxies or edge-compatible database drivers address it.",
+      "difficulty": "Hard",
+      "answer": "A traditional long-running Node.js server keeps one process (and one connection pool) alive across many requests, so the number of database connections stays bounded and predictable. Serverless functions invert this: under load, the platform spins up many concurrent function instances, and if each instance creates its own database client (or, worse, a new client per invocation instead of reusing a module-level singleton), you can end up with dozens or hundreds of simultaneous TCP connections to Postgres — far exceeding the database's `max_connections` limit (often 100 by default on managed Postgres), causing new connections to be refused and requests to fail under exactly the traffic spikes you need reliability for most. The standard fix is introducing a connection pooling proxy — PgBouncer, or a managed equivalent like Supabase's built-in pooler or Neon's native pooling — that sits between your serverless functions and Postgres: your app connects to the pooler (often on a different port, e.g., 6543 instead of 5432, with a `pgbouncer=true` connection-string flag when using an ORM like Prisma), and the pooler maintains a small, stable set of real connections to Postgres while multiplexing many client connections on top of it in 'transaction mode.' At the code level, you also fix the root cause by ensuring a single database client instance is reused across invocations within the same warm serverless container (a module-level singleton, not one instantiated per request) rather than relying on the pooler alone to paper over connection churn. For Edge Runtime deployments specifically, this compounds: the Edge Runtime has no TCP sockets at all, so a classic Postgres driver simply cannot connect from Edge code — this is solved with an HTTP-based driver (e.g., Neon's serverless driver or similar) that talks to Postgres over HTTP/WebSocket instead of a raw TCP connection, making it compatible with the Edge Runtime's Web-standards-only environment.",
+      "sources": [
+        {
+          "title": "Connection pool | Prisma Documentation",
+          "url": "https://www.prisma.io/docs/orm/prisma-client/setup-and-configuration/databases-connections/connection-pool",
+          "domain": "prisma.io"
+        },
+        {
+          "title": "Reference setup with Prisma, NextJS, and local Postgres / PGBouncer? · prisma/prisma Discussion #11987",
+          "url": "https://github.com/prisma/prisma/discussions/11987",
+          "domain": "github.com"
+        }
+      ],
+      "id": 69
+    },
+    {
+      "question": "You want consistent rate limiting and bot protection across both Route Handlers and Server Actions. Route Handlers have stable, matchable URLs, but Server Actions are invoked via per-build encrypted IDs with no stable per-action path. How would you apply consistent protection to both patterns?",
+      "difficulty": "Hard",
+      "answer": "The URL-matching approach that works cleanly for Route Handlers — a Middleware/Proxy `matcher` pattern like `/api/:path*` that intercepts requests before they reach your handler — doesn't generalize to Server Actions, because their encrypted, per-build action IDs aren't a stable path you can pattern-match against in advance, and Middleware in Next.js 16's `proxy.ts` runs on the Node.js runtime specifically for network-boundary concerns, not as a generic per-function guard. The practical pattern (used by tools like Arcjet, which explicitly supports this dual mode) is to stop trying to intercept Server Actions from the outside and instead call the same protection logic directly inside each Server Action's own function body, alongside calling it from Middleware or directly inside Route Handlers for the URL-addressable half of your API surface. Concretely, you define one shared rate-limiting/bot-detection configuration (e.g., `arcjet({ rules: [shield(), detectBot(), fixedWindow({ window: '1m', max: 5 })] })`) and invoke `aj.protect()` at the top of both the Route Handler (using its native `Request` object) and the Server Action (using a helper like Arcjet's `request()` utility, which reconstructs a `Request`-like object with headers from the Server Action's execution context, since Server Actions don't receive a `Request` object the way Route Handlers do). Keying the rate limit by IP or authenticated user ID (rather than by path, which doesn't exist for actions) makes the same limiter logic apply uniformly regardless of which invocation style triggered it. This does mean accepting some code duplication — the protection call has to be added to every sensitive Server Action individually rather than centralized in one Middleware matcher — but it's the only approach that actually covers actions, since there's no external network layer that can see or match on an action's identity before it executes inside the Next.js server process.",
+      "sources": [
+        {
+          "title": "Next.js server action security | Arcjet Blog",
+          "url": "https://blog.arcjet.com/next-js-server-action-security/",
+          "domain": "blog.arcjet.com"
+        },
+        {
+          "title": "Rate-limiting Server Actions in Next.js",
+          "url": "https://dev.to/erfanebrahimnia/rate-limiting-server-actions-in-nextjs-nfm",
+          "domain": "dev.to"
+        }
+      ],
+      "id": 70
     }
   ],
   "sources": [
@@ -740,12 +1370,24 @@
       "title": "Getting Started: Server and Client Components | Next.js",
       "url": "https://nextjs.org/docs/app/getting-started/server-and-client-components",
       "domain": "nextjs.org",
-      "count": 3
+      "count": 4
+    },
+    {
+      "title": "Guides: Authentication | Next.js",
+      "url": "https://nextjs.org/docs/app/guides/authentication",
+      "domain": "nextjs.org",
+      "count": 4
     },
     {
       "title": "File-system conventions: Parallel Routes | Next.js",
       "url": "https://nextjs.org/docs/app/api-reference/file-conventions/parallel-routes",
       "domain": "nextjs.org",
+      "count": 3
+    },
+    {
+      "title": "next.config.js | Next.js",
+      "url": "https://mintlify.wiki/vercel/next.js/api-reference/config/next-config-js",
+      "domain": "mintlify.wiki",
       "count": 3
     },
     {
@@ -779,6 +1421,12 @@
       "count": 2
     },
     {
+      "title": "Guides: Server Actions | Next.js",
+      "url": "https://nextjs.org/docs/app/guides/server-actions",
+      "domain": "nextjs.org",
+      "count": 2
+    },
+    {
       "title": "File-system conventions: error.js | Next.js",
       "url": "https://nextjs.org/docs/app/api-reference/file-conventions/error",
       "domain": "nextjs.org",
@@ -803,15 +1451,93 @@
       "count": 2
     },
     {
-      "title": "Guides: Authentication | Next.js",
-      "url": "https://nextjs.org/docs/app/guides/authentication",
+      "title": "Server Components in Client Components Explained",
+      "url": "https://rishibakshi.hashnode.dev/wrapping-server-components-in-client-components-what-happens",
+      "domain": "rishibakshi.hashnode.dev",
+      "count": 2
+    },
+    {
+      "title": "Missing Suspense boundary with useSearchParams | Next.js",
+      "url": "https://nextjs.org/docs/messages/missing-suspense-with-csr-bailout",
       "domain": "nextjs.org",
+      "count": 2
+    },
+    {
+      "title": "Next.js Authentication Best Practices in 2025",
+      "url": "https://dev.to/franciscomoretti/nextjs-authentication-best-practices-in-2025-o00",
+      "domain": "dev.to",
+      "count": 2
+    },
+    {
+      "title": "Getting started with Partial Prerendering | Vercel",
+      "url": "https://vercel.com/docs/partial-prerendering/quickstart",
+      "domain": "vercel.com",
       "count": 2
     },
     {
       "title": "Guides: Streaming | Next.js",
       "url": "https://nextjs.org/docs/app/guides/streaming",
       "domain": "nextjs.org",
+      "count": 2
+    },
+    {
+      "title": "Migrating: App Router | Next.js",
+      "url": "https://nextjs.org/docs/app/guides/migrating/app-router-migration",
+      "domain": "nextjs.org",
+      "count": 2
+    },
+    {
+      "title": "Migrating from Pages Router to App Router: An Incremental Guide | Clerk",
+      "url": "https://clerk.com/blog/migrating-pages-router-to-app-router-an-incremental-guide",
+      "domain": "clerk.com",
+      "count": 2
+    },
+    {
+      "title": "Guides: Lazy Loading | Next.js",
+      "url": "https://nextjs.org/docs/app/guides/lazy-loading",
+      "domain": "nextjs.org",
+      "count": 2
+    },
+    {
+      "title": "Perfecting the Loading Experience with next/dynamic and React Suspense",
+      "url": "https://dev.to/mariahello/perfecting-the-loading-experience-with-nextdynamic-and-react-suspense-8jp",
+      "domain": "dev.to",
+      "count": 2
+    },
+    {
+      "title": "Docker documentation: Next.js",
+      "url": "https://docs.docker.com/guides/nextjs/",
+      "domain": "docs.docker.com",
+      "count": 2
+    },
+    {
+      "title": "Next.js App Router internationalization (i18n) | next-intl",
+      "url": "https://next-intl.dev/docs/getting-started/app-router",
+      "domain": "next-intl.dev",
+      "count": 2
+    },
+    {
+      "title": "Optimistic Updates in Next.js 14: useOptimistic, Server Actions, and Automatic Rollback",
+      "url": "https://dev.to/whoffagents/optimistic-updates-in-nextjs-14-useoptimistic-server-actions-and-automatic-rollback-5hbl",
+      "domain": "dev.to",
+      "count": 2
+    },
+    {
+      "title": "Turbopack in 2026: The Complete Guide to Next.js's Rust-Powered Bundler",
+      "url": "https://dev.to/pockit_tools/turbopack-in-2026-the-complete-guide-to-nextjss-rust-powered-bundler-oda",
+      "domain": "dev.to",
+      "count": 2
+    },
+    {
+      "title": "Guides: Testing | Next.js",
+      "url": "https://nextjs.org/docs/app/guides/testing",
+      "domain": "nextjs.org",
+      "count": 2
+    },
+    {
+      "title": "Next.js Server Action Security | Arcjet Blog",
+      "url": "https://blog.arcjet.com/next-js-server-action-security/",
+      "domain": "blog.arcjet.com",
       "count": 2
     },
     {
@@ -917,12 +1643,6 @@
       "count": 1
     },
     {
-      "title": "Guides: Server Actions | Next.js",
-      "url": "https://nextjs.org/docs/app/guides/server-actions",
-      "domain": "nextjs.org",
-      "count": 1
-    },
-    {
       "title": "Server Actions vs Route Handlers: When to Use Each in Next.js",
       "url": "https://makerkit.dev/blog/tutorials/server-actions-vs-route-handlers",
       "domain": "makerkit.dev",
@@ -1013,27 +1733,9 @@
       "count": 1
     },
     {
-      "title": "Server Components in Client Components Explained",
-      "url": "https://rishibakshi.hashnode.dev/wrapping-server-components-in-client-components-what-happens",
-      "domain": "rishibakshi.hashnode.dev",
-      "count": 1
-    },
-    {
-      "title": "Missing Suspense boundary with useSearchParams | Next.js",
-      "url": "https://nextjs.org/docs/messages/missing-suspense-with-csr-bailout",
-      "domain": "nextjs.org",
-      "count": 1
-    },
-    {
       "title": "Missing Suspense boundary with useSearchParams in Next.js",
       "url": "https://www.iloveblogs.blog/post/fix-nextjs-missing-suspense-boundary-use-searchparams",
       "domain": "iloveblogs.blog",
-      "count": 1
-    },
-    {
-      "title": "Next.js Authentication Best Practices in 2025",
-      "url": "https://dev.to/franciscomoretti/nextjs-authentication-best-practices-in-2025-o00",
-      "domain": "dev.to",
       "count": 1
     },
     {
@@ -1085,12 +1787,6 @@
       "count": 1
     },
     {
-      "title": "Getting started with Partial Prerendering | Vercel",
-      "url": "https://vercel.com/docs/partial-prerendering/quickstart",
-      "domain": "vercel.com",
-      "count": 1
-    },
-    {
       "title": "Cache Components for Instant and Fresh Pages | Vercel Academy",
       "url": "https://vercel.com/academy/nextjs-foundations/cache-components",
       "domain": "vercel.com",
@@ -1111,18 +1807,6 @@
     {
       "title": "How to Add Auth to App Router | Clerk",
       "url": "https://clerk.com/articles/complete-authentication-guide-for-nextjs-app-router",
-      "domain": "clerk.com",
-      "count": 1
-    },
-    {
-      "title": "Migrating: App Router | Next.js",
-      "url": "https://nextjs.org/docs/app/guides/migrating/app-router-migration",
-      "domain": "nextjs.org",
-      "count": 1
-    },
-    {
-      "title": "Migrating from Pages Router to App Router: An Incremental Guide | Clerk",
-      "url": "https://clerk.com/blog/migrating-pages-router-to-app-router-an-incremental-guide",
       "domain": "clerk.com",
       "count": 1
     },
@@ -1178,6 +1862,252 @@
       "title": "Getting Started: Error Handling | Next.js",
       "url": "https://nextjs.org/docs/app/getting-started/error-handling",
       "domain": "nextjs.org",
+      "count": 1
+    },
+    {
+      "title": "Functions: getInitialProps | Next.js",
+      "url": "https://nextjs.org/docs/pages/api-reference/functions/get-initial-props",
+      "domain": "nextjs.org",
+      "count": 1
+    },
+    {
+      "title": "Data fetching in Next.js with getServerSideProps and getStaticProps - LogRocket Blog",
+      "url": "https://blog.logrocket.com/data-fetching-next-js-getserversideprops-getstaticprops/",
+      "domain": "blog.logrocket.com",
+      "count": 1
+    },
+    {
+      "title": "next.config.js: rewrites | Next.js",
+      "url": "https://nextjs.org/docs/app/api-reference/config/next-config-js/rewrites",
+      "domain": "nextjs.org",
+      "count": 1
+    },
+    {
+      "title": "App Router: Optimizing Fonts and Images | Next.js",
+      "url": "https://nextjs.org/learn/dashboard-app/optimizing-fonts-images",
+      "domain": "nextjs.org",
+      "count": 1
+    },
+    {
+      "title": "NextjsDocs.md · GitHub",
+      "url": "https://gist.github.com/arazabedi/87cbc8aae2ca6dad92beb5e72deb0c88",
+      "domain": "gist.github.com",
+      "count": 1
+    },
+    {
+      "title": "Getting Started: CSS | Next.js",
+      "url": "https://nextjs.org/docs/app/getting-started/css",
+      "domain": "nextjs.org",
+      "count": 1
+    },
+    {
+      "title": "CSS-in-JS - Next.js",
+      "url": "https://mintlify.wiki/vercel/next.js/app/styling/css-in-js",
+      "domain": "mintlify.wiki",
+      "count": 1
+    },
+    {
+      "title": "Getting Started: Fonts | Next.js",
+      "url": "https://nextjs.org/docs/app/getting-started/fonts",
+      "domain": "nextjs.org",
+      "count": 1
+    },
+    {
+      "title": "Optimizing: Fonts | Next.js",
+      "url": "https://nextjs.org/docs/14/app/building-your-application/optimizing/fonts",
+      "domain": "nextjs.org",
+      "count": 1
+    },
+    {
+      "title": "Routing: Route Groups | Next.js",
+      "url": "https://nextjs.org/docs/14/app/building-your-application/routing/route-groups",
+      "domain": "nextjs.org",
+      "count": 1
+    },
+    {
+      "title": "Getting Started: Project Structure | Next.js",
+      "url": "https://nextjs.org/docs/app/getting-started/project-structure",
+      "domain": "nextjs.org",
+      "count": 1
+    },
+    {
+      "title": "next CLI | Next.js v15 Docs",
+      "url": "https://nextjs.im/docs/15/pages/api-reference/cli/next/",
+      "domain": "nextjs.im",
+      "count": 1
+    },
+    {
+      "title": "Guides: Development Environment | Next.js",
+      "url": "https://nextjs.org/docs/app/guides/local-development",
+      "domain": "nextjs.org",
+      "count": 1
+    },
+    {
+      "title": "Components: Script Component | Next.js",
+      "url": "https://nextjs.org/docs/app/api-reference/components/script",
+      "domain": "nextjs.org",
+      "count": 1
+    },
+    {
+      "title": "Optimizing third-party script loading in Next.js | Chrome for Developers",
+      "url": "https://developer.chrome.com/blog/script-component",
+      "domain": "developer.chrome.com",
+      "count": 1
+    },
+    {
+      "title": "Functions: generateMetadata | Next.js",
+      "url": "https://nextjs.org/docs/app/api-reference/functions/generate-metadata",
+      "domain": "nextjs.org",
+      "count": 1
+    },
+    {
+      "title": "PageProps type inference discussion · vercel/next.js #71997",
+      "url": "https://github.com/vercel/next.js/discussions/71997",
+      "domain": "github.com",
+      "count": 1
+    },
+    {
+      "title": "Setup locale-based routing | next-intl",
+      "url": "https://next-intl.dev/docs/routing/setup",
+      "domain": "next-intl.dev",
+      "count": 1
+    },
+    {
+      "title": "Metadata Files: sitemap.xml | Next.js",
+      "url": "https://nextjs.org/docs/app/api-reference/file-conventions/metadata/sitemap",
+      "domain": "nextjs.org",
+      "count": 1
+    },
+    {
+      "title": "Metadata Files: robots.txt | Next.js",
+      "url": "https://nextjs.org/docs/app/api-reference/file-conventions/metadata/robots",
+      "domain": "nextjs.org",
+      "count": 1
+    },
+    {
+      "title": "How to enable cors in Nextjs 13 Route Handlers · vercel/next.js Discussion #47933",
+      "url": "https://github.com/vercel/next.js/discussions/47933",
+      "domain": "github.com",
+      "count": 1
+    },
+    {
+      "title": "Using CORS in Next.js to handle cross-origin requests - LogRocket Blog",
+      "url": "https://blog.logrocket.com/using-cors-next-js-handle-cross-origin-requests/",
+      "domain": "blog.logrocket.com",
+      "count": 1
+    },
+    {
+      "title": "Data Fetching: Server Actions and Mutations | Next.js",
+      "url": "https://nextjs.org/docs/13/app/building-your-application/data-fetching/server-actions-and-mutations",
+      "domain": "nextjs.org",
+      "count": 1
+    },
+    {
+      "title": "Guides: Forms | Next.js",
+      "url": "https://nextjs.org/docs/app/guides/forms",
+      "domain": "nextjs.org",
+      "count": 1
+    },
+    {
+      "title": "useFormStatus – React",
+      "url": "https://react.dev/reference/react-dom/hooks/useFormStatus",
+      "domain": "react.dev",
+      "count": 1
+    },
+    {
+      "title": "Next.js 16 Optimistic UI Tutorial: Server Actions 2026 | Nerd Level Tech",
+      "url": "https://nerdleveltech.com/nextjs-16-server-actions-react-19-optimistic-ui-tutorial",
+      "domain": "nerdleveltech.com",
+      "count": 1
+    },
+    {
+      "title": "Next.js 16.2 Turbopack: The Anatomy of a 400% Improvement in Compile Times",
+      "url": "https://dev.to/mericcintosun/nextjs-162-turbopack-the-anatomy-of-a-400-improvement-in-compile-times-5hnd",
+      "domain": "dev.to",
+      "count": 1
+    },
+    {
+      "title": "Guides: Jest | Next.js",
+      "url": "https://nextjs.org/docs/pages/guides/testing/jest",
+      "domain": "nextjs.org",
+      "count": 1
+    },
+    {
+      "title": "Guides: Instrumentation | Next.js",
+      "url": "https://nextjs.org/docs/pages/guides/instrumentation",
+      "domain": "nextjs.org",
+      "count": 1
+    },
+    {
+      "title": "Next.js instrumentation.ts: Monitoring Guide (2026) | Nurbak",
+      "url": "https://nurbak.com/en/blog/nextjs-instrumentation-ts-monitoring/",
+      "domain": "nurbak.com",
+      "count": 1
+    },
+    {
+      "title": "Mastering Route Groups in NextJS 14 - dev.to context on Next.js-specific APIs",
+      "url": "https://dev.to/shawon/mastering-route-groups-in-nextjs-14-1oae",
+      "domain": "dev.to",
+      "count": 1
+    },
+    {
+      "title": "Next.js docs: Functions: cookies",
+      "url": "https://nextjs.org/docs/app/api-reference/functions/cookies",
+      "domain": "nextjs.org",
+      "count": 1
+    },
+    {
+      "title": "Async Server Components can't be unit tested · vercel/next.js Discussion #49603",
+      "url": "https://github.com/vercel/next.js/discussions/49603",
+      "domain": "github.com",
+      "count": 1
+    },
+    {
+      "title": "Guides: Data Security | Next.js",
+      "url": "https://nextjs.org/docs/app/guides/data-security",
+      "domain": "nextjs.org",
+      "count": 1
+    },
+    {
+      "title": "Mastering Route Groups in Next.js — architecture patterns for shared code",
+      "url": "https://prateekbadjatya.medium.com/mastering-route-groups-in-next-js-organizing-clean-urls-and-scalable-codebases-5c92affb8794",
+      "domain": "prateekbadjatya.medium.com",
+      "count": 1
+    },
+    {
+      "title": "Next.js Internationalization for App Router and Pages Router | Weglot",
+      "url": "https://www.weglot.com/blog/nextjs-internationalization",
+      "domain": "weglot.com",
+      "count": 1
+    },
+    {
+      "title": "React useOptimistic: Optimistic UI Patterns That Actually Work (2026)",
+      "url": "https://dev.to/stacknotice/react-useoptimistic-optimistic-ui-patterns-that-actually-work-2026-5460",
+      "domain": "dev.to",
+      "count": 1
+    },
+    {
+      "title": "Next.js 16.3: Turbopack Persistent Cache and Agent Tools",
+      "url": "https://www.digitalapplied.com/blog/nextjs-16-3-agent-native-turbopack-persistent-cache-2026",
+      "domain": "digitalapplied.com",
+      "count": 1
+    },
+    {
+      "title": "Connection pool | Prisma Documentation",
+      "url": "https://www.prisma.io/docs/orm/prisma-client/setup-and-configuration/databases-connections/connection-pool",
+      "domain": "prisma.io",
+      "count": 1
+    },
+    {
+      "title": "Reference setup with Prisma, NextJS, and local Postgres / PGBouncer? · prisma/prisma Discussion #11987",
+      "url": "https://github.com/prisma/prisma/discussions/11987",
+      "domain": "github.com",
+      "count": 1
+    },
+    {
+      "title": "Rate-limiting Server Actions in Next.js",
+      "url": "https://dev.to/erfanebrahimnia/rate-limiting-server-actions-in-nextjs-nfm",
+      "domain": "dev.to",
       "count": 1
     }
   ]
