@@ -158,7 +158,7 @@ export default async function Image({
               fontFamily: "monospace"
             }}
           >
-            devprep.online
+            www.devprep.online
           </div>
         </div>
       </div>

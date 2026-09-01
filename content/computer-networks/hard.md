@@ -95,7 +95,7 @@ ECN (RFC 3168) allows routers to signal impending network congestion without dro
 *   **Fix:** Disable Nagle's via the `TCP_NODELAY` socket option.
 
 ### Q15: Explain Path MTU Black Holes and how PLPMTUD resolves them.
-*   **The Black Hole:** PMTUD relies on receiving ICMP "Fragmentation Needed" packets from routers. If firewalls along the path block all ICMP traffic, the sender never receives these messages, and large packets are dropped silently without any error reporting—a "black hole."
+*   **The Black Hole:** PMTUD relies on receiving ICMP "Fragmentation Needed" packets from routers. If firewalls along the path block all ICMP traffic, the sender never receives these messages, and large packets are dropped silently without any error reporting - a "black hole."
 *   **PLPMTUD (Packetization Layer Path MTU Discovery):** Resolves this by probing the path without ICMP.
 *   **Mechanism:** The transport layer (TCP/QUIC) sends actual data packets of varying sizes (probes) with the DF bit set. If a probe packet is ACKed, the PMTU is verified. If a probe fails to get an ACK but smaller packets succeed, the protocol adjusts the MTU downward.
 
@@ -288,8 +288,8 @@ When a router receives multiple BGP paths to the same prefix, it runs a step-by-
 
 ### Q50: How does DNS cache poisoning work, and which mechanisms (randomization + DNSSEC) defend against it?
 *   **The Attack:** A resolver accepts a forged response for a query it forwarded upstream. The attacker races the legitimate authoritative server, guessing matching parameters so the resolver accepts and caches malicious records (e.g., pointing `bank.com` to attacker IPs). The poison then propagates to every client of that resolver for the TTL duration.
-*   **The Classic Weakness (Dan Kaminsky, 2008):** If an attacker can force queries for many non-existent subdomains, they get thousands of guesses against one cached NS referral — the birthday-paradox style race made fixed TXIDs breakable within seconds.
+*   **The Classic Weakness (Dan Kaminsky, 2008):** If an attacker can force queries for many non-existent subdomains, they get thousands of guesses against one cached NS referral - the birthday-paradox style race made fixed TXIDs breakable within seconds.
 *   **Defenses:**
     1.  **Entropy randomization:** Randomized source ports (+~16 bits), random capitalization of query names (0x20 encoding), and unpredictable TXIDs make blind forgery probabilistically infeasible.
     2.  **Glue minimization / bailiwick checking:** Resolvers reject out-of-bailwick records inside referrals and additional sections, limiting what a forged reply may plant.
-    3.  **DNSSEC:** Responses carry RRSIG digital signatures chained from the root trust anchor. Forged answers fail validation (`SERVFAIL` is returned instead of caching the poison). Note DNSSEC provides integrity/authenticity only — not confidentiality (that is DoT/DoH territory).
+    3.  **DNSSEC:** Responses carry RRSIG digital signatures chained from the root trust anchor. Forged answers fail validation (`SERVFAIL` is returned instead of caching the poison). Note DNSSEC provides integrity/authenticity only - not confidentiality (that is DoT/DoH territory).

@@ -3,22 +3,22 @@
 ## Theory Questions & Answers
 
 ### Q1: How does the Spring context startup actually sequence, and what breaks it?
-* Scan/parse bean definitions → BeanFactoryPostProcessors (property placeholders, config class parsing — CGLIB enhancement of @Configuration enforcing proxyBeanMethods semantics) → instantiate non-lazy singletons in dependency order → BeanPostProcessors wrap proxies → SmartLifecycle.start().
+* Scan/parse bean definitions → BeanFactoryPostProcessors (property placeholders, config class parsing - CGLIB enhancement of @Configuration enforcing proxyBeanMethods semantics) → instantiate non-lazy singletons in dependency order → BeanPostProcessors wrap proxies → SmartLifecycle.start().
 * Breakers: circular deps (now fatal by default; allow-circular-references escape hatch), eager @PostConstruct doing IO, static initializers touching beans.
-* Lazy init defers but shifts failures to request time — trade-off articulation expected.
+* Lazy init defers but shifts failures to request time - trade-off articulation expected.
 
 ---
 
 ### Q2: Explain @Configuration(proxyBeanMethods) semantics and the cglib interlude.
-* Full mode (default): config class is CGLIB-subclassed so internal @Bean calls intercept, returning the SAME singleton instead of invoking method — preserves container semantics.
+* Full mode (default): config class is CGLIB-subclassed so internal @Bean calls intercept, returning the SAME singleton instead of invoking method - preserves container semantics.
 * lite mode (proxyBeanMethods=false / @Bean on non-@Configuration classes): methods execute literally → new instance per call; allowed when no intra-config references; faster startup, used heavily in native/AOT guidance.
-Bug signature: two "singletons" unequal — explain mechanism to ace this.
+Bug signature: two "singletons" unequal - explain mechanism to ace this.
 
 ---
 
 ### Q3: What is the transaction synchronization + JPA flush ordering dance in services?
 * Within tx: Hibernate flushes BEFORE query execution touching affected tables (FlushMode.AUTO queries flush pending changes to keep results consistent), and always at commit.
-* @TransactionalEventListener(AFTER_COMMIT) sees committed state but detached entities — must pass ids/data explicitly, not managed graphs.
+* @TransactionalEventListener(AFTER_COMMIT) sees committed state but detached entities - must pass ids/data explicitly, not managed graphs.
 * Pitfall: enqueueing message inside tx reading uncommitted rows elsewhere → phantom reads for consumer; design consumers idempotent or move reads post-commit.
 
 ---
@@ -26,12 +26,12 @@ Bug signature: two "singletons" unequal — explain mechanism to ace this.
 ### Q4: How does Hibernate batch writes and what settings unlock it?
 * Requires: hibernate.jdbc.batch_size=50, ordered inserts (`order_inserts=true`), IDENTITY generation DISABLES batching for inserts (use SEQUENCE w/ pooled optimizer hi-lo style).
 * Versioned data enables batched updates; statement rewrites via reWriteBatchedInserts=true (MySQL/pgjdbc) collapsing multi-values.
-* Verify: datasource-proxy/sql statement count metrics before/after — prove the win numerically.
+* Verify: datasource-proxy/sql statement count metrics before/after - prove the win numerically.
 
 ---
 
 ### Q5: What are the concurrency semantics of @Transactional across threads/reactive boundaries?
-* Transaction bound to thread via ThreadLocal (DataSourceTransactionManager) — spawning threads inside a tx method runs code OUTSIDE it silently.
+* Transaction bound to thread via ThreadLocal (DataSourceTransactionManager) - spawning threads inside a tx method runs code OUTSIDE it silently.
 * Reactive: ReactiveTransactionManager propagates via Reactor context; mixing JDBC (blocking) inside reactive chains needs schedulers bounding blocking work.
 * Async bridging patterns: pre-load ids inside tx, process outside, final update tx with optimistic checks.
 
@@ -47,7 +47,7 @@ Bug signature: two "singletons" unequal — explain mechanism to ace this.
 ### Q7: What does Boot's AOT processing transform, and how do you keep an app native-compatible?
 * AOT generates bean definitions code (no runtime reflection scanning), proxy hints, property binding code at build time; native image then closes world.
 * Compatibility rules: register reflection hints (@RegisterReflectionForBinding, RuntimeHints registrar) for serialization/domain types; avoid dynamic bean registration/classloading; prefer constructor injection; conditional evaluation resolved build-time.
-* Test native profile in CI (slow builds — nightly), not just JVM tests.
+* Test native profile in CI (slow builds - nightly), not just JVM tests.
 
 ---
 
@@ -56,16 +56,16 @@ Bug signature: two "singletons" unequal — explain mechanism to ace this.
 @Endpoint(id="queue") @ReadOperation Map<String,Object> queue() {...}
 ```
 * Security: restrict exposure (`management.endpoints.web.exposure.include`) + separate management port/network; sanitize returned data (no secrets).
-* HealthIndicators returning Status.OUT disable readiness only when appropriate — distinguish liveness-affecting failures from degraded-but-serving states.
+* HealthIndicators returning Status.OUT disable readiness only when appropriate - distinguish liveness-affecting failures from degraded-but-serving states.
 
 ---
 
-### Q9: Compare resilience patterns implementation: circuit breaker vs rate limiter vs retry vs bulkhead — interactions and pitfalls.
+### Q9: Compare resilience patterns implementation: circuit breaker vs rate limiter vs retry vs bulkhead - interactions and pitfalls.
 Resilience4j specifics:
-* Ordering matters: Retry wrapping CircuitBreaker skews failure-rate stats — put breaker OUTSIDE retry (or use CB metrics ignoring retries).
+* Ordering matters: Retry wrapping CircuitBreaker skews failure-rate stats - put breaker OUTSIDE retry (or use CB metrics ignoring retries).
 * Bulkhead = semaphore/threadpool isolation per downstream; RateLimiter protects upstream contracts (their limits).
 * Fallbacks must be observable (metric tag fallback=true) else incidents hide behind happy-looking success rates.
-Config-as-code reviewed like schema changes — thresholds encode SLOs.
+Config-as-code reviewed like schema changes - thresholds encode SLOs.
 
 ---
 
@@ -79,28 +79,28 @@ Document key grammar as contract; lint helper for building keys prevents drift.
 ### Q11: What are the internals of Spring Security's filter chain customization and common ordering bugs?
 * SecurityFilterChain bean defines ordered filters: CORS→CSRF→headers→auth mechanisms→authorization; custom filters inserted via addFilterBefore/After relative to known anchors (UsernamePasswordAuthenticationFilter etc.).
 * Classic bugs: permitAll on error dispatches leaking state, CSRF disabled globally instead of per-safe-routes, session creation policy mismatched to JWT APIs (IF_REQUIRED creating sessions needlessly).
-* Debug via security debugging flag logging each filter decision — teach it during onboarding.
+* Debug via security debugging flag logging each filter decision - teach it during onboarding.
 
 ---
 
 ### Q12: How does OAuth2 login + resource server coexist in one service, and what token flows result?
 * Both configured: oauth2Login for browser users (authorization-code + PKCE against IdP), resource-server validating incoming Bearer tokens for API clients.
 * Session vs stateless split by matcher patterns; authorities mapping unified post either path.
-* Logout complexity: IdP session vs local session vs back-channel logout endpoints — enumerate all three or accept documented gaps.
+* Logout complexity: IdP session vs local session vs back-channel logout endpoints - enumerate all three or accept documented gaps.
 
 ---
 
 ### Q13: What does @Transactional(readOnly=true) actually change across layers?
 * Hibernate: flush mode MANUAL, read-only entity snapshots (no dirty-check snapshots) → big memory savings on large reads.
 * JDBC hints: PG driver sets readOnly connection → planner optimizations; routing datasources send to replicas.
-* Misconception to correct: it does NOT enforce immutability — writes may still execute and fail only at DB level depending.
+* Misconception to correct: it does NOT enforce immutability - writes may still execute and fail only at DB level depending.
 
 ---
 
 ### Q14: How would you implement multi-datasource configuration cleanly?
 Recipe:
 * Two DataSource/EntityManagerFactory/TransactionManager beans with qualifiers (`ordersTm`, `crmTm`); repositories assigned via `@EnableJpaRepositories(...transactionManagerRef=..., entityManagerFactoryRef=...)` package splits.
-* Cross-store consistency: no 2PC generally — design compensating flows/outbox per store.
+* Cross-store consistency: no 2PC generally - design compensating flows/outbox per store.
 * Actuator health per datasource registered manually.
 Self-invocation & qualifier mistakes dominate review comments here.
 
@@ -108,8 +108,8 @@ Self-invocation & qualifier mistakes dominate review comments here.
 
 ### Q15: Explain Hibernate's persistence context pitfalls in batch services and the escape hatches.
 * Long-lived contexts accumulate managed entities → memory bloat + dirty-check cost linear growth.
-* Patterns: clear()/detach after flush per chunk; StatelessSession for pure ETL; JPQL bulk update bypassing L1 but ALSO bypassing version checks/listeners — document semantics.
-* Flush-before-query surprises: auto-flush triggering on queries touching affected tables — scope queries to avoid unintended flush storms.
+* Patterns: clear()/detach after flush per chunk; StatelessSession for pure ETL; JPQL bulk update bypassing L1 but ALSO bypassing version checks/listeners - document semantics.
+* Flush-before-query surprises: auto-flush triggering on queries touching affected tables - scope queries to avoid unintended flush storms.
 
 ---
 
@@ -139,8 +139,8 @@ Contract:
 Steps:
 1. Actuator threaddump/heapdump endpoints (pre-enabled secure) capture live evidence.
 2. Thread groups analysis: blocked threads clustering around lock (jstack pattern), executor saturation counts.
-3. Heap: class-instance histogram diffing two dumps (jhat/mat) — growing HashMaps/caches named.
-4. CPU: async-profiler flamegraph attach — JIT frames vs app packages split.
+3. Heap: class-instance histogram diffing two dumps (jhat/mat) - growing HashMaps/caches named.
+4. CPU: async-profiler flamegraph attach - JIT frames vs app packages split.
 5. Correlate with deploy/metric annotations; fix + regression load-test proving plateau.
 
 ---
@@ -148,7 +148,7 @@ Steps:
 ### Q20: How do you implement idempotent consumers exactly-once-ish with Spring Kafka?
 Stack:
 * Consumer dedup store (redis SETNX event-id TTL / unique constraint table insert within processing txn).
-* Manual ACK mode: offset committed ONLY after side-effect txn commits — crash between yields redelivery handled by dedup.
+* Manual ACK mode: offset committed ONLY after side-effect txn commits - crash between yields redelivery handled by dedup.
 * Outbox publishing for outbound messages keeps end-to-end exactly-once illusion; DLQ after bounded retries with alerting.
 Interview framing: "exactly-once is an illusion assembled from at-least-once + dedup" wins points.
 
@@ -156,15 +156,15 @@ Interview framing: "exactly-once is an illusion assembled from at-least-once + d
 Tools:
 * `@ConditionalOnProperty` for env toggles; custom Condition classes evaluating combinations (flag + license + region).
 * BeanFactoryPostProcessor registering alternate beans programmatically when logic exceeds annotation expressiveness.
-* Plugin pattern: Map<String,Feature> injected collecting all implementations keyed by qualifier — strategy registry replaces if/else bean forests.
+* Plugin pattern: Map<String,Feature> injected collecting all implementations keyed by qualifier - strategy registry replaces if/else bean forests.
 Guardrail: startup report listing active strategies (Actuator endpoint) making wiring visible.
 
 ---
 
 ### Q22: What is the correct handling of Timezone/Locale in a Boot service serving global users?
-* Store UTC; accept client tz via header/profile; Jackson timezone configured per-request via ObjectMapper thread-local alternative — cleaner: serialize ISO8601 always, convert at CLIENT display layer.
+* Store UTC; accept client tz via header/profile; Jackson timezone configured per-request via ObjectMapper thread-local alternative - cleaner: serialize ISO8601 always, convert at CLIENT display layer.
 * Locale resolution LocaleResolver (header/session) feeding MessageSource for error strings.
-* Scheduled jobs pin explicit zone (cron TZ) avoiding DST surprises — document each cron's business-timezone contract.
+* Scheduled jobs pin explicit zone (cron TZ) avoiding DST surprises - document each cron's business-timezone contract.
 
 ---
 
@@ -178,17 +178,17 @@ Clock skew solved by Redis TIME server-authoritative inside script.
 
 ### Q24: What is the difference between classpath scanning vs @Import vs spring.factories auto-config you'd exploit for SDK design?
 SDK patterns:
-* Library ships @AutoConfiguration via META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports with @ConditionalOnMissingBean defaults — consumers override naturally.
+* Library ships @AutoConfiguration via META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports with @ConditionalOnMissingBean defaults - consumers override naturally.
 * @Import for mandatory infrastructure the SDK requires regardless of user beans.
-* Avoid component-scanning library packages (forces consumer scan base tweaks) — explicit imports are kinder contracts.
+* Avoid component-scanning library packages (forces consumer scan base tweaks) - explicit imports are kinder contracts.
 Versioning: BOM alignment + deprecation cycle across majors documented.
 
 ---
 
 ### Q25: How do you implement request-scoped multi-step wizard state across stateless pods?
 Options:
-* Opaque token → server-side store (redis JSON of draft, TTL, versioned schema) — resumable across pods/devices after auth.
-* Signed encrypted cookie blob for small non-sensitive drafts — tamper-evident but size-limited (~4KB) and revocation impossible.
+* Opaque token → server-side store (redis JSON of draft, TTL, versioned schema) - resumable across pods/devices after auth.
+* Signed encrypted cookie blob for small non-sensitive drafts - tamper-evident but size-limited (~4KB) and revocation impossible.
 * Hybrid: server holds PII fields; cookie holds step pointer only.
 Completion idempotency via unique intent-key constraint; expiry sweeper cleaning abandoned drafts.
 
@@ -203,7 +203,7 @@ Token introspection vs local JWT verification trade-off: revocation immediacy vs
 
 ### Q27: How would you implement blue/green DB-compatible deployments where two app versions coexist?
 Checklist:
-* Expand-first migrations; both versions tolerate extra columns (entities ignore unknown via @DynamicUpdate discipline? actually unknown columns fine—missing columns fatal, hence expand before deploy).
+* Expand-first migrations; both versions tolerate extra columns (entities ignore unknown via @DynamicUpdate discipline? actually unknown columns fine - missing columns fatal, hence expand before deploy).
 * Feature flags gating new code paths; message schemas versioned with converters on listeners bridging old producers/new consumers.
 * Readiness gates on migration version; rollback plan honoring no-destructive-migrations-until-N+1-retired rule.
 
@@ -212,14 +212,14 @@ Checklist:
 ### Q28: What is your approach to load-shedding and priority lanes inside a Boot service?
 * Middleware measuring event-loop... rather: tomcat executor queue depth / Hikari pool waiters; shed lowest-priority routes with 503 Retry-When once thresholds crossed.
 * Priority classification annotation per endpoint (critical=payments, batch=exports); bulkhead executors isolating slow lanes from interactive.
-* Load tests proving shed behavior protects p99 for critical class under 5× overload — evidence-based capacity docs.
+* Load tests proving shed behavior protects p99 for critical class under 5× overload - evidence-based capacity docs.
 
 ---
 
 ### Q29: What subtle issues arise from @ConfigurationProperties relaxed binding and maps/lists?
 * Relaxed binding quirks: kebab-case keys map to camelCase; LIST indices `app.items[0].name` from env vars need underscore escaping (`APP_ITEMS_0_NAME`); map keys preserve case only when bracketed `[KeyName]`.
 * Duration/DataSize units parse friendly strings (30s, 10MB).
-* Validation groups per profile possible; unknown-property failure modes differ (ignore-unknown-fields default hides typos — enable strict checking in CI via metadata annotations).
+* Validation groups per profile possible; unknown-property failure modes differ (ignore-unknown-fields default hides typos - enable strict checking in CI via metadata annotations).
 
 ---
 
@@ -227,13 +227,13 @@ Checklist:
 Comparison:
 * Envers: entity-version tables automatic, queryable history via AuditReader; misses native SQL updates; schema weight grows.
 * Hand-rolled audit service: full control/diff shaping; discipline burden on every writer.
-* CDC (Debezium): captures EVERYTHING incl. manual DB ops — ops complexity, needs sink pipeline.
+* CDC (Debezium): captures EVERYTHING incl. manual DB ops - ops complexity, needs sink pipeline.
 Choice by compliance strictness: light→Envers, strict-regulated→CDC into immutable log store with hash chaining.
 
 ### Q31: What does Spring's event type-safety look like and how do you avoid stringly-typed events?
-* Typed event POJOs + `ApplicationEventPublisher.publishEvent(new OrderPlaced(id))`; listener `@EventListener` param type resolves — no string channels.
-* Generics events (`EntityChanged<T>`) require ResolvableType tricks — prefer concrete records per domain.
-* Transactional phases annotated explicitly; tests with `@RecordApplicationEvents` asserting published set — events become part of contract surface.
+* Typed event POJOs + `ApplicationEventPublisher.publishEvent(new OrderPlaced(id))`; listener `@EventListener` param type resolves - no string channels.
+* Generics events (`EntityChanged<T>`) require ResolvableType tricks - prefer concrete records per domain.
+* Transactional phases annotated explicitly; tests with `@RecordApplicationEvents` asserting published set - events become part of contract surface.
 
 ---
 
@@ -247,14 +247,14 @@ Chaos drills prove each tier: kill primary → measure user-visible impact vs de
 ---
 
 ### Q33: What is the correct way to expose SSE/WebFlux endpoints inside otherwise-MVC Boot apps?
-* Mixing MVC + WebFlux starters is unsupported — choose one stack per service; MVC supports streaming via SseEmitter/ResponseBodyEmitter with async executors.
+* Mixing MVC + WebFlux starters is unsupported - choose one stack per service; MVC supports streaming via SseEmitter/ResponseBodyEmitter with async executors.
 * SseEmitter lifecycle: complete on error/timeout callbacks, store in registry, cleanup on disconnect callbacks to prevent leaks.
 * For heavy reactive needs: deploy separate reactive service behind gateway rather than hybrid dependency soup.
 
 ---
 
 ### Q34: How do you implement tenant-scoped Hibernate filters correctly with pooling pitfalls?
-* @FilterDef/@Filter on entities enabled per session after tenant resolution; MUST re-enable per NEW session (filters don't persist across EMs) — central interceptor doing it prevents misses.
+* @FilterDef/@Filter on entities enabled per session after tenant resolution; MUST re-enable per NEW session (filters don't persist across EMs) - central interceptor doing it prevents misses.
 * Connection-provider alternative: search_path schema switching per checkout with reset on return.
 * Verification: integration matrix crossing tenants × cached sessions asserting isolation; leak detector logging missing filter enables.
 
@@ -279,37 +279,37 @@ Framework pieces:
 * Partitioned work discovery (range queries by pk windows), worker claim rows with skip_locked, heartbeat leases expiring dead workers, resumable checkpoints persisted per partition.
 * Metrics: throughput/min, failure counts per chunk, lag behind source; DLQ for poison partitions.
 * Idempotent upserts make reruns safe; end-of-run reconciliation report emitted as event.
-This generalizes to migrations/backfills/syncs — one engine, many jobs.
+This generalizes to migrations/backfills/syncs - one engine, many jobs.
 
 ---
 
 ### Q38: What is the correct handling of Jackson polymorphism for API payloads?
 * @JsonTypeInfo(+@JsonSubTypes) or property-based discriminator (`@JsonTypeInfo(use=EXISTING_PROPERTY, property="kind")`) preventing arbitrary class instantiation from wire data.
-* Unknown-subtype policy: fail vs coerce-to-unknown wrapper — forward-compat decision documented per API version.
-* Security note: default typing enablement historically RCE vector — never enable globally.
+* Unknown-subtype policy: fail vs coerce-to-unknown wrapper - forward-compat decision documented per API version.
+* Security note: default typing enablement historically RCE vector - never enable globally.
 
 ---
 
 ### Q39: How do you implement request hedging/speculative execution for critical downstream reads?
 Pattern:
-* Fire primary; if p95 timer elapses without response, fire hedge to second instance/pool; first-winner cancels loser (careful: cancel may not stop server-side effects — hedge only idempotent reads).
+* Fire primary; if p95 timer elapses without response, fire hedge to second instance/pool; first-winner cancels loser (careful: cancel may not stop server-side effects - hedge only idempotent reads).
 * Metrics: hedge-trigger rate indicating primary flakiness; cap hedges per window preventing storm amplification.
-Resilience4j lacks native hedging — hand-roll with CompletableFuture.anyOf + timeouts or use Envoy retries at mesh layer instead.
+Resilience4j lacks native hedging - hand-roll with CompletableFuture.anyOf + timeouts or use Envoy retries at mesh layer instead.
 
 ---
 
 ### Q40: What is your strategy for testing time-travel scenarios (expiry, billing cycles) in Boot tests?
-* Abstract Clock bean injected everywhere; tests install MutableClock advancing explicitly — production wiring uses systemUTC.
+* Abstract Clock bean injected everywhere; tests install MutableClock advancing explicitly - production wiring uses systemUTC.
 * Scheduled tasks refactored to accept clock; integration tests trigger scheduler manually with advanced time rather than sleeping.
 * Property-based generation of date ranges around DST/month boundaries catching calendar math bugs.
-Ban direct Instant.now() via ArchUnit rule — enforcement makes the strategy real.
+Ban direct Instant.now() via ArchUnit rule - enforcement makes the strategy real.
 
 ### Q41: How do you implement contract-first APIs with OpenAPI generator in a Spring team?
 Flow:
-* Spec authored/reviewed FIRST (oasdiff governance); generator produces interfaces + DTOs (spring generator) — controllers implement interface ensuring signature parity.
+* Spec authored/reviewed FIRST (oasdiff governance); generator produces interfaces + DTOs (spring generator) - controllers implement interface ensuring signature parity.
 * Server validation from spec via atlassian-openapi-request-validation or generated annotations; client SDKs published per language from same source.
 * Breaking-change CI gate blocks merges; versioned spec artifacts archived immutably per release.
-Trade-off honesty: codegen friction vs drift elimination — teams choose per API stability class.
+Trade-off honesty: codegen friction vs drift elimination - teams choose per API stability class.
 
 ---
 
@@ -322,7 +322,7 @@ Mechanics:
 ---
 
 ### Q43: How do you implement virtual threads (Loom) adoption in Boot 3.2+ and what changes?
-* `spring.threads.virtual.enabled=true` switches Tomcat executors/scheduling to virtual threads — blocking code scales without reactive rewrites.
+* `spring.threads.virtual.enabled=true` switches Tomcat executors/scheduling to virtual threads - blocking code scales without reactive rewrites.
 * Caveats: pinning on synchronized blocks/JNI (avoid in hot paths; JFR PinningEvents monitor), thread-local heavy libraries cost memory at scale, pooled resources sized for massive concurrency now.
 * Load tests recalibrated: throughput ceilings shift dramatically; capacity docs rewritten.
 
@@ -331,7 +331,7 @@ Mechanics:
 ### Q44: What is your approach to securing actuator/metrics against cardinality and info leaks?
 * Exposure allowlists minimal (`health,info,metrics,prometheus`); management port separate network; security per-endpoint roles.
 * Metric tags audited: deny user ids/urls (http server metrics URI tag pattern-normalized); custom MeterFilter denying high-cardinality meters at registration.
-* /env sanitized (show-values=never default), loggers endpoint restricted to ops role — runtime level changes audited.
+* /env sanitized (show-values=never default), loggers endpoint restricted to ops role - runtime level changes audited.
 
 ---
 
@@ -339,14 +339,14 @@ Mechanics:
 Design:
 * Auto-configuration providing sane defaults (observability, error envelope, security headers) with @ConditionalOnMissingBean escape hatches.
 * BOM versioning aligned with Boot releases; deprecation cycle documented; example app as living documentation tested against each supported Boot minor.
-* Adoption levers: golden-path template referencing starter, migration codemods, office-hours support — governance plus empathy.
+* Adoption levers: golden-path template referencing starter, migration codemods, office-hours support - governance plus empathy.
 
 ---
 
 ### Q46: What is the difference between @TransactionalEventListener phases and their failure semantics?
 Phases AFTER_COMMIT (default), AFTER_ROLLBACK, BEFORE_COMMIT, AFTER_COMPLETION.
-* AFTER_COMMIT failures CANNOT roll back business txn — side effects must be resilient (retry/outbox) or accept loss explicitly.
-* BEFORE_COMMIT can veto (throwing rolls back) but sees uncommitted data within same tx — use sparingly (validation).
+* AFTER_COMMIT failures CANNOT roll back business txn - side effects must be resilient (retry/outbox) or accept loss explicitly.
+* BEFORE_COMMIT can veto (throwing rolls back) but sees uncommitted data within same tx - use sparingly (validation).
 * conditional `@ConditionalOn(...)` expression filtering events; multiple listeners ordering via @Order documented.
 
 ---
@@ -362,10 +362,10 @@ Trust boundaries drawn explicitly in architecture diagrams reviewed quarterly.
 
 ### Q48: What is your methodology for keeping 40+ microservice dependency graphs healthy?
 Program:
-* Dependency dashboard (OpenAPI consumers registry, kafka topic ownership map) — visibility first.
+* Dependency dashboard (OpenAPI consumers registry, kafka topic ownership map) - visibility first.
 * Contract test meshes (pact-style) gating providers on consumer expectations; deprecation windows enforced by usage telemetry floors.
 * Quarterly "dependency days" batching upgrades fleet-wide with shared runbooks; canary rings by criticality tier.
-Culture: upgrades are routine maintenance, not projects — budgeted continuously.
+Culture: upgrades are routine maintenance, not projects - budgeted continuously.
 
 ---
 
@@ -383,7 +383,7 @@ Synthesis pillars:
 * Convention WITH visibility: autoconfig magic documented via startup reports and ADRs so magic never becomes mystery.
 * Data integrity owned end-to-end: migrations disciplined, transactions explicit, consistency models named.
 * Operability as feature: health truthfulness, tracing completeness, capacity math written down.
-* Reversibility engineered: flags, expand-contract, facade seams — decisions priced by exit cost.
+* Reversibility engineered: flags, expand-contract, facade seams - decisions priced by exit cost.
 * Platform empathy: golden paths maintained with the same rigor as product code, because developer velocity IS system velocity.
 
 

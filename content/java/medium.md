@@ -216,23 +216,23 @@
 ### Q44: How does TreeMap work internally? What extra operations does NavigableMap provide?
 * TreeMap is backed by a **Red-Black tree** (self-balancing BST): get/put/remove in O(log n), keys kept sorted per Comparator/natural ordering.
 * Entries are linked in insertion-of-key order, enabling ordered traversal and range views.
-* **NavigableMap API**: `floorKey`, `ceilingKey`, `lowerKey`, `higherKey`, `firstEntry/lastEntry`, `pollFirstEntry/pollLastEntry`, plus subset views `headMap/tailMap/subMap` (inclusive/exclusive bounds) — perfect for "range query" workloads (leaderboards, time-window lookups).
+* **NavigableMap API**: `floorKey`, `ceilingKey`, `lowerKey`, `higherKey`, `firstEntry/lastEntry`, `pollFirstEntry/pollLastEntry`, plus subset views `headMap/tailMap/subMap` (inclusive/exclusive bounds) - perfect for "range query" workloads (leaderboards, time-window lookups).
 * Costs vs HashMap: slower average ops (log n vs O(1)), no null keys, tree-node memory overhead. Choose when sorted iteration/range semantics dominate raw lookup speed.
 
 ### Q45: How does PriorityQueue work? What is its complexity profile?
 * Backed by a **binary min-heap** in an array; head = least element per natural order or supplied Comparator (use `Collections.reverseOrder()` for max-heap).
-* `offer()/poll()` = O(log n) sift up/down; `peek()` = O(1); `remove(Object)/contains` = O(n). Iteration order is *unordered* — only the head is guaranteed minimal.
+* `offer()/poll()` = O(log n) sift up/down; `peek()` = O(1); `remove(Object)/contains` = O(n). Iteration order is *unordered* - only the head is guaranteed minimal.
 * Classic uses: top-k problems (keep heap of size k), Dijkstra/Prim frontiers, merge k sorted lists, schedulers.
-* Not thread-safe — use `PriorityBlockingQueue` concurrently. For decrease-key operations (graph algorithms) you typically re-offer entries and skip stale ones lazily.
+* Not thread-safe - use `PriorityBlockingQueue` concurrently. For decrease-key operations (graph algorithms) you typically re-offer entries and skip stale ones lazily.
 
 ### Q46: Explain thenApply vs thenCompose vs thenCombine in CompletableFuture.
-* `thenApply(fn)` — synchronous transform of the result: `CF<T> → CF<U>`; fn returns plain U.
-* `thenCompose(fn)` — flatten nested futures: fn returns `CompletableFuture<U>`, avoiding `CF<CF<U>>`. Equivalent to flatMap/monadic bind; correct choice when the transformation itself starts another async call.
-* `thenCombine(other, fn)` — run two independent futures concurrently and merge both results when both complete: `cf1.thenCombine(cf2, (a, b) -> a + b)`.
-* Async variants (`thenApplyAsync(fn, executor)`) control which thread executes the callback; without an executor, callbacks may run on the completing thread or the caller — a common source of surprise in benchmarks and blocking calls (never block inside a callback on the common pool).
+* `thenApply(fn)` - synchronous transform of the result: `CF<T> → CF<U>`; fn returns plain U.
+* `thenCompose(fn)` - flatten nested futures: fn returns `CompletableFuture<U>`, avoiding `CF<CF<U>>`. Equivalent to flatMap/monadic bind; correct choice when the transformation itself starts another async call.
+* `thenCombine(other, fn)` - run two independent futures concurrently and merge both results when both complete: `cf1.thenCombine(cf2, (a, b) -> a + b)`.
+* Async variants (`thenApplyAsync(fn, executor)`) control which thread executes the callback; without an executor, callbacks may run on the completing thread or the caller - a common source of surprise in benchmarks and blocking calls (never block inside a callback on the common pool).
 
 ### Q47: What are suppressed exceptions in try-with-resources?
-* When both the try block and a resource's `close()` throw, the *primary* exception propagates and the close-time exception is attached as **suppressed** via `Throwable.getSuppressed()` — neither is lost.
+* When both the try block and a resource's `close()` throw, the *primary* exception propagates and the close-time exception is attached as **suppressed** via `Throwable.getSuppressed()` - neither is lost.
 * Without try-with-resources (manual finally close), the close exception would *replace* the business exception, hiding the real root cause.
 ```java
 try (var in = new FileInputStream(f)) { ... } // if body throws AND close throws:
@@ -244,16 +244,16 @@ try (var in = new FileInputStream(f)) { ... } // if body throws AND close throws
 ### Q48: How do you write custom annotations? Explain @Retention and @Target.
 * Declare with `@interface`; members are methods with defaults: `String value() default "";`
 * Meta-annotations configure behavior:
-  * **@Retention**: `SOURCE` (compiler-only, e.g., `@Override`), `CLASS` (bytecode, not runtime-visible), `RUNTIME` (readable via reflection — required for framework annotations).
+  * **@Retention**: `SOURCE` (compiler-only, e.g., `@Override`), `CLASS` (bytecode, not runtime-visible), `RUNTIME` (readable via reflection - required for framework annotations).
   * **@Target**: restricts placement (`TYPE`, `METHOD`, `FIELD`, `PARAMETER`, `ANNOTATION_TYPE`...); `TYPE_USE` enables typing contexts (nullness markers).
   * **@Inherited** (class inheritance visibility), **@Repeatable**, **@Documented**.
-* Runtime processing: `clazz.isAnnotationPresent(X.class)`, `method.getAnnotation(X.class)`. Compile-time processing uses annotation processors (APTs) — how Lombok/MapStruct/Dagger generate code.
+* Runtime processing: `clazz.isAnnotationPresent(X.class)`, `method.getAnnotation(X.class)`. Compile-time processing uses annotation processors (APTs) - how Lombok/MapStruct/Dagger generate code.
 
 ### Q49: How do you design an immutable class in Java? List the mandatory rules.
 1. Declare the class `final` (or make constructors private + factory) so subclasses cannot reintroduce mutability.
 2. Make all fields `private final`.
 3. No setters; initialize everything through the constructor performing **defensive copies** of incoming mutable arguments.
-4. Return **defensive copies** (or unmodifiable views) of mutable internals from getters — never expose the internal array/collection/Date.
+4. Return **defensive copies** (or unmodifiable views) of mutable internals from getters - never expose the internal array/collection/Date.
 5. Ensure methods don't mutate shared state; derive new instances instead (`withX` style).
 * Benefits: inherently thread-safe (safe publication without locks), hashable caching, safe map keys, simpler reasoning/testing. Records (Java 16+) give this shape automatically but still require care with mutable components.
 

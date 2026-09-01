@@ -4,16 +4,16 @@
 
 ### Q1: How does the Redux store dispatch pipeline actually execute internally?
 * `configureStore` composes middleware via `compose(...middlewares)(store.dispatch)` producing an **enhanced dispatcher**; each layer wraps the next, so calling enhanced dispatch enters middleware[0] first.
-* The store keeps `currentReducer`, `currentState`; a boolean `isDispatching` guards re-entrancy — dispatching DURING a reducer throws ("Reducers may not dispatch actions"), preventing cascading corruption.
-* After reducer returns, listeners array is snapshotted and iterated — subscribers added/removed during notification are handled safely for the current pass but affect future ones.
-* State reference changes even when reducers return identical slices? No — combineReducers preserves identical slice references; root ref changes only if any slice changed (cheap bailout preserved).
+* The store keeps `currentReducer`, `currentState`; a boolean `isDispatching` guards re-entrancy - dispatching DURING a reducer throws ("Reducers may not dispatch actions"), preventing cascading corruption.
+* After reducer returns, listeners array is snapshotted and iterated - subscribers added/removed during notification are handled safely for the current pass but affect future ones.
+* State reference changes even when reducers return identical slices? No - combineReducers preserves identical slice references; root ref changes only if any slice changed (cheap bailout preserved).
 
 ---
 
 ### Q2: What guarantees does react-redux's useSyncExternalStore-based subscription provide, and what tearing means here?
 * Modern react-redux subscribes via `useSyncExternalStore` with a memoized selector wrapper (`useSelectorWithStore` pattern): getSnapshot = latest selector result cached per subscription.
-* **Tearing**: in concurrent rendering two components could read different store snapshots within one committed tree. useSyncExternalStore's consistency check forces re-render when snapshot mutates mid-render, closing the tear — provided your selector is pure & stable.
-* Store authors must notify AFTER commit-friendly timing? Not required — notifications during render trigger the check path. But mutating state objects in place breaks snapshot identity assumptions entirely (never mutate).
+* **Tearing**: in concurrent rendering two components could read different store snapshots within one committed tree. useSyncExternalStore's consistency check forces re-render when snapshot mutates mid-render, closing the tear - provided your selector is pure & stable.
+* Store authors must notify AFTER commit-friendly timing? Not required - notifications during render trigger the check path. But mutating state objects in place breaks snapshot identity assumptions entirely (never mutate).
 * Interview depth: contrast with pre-18 `store.subscribe + setState` approach which could tear under transitions.
 
 ---
@@ -29,10 +29,10 @@ Patches emitted alongside enable inverse-patch undo systems.
 
 ---
 
-### Q4: Design an undo/redo system on top of Redux — what do you track?
+### Q4: Design an undo/redo system on top of Redux - what do you track?
 Two viable architectures:
 1. **Snapshot stack**: wrap reducer to push `{past:[...], present, future:[]}` per tracked action whitelist; memory heavy but simple; partialize via key filtering to bound size.
-2. **Patch-based**: capture Immer forward+inverse patches per action; apply inverses for undo, forwards for redo — orders of magnitude smaller for big normalized graphs.
+2. **Patch-based**: capture Immer forward+inverse patches per action; apply inverses for undo, forwards for redo - orders of magnitude smaller for big normalized graphs.
 Hard parts to articulate: grouping rapid actions into logical steps (debounce windows / transaction markers), cross-slice atomicity (single history entry spanning slices via root wrapper), excluding volatile keys, and coalescing server reconciliations so network truth doesn't create undo steps.
 
 ---
@@ -42,13 +42,13 @@ Components:
 * `pendingMutations: { [entityId]: Queue<Op> }` persisted slice; ops carry clientToken, baseRev.
 * Reducer applies op optimistically AND bumps local rev; selector layer merges server cache beneath pending overlays.
 * On fulfillment: replace overlay with canonical entity (rev from server); conflicts (server rev > baseRev) route to rebase strategy: field-level merge where user-touched fields win, else surface resolution UI.
-* Refetch reconciliation must reapply pending overlays post-merge — implement as a single `reconcileEntity` helper ALL cache writes funnel through.
+* Refetch reconciliation must reapply pending overlays post-merge - implement as a single `reconcileEntity` helper ALL cache writes funnel through.
 Failure edges: abandoned tokens GC'd by TTL sweeper; double-submit prevented by token uniqueness per logical intent.
 
 ---
 
 ### Q6: What subtle bugs emerge from combineReducer + shared action handling?
-* Every sub-reducer receives every action: an action meant for cart also flows into user reducer — accidental default-case mutations or forgotten returns cause cross-slice corruption.
+* Every sub-reducer receives every action: an action meant for cart also flows into user reducer - accidental default-case mutations or forgotten returns cause cross-slice corruption.
 * Slice identity preservation: returning undefined instead of prior state throws; returning NEW object unconditionally defeats bailouts globally.
 * Key renames silently orphan state (persisted JSON under old key ignored).
 * Root-shape migrations need explicit versioned upgrade reducers.
@@ -68,7 +68,7 @@ Interview probe: explain why invalidation of unsubscribed queries doesn't fire n
 ### Q8: Compare Redux-Saga effects vs async/await thunks for complex cancellation flows.
 Saga strengths: declarative cancellation trees (`takeLatest/takeEvery`, race, fork/cancel semantics), testable generator step assertions without mocks, channels buffering external events.
 Thunk strengths: native TS inference, no DSL, trivial debugging stack traces, smaller bundle.
-Complex flow litmus: "pause A until event E, then race B/C with cleanup" — saga expresses in 6 lines; thunk needs AbortController plumbing + manual flags.
+Complex flow litmus: "pause A until event E, then race B/C with cleanup" - saga expresses in 6 lines; thunk needs AbortController plumbing + manual flags.
 Modern stance: sagas earn complexity only for long-lived orchestration (background sync daemons, multi-step wizards with server coordination); otherwise listener middleware + thunks cover it.
 
 ---
@@ -86,7 +86,7 @@ Broken sharing converts your memoization strategy into dead weight.
 
 ### Q10: How would you migrate a legacy constants/reducers codebase to RTK incrementally?
 Strangler sequence:
-1. Add RTK store alongside legacy via `configureStore({reducer: {...legacyReducers}})` — legacy plain reducers run fine inside.
+1. Add RTK store alongside legacy via `configureStore({reducer: {...legacyReducers}})` - legacy plain reducers run fine inside.
 2. Convert one feature per PR: replace its constants/actions/reducer trio with createSlice; keep exported creator signatures IDENTICAL so consumers untouched (adapter module if needed).
 3. Swap applyMiddleware chains: custom middlewares ported via `getDefaultMiddleware().concat`.
 4. Migrate async modules to createAsyncThunk preserving action type strings (`actionPrefix/TYPE`) to keep existing extraReducers compatible.
@@ -99,23 +99,23 @@ Rollback safety: feature flags per converted domain; contract tests pinning disp
   * Shard slices by domain AND temperature (hot session data vs cold reference tables) so notifications narrow.
   * Move append-only logs to ring-buffer slices with hard caps.
   * Offload truly large read-mostly datasets to worker threads, posting projections into redux.
-Quantify in interviews: "10k entities × ~200B ≈ 2MB heap — fine; but 60fps tick actions through 200 subscribers is the real killer."
+Quantify in interviews: "10k entities × ~200B ≈ 2MB heap - fine; but 60fps tick actions through 200 subscribers is the real killer."
 
 ---
 
 ### Q12: How do you make Redux devtools useful at scale rather than noise?
 * Action naming discipline: RTK auto-names from slice+reducer; wrap bulk imports with `pause()/resume(label)` collapsing hundreds of entries.
 * `actionSanitizer`/`stateSanitizer`: strip payloads (tokens, PII), truncate huge arrays before they hit the extension store.
-* Trace option (`trace: true`, `traceLimit`) records stack of dispatch origin — the killer feature for "who fired this?" hunts.
+* Trace option (`trace: true`, `traceLimit`) records stack of dispatch origin - the killer feature for "who fired this?" hunts.
 * Multiple stores: distinct connection names; per-environment enablement (dev only, or behind flag with redaction for staging).
-Anti-goal: recording production timelines — ship sampled telemetry instead.
+Anti-goal: recording production timelines - ship sampled telemetry instead.
 
 ---
 
 ### Q13: What security concerns apply to Redux state and DevTools in production?
-* State mirrors everything the UI knows: tokens/PII stored plainly are readable via extensions on a user's own machine (acceptable risk boundary) BUT also leak through crash reporters capturing state snapshots — sanitize at reporter layer.
+* State mirrors everything the UI knows: tokens/PII stored plainly are readable via extensions on a user's own machine (acceptable risk boundary) BUT also leak through crash reporters capturing state snapshots - sanitize at reporter layer.
 * Never trust client state as authorization: reducers/flags are UX hints; server revalidates every request.
-* Persisted slices must exclude credentials; if unavoidable, encrypted-at-rest adapters + documented threat boundary (XSS defeats them anyway — keep creds in HttpOnly cookies).
+* Persisted slices must exclude credentials; if unavoidable, encrypted-at-rest adapters + documented threat boundary (XSS defeats them anyway - keep creds in HttpOnly cookies).
 * DevTools disabled in prod builds (`devTools: false`) reduces surface + bundle; action whitelisting if diagnostics demand partial recording.
 
 ---
@@ -124,7 +124,7 @@ Anti-goal: recording production timelines — ship sampled telemetry instead.
 Ladder:
 1. Narrow selectors + memoization (default answer).
 2. `createSelector` with input hashing for value-based keys (sorted id joins) enabling semantic equality cheaply.
-3. Split stores per high-frequency domain (pointer/ticker) while keeping main app store — cross-store bridges via listener middleware.
+3. Split stores per high-frequency domain (pointer/ticker) while keeping main app store - cross-store bridges via listener middleware.
 4. Transient subscription escape hatch: direct `store.subscribe` inside effects for canvas/media sync where React renders are unwanted entirely.
 Frame as observation-economics: reduce WHO recomputes per event, not just what changed.
 
@@ -137,27 +137,27 @@ Architecture:
 * Backpressure: coalesce burst events (ticker prices) via rAF-aligned flush middleware rather than per-message dispatch storms.
 * Resync protocol: seq-gap detection triggers snapshot refetch action replacing affected slice atomically (single transition, no intermediate tear states).
 * Shutdown hygiene: flush pending queue, cancel in-flight thunks via abort signals on teardown.
-Failure story ready: duplicate reconnect double-dispatch caught by seq guard — why naive bridges corrupt ledgers.
+Failure story ready: duplicate reconnect double-dispatch caught by seq guard - why naive bridges corrupt ledgers.
 
 ---
 
 ### Q16: What invariants let you safely persist and rehydrate Redux state across versions?
 * Version envelope per persisted slice: `{v:3,data}`; migrations walk-forward pure functions unit-tested against captured payloads.
-* Whitelist persistence via partialize — volatile fields (loading, sockets, timestamps-as-state) never stored.
+* Whitelist persistence via partialize - volatile fields (loading, sockets, timestamps-as-state) never stored.
 * Rehydrate merge policy: persisted merges OVER defaults shallowly; unknown keys dropped defensively against tampered blobs.
 * Cross-device semantics: last-write-wins acceptable for prefs; version-vector or server-authoritative for shared entities.
-* Never persist function-bearing or class-instance state (serialization silently strips prototypes — runtime TypeErrors later).
+* Never persist function-bearing or class-instance state (serialization silently strips prototypes - runtime TypeErrors later).
 
 ---
 
 ### Q17: How do you profile and prove the source of excessive redux-driven renders?
 Workflow:
 1. React Profiler commit flamegraph → identify over-rendering components.
-2. "Why rendered" props diff — trace unstable prop to its selector.
+2. "Why rendered" props diff - trace unstable prop to its selector.
 3. Selector instrumentation wrapper (dev): count invocations + result-identity changes per action type; hot list exposes unmemoized derivations.
-4. Action storm histogram: middleware sampling dispatch frequency by type — pointer-move style floods surfaced instantly.
+4. Action storm histogram: middleware sampling dispatch frequency by type - pointer-move style floods surfaced instantly.
 5. Fix ladder applied per offender (narrow → memoize → split slice → transient escape).
-Close with regression gate: CI perf probe asserting render budgets on scripted interaction scripts — numbers, not vibes.
+Close with regression gate: CI perf probe asserting render budgets on scripted interaction scripts - numbers, not vibes.
 
 ---
 
@@ -171,10 +171,10 @@ Reversibility framing: propose facade seam (hooks exporting store access) so swa
 ---
 
 ### Q19: How does server-component/RSC architecture reshape Redux's role going forward?
-* Server components absorb data-fetching state entirely — much former redux content (fetched entities) never touches client JS.
-* Client islands still need coordination: selections, optimistic overlays, wizards — exactly redux's remaining jurisdiction, now smaller and more clearly bounded.
+* Server components absorb data-fetching state entirely - much former redux content (fetched entities) never touches client JS.
+* Client islands still need coordination: selections, optimistic overlays, wizards - exactly redux's remaining jurisdiction, now smaller and more clearly bounded.
 * Server Actions replace many mutation thunks; redux keeps receiving their results as plain success actions for UI projection updates.
-Strategic framing for interviews: redux shrinks from "app backbone" to "client-interactivity kernel" — teams should audit slices annually and delete server-shaped ones; the library's future is deliberate smallness, not expansion.
+Strategic framing for interviews: redux shrinks from "app backbone" to "client-interactivity kernel" - teams should audit slices annually and delete server-shaped ones; the library's future is deliberate smallness, not expansion.
 
 ---
 
@@ -185,6 +185,6 @@ Answer spine (adapt specifics):
 3. **Contracts**: typed hooks exported per feature folder; lint bans raw useDispatch; selector colocation rules; persistence whitelist registry.
 4. **Ops**: devtools sanitizers, perf CI render budgets, annual slice audits deleting server-shaped leftovers.
 5. **Exit seams**: facade modules so any owner can migrate without touching consumers.
-Deliverable framing beats tool choice — reviewers grade the decision tree and reversal costs.
+Deliverable framing beats tool choice - reviewers grade the decision tree and reversal costs.
 
 

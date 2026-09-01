@@ -195,40 +195,40 @@
 ---
 
 ### Q44: What are advisory locks and where do they beat row locking?
-* Application-defined locks keyed by arbitrary integers/strings (`pg_advisory_lock(42)`, `pg_try_advisory_xact_lock(key)`) held independent of rows — coordination primitives exposed by the engine itself.
+* Application-defined locks keyed by arbitrary integers/strings (`pg_advisory_lock(42)`, `pg_try_advisory_xact_lock(key)`) held independent of rows - coordination primitives exposed by the engine itself.
 * Killer use cases: singleton cron-job mutual exclusion across app instances (try-lock, skip run if held), serializing cache-rebuild stampedes, guarding multi-row business operations where SELECT ... FOR UPDATE spans too much, resource leasing.
-* Variants: session-level (explicit unlock, survives commits) vs transaction-level (auto-release at COMMIT/ROLLBACK — safer); blocking vs try variants; shared mode for reader fleets.
+* Variants: session-level (explicit unlock, survives commits) vs transaction-level (auto-release at COMMIT/ROLLBACK - safer); blocking vs try variants; shared mode for reader fleets.
 * Hazards: deadlock potential like any lock ordering issue, forgotten session locks lingering after crashes (monitor `pg_locks` mode='advisory'), and key-collision discipline across teams/modules.
 
 ### Q45: How does PostgreSQL Serializable Snapshot Isolation detect anomalies without read locks?
 * Builds on snapshot isolation plus **predicate-lock tracking (SIREAD)**: readers record coarse-grained "read this range/page/table" entries instead of blocking writers; writers check conflicts against concurrent readers' SIREADs.
-* The engine watches for **dangerous structures** — rw-antidependency chains that could complete a serialization cycle (T1 read→T2 wrote; T2 read→T3 wrote; T3 wrote→T1 read). Detecting two-in-a-row pivots triggers abort of one transaction with serialization_failure.
-* Result: true serializability with optimistic concurrency — no gap/next-key locking, high parallelism for short transactions, false-positive aborts possible so apps must retry with backoff.
+* The engine watches for **dangerous structures** - rw-antidependency chains that could complete a serialization cycle (T1 read→T2 wrote; T2 read→T3 wrote; T3 wrote→T1 read). Detecting two-in-a-row pivots triggers abort of one transaction with serialization_failure.
+* Result: true serializability with optimistic concurrency - no gap/next-key locking, high parallelism for short transactions, false-positive aborts possible so apps must retry with backoff.
 * Contrast points interviewers expect: SQL Server achieves serializable via range key-locking (blocking-based); Postgres chose abort-based SSI trading retries for throughput; both prevent write-skew which plain REPEATABLE READ misses.
 
 ### Q46: How do columnstore segment elimination and rowgroup quality affect analytics performance?
-* Column stores compress data into segments/rowgroups (~1M rows) per column, storing min/max metadata — queries pruning segments via predicate pushdown read only qualifying chunks (**segment elimination**).
+* Column stores compress data into segments/rowgroups (~1M rows) per column, storing min/max metadata - queries pruning segments via predicate pushdown read only qualifying chunks (**segment elimination**).
 * **Rowgroup quality**: rows deleted/updated leave holes; fragmented rowgroups (<threshold rows) or wide value ranges inside one segment kill both compression ratios and pruning selectivity. Delta stores/b-trees absorb trickle inserts until compaction tuples-mover rebuilds clean rowgroups.
 * Practical levers: ordered/clustered ingestion by dominant filter key (sort key), periodic OPTIMIZE/vacuum/rebuild, avoiding tiny frequent loads (micro-batching anti-pattern), zone maps/clustering keys tuned per workload.
-* Diagnostics: EXPLAIN showing segments total vs scanned, system views exposing rowgroup density (SQL Server DMVs, Snowflake clustering depth, ClickHouse marks) — quantifying elimination ratio is the senior move.
+* Diagnostics: EXPLAIN showing segments total vs scanned, system views exposing rowgroup density (SQL Server DMVs, Snowflake clustering depth, ClickHouse marks) - quantifying elimination ratio is the senior move.
 
 ### Q47: Explain full_page_writes, WAL checksums, and torn-page protection.
-* A disk-sector tear mid-page-write leaves a half-old/half-new page — unrecoverable corruption unless guarded. **full_page_writes (FPW)**: after each checkpoint, the first modification of every page logs the *entire page image* into WAL; crash recovery restores pages wholesale from WAL before applying deltas, guaranteeing atomicity regardless of tearing.
-* Cost: checkpoint-following write bursts double WAL volume — tunings include spreading checkpoints (checkpoint_completion_target), wal_compression (zstd/lz4 shrinking FPW records), and understanding SSD atomic-write guarantees that motivated discussions of disabling FPW (risky, vendor-specific).
-* **Checksums** (`data_checksums` initdb option / SQL Server page verification): detect silent corruption from storage bitrot — verified on every page read; failures raise hard errors rather than returning poisoned data.
-* Ops maturity signals: monitoring WAL generation rate, alerting on checksum failures (restore-from-backup events!), aligning FS/raid stripe sizes, testing restore drills — recovery guarantees live only as good as rehearsed restores.
+* A disk-sector tear mid-page-write leaves a half-old/half-new page - unrecoverable corruption unless guarded. **full_page_writes (FPW)**: after each checkpoint, the first modification of every page logs the *entire page image* into WAL; crash recovery restores pages wholesale from WAL before applying deltas, guaranteeing atomicity regardless of tearing.
+* Cost: checkpoint-following write bursts double WAL volume - tunings include spreading checkpoints (checkpoint_completion_target), wal_compression (zstd/lz4 shrinking FPW records), and understanding SSD atomic-write guarantees that motivated discussions of disabling FPW (risky, vendor-specific).
+* **Checksums** (`data_checksums` initdb option / SQL Server page verification): detect silent corruption from storage bitrot - verified on every page read; failures raise hard errors rather than returning poisoned data.
+* Ops maturity signals: monitoring WAL generation rate, alerting on checksum failures (restore-from-backup events!), aligning FS/raid stripe sizes, testing restore drills - recovery guarantees live only as good as rehearsed restores.
 
 ### Q48: How do logical replication slots power CDC, and what operational hazards exist?
 * Logical decoding streams row-level change events decoded from WAL (`pgoutput` protocol consumed by Debezium etc.), filtered by publication definitions (tables/row filters/column lists).
-* **Replication slot** anchors the consumer position: the server retains WAL needed by every active slot — the hazard being an offline/stuck consumer causing unbounded WAL retention until disk exhaustion takes the primary down.
-* Guardrails: alarm on `pg_replication_slots` restart_lsn lag bytes, cap via `max_slot_wal_keep_size` (slots become invalid beyond limit — consumer must resnapshot), heartbeat tables keeping idle-period slots advancing.
+* **Replication slot** anchors the consumer position: the server retains WAL needed by every active slot - the hazard being an offline/stuck consumer causing unbounded WAL retention until disk exhaustion takes the primary down.
+* Guardrails: alarm on `pg_replication_slots` restart_lsn lag bytes, cap via `max_slot_wal_keep_size` (slots become invalid beyond limit - consumer must resnapshot), heartbeat tables keeping idle-period slots advancing.
 * Schema-change choreography: additive-first migrations keep old consumers decoding; breaking column drops require coordinated consumer upgrades. Compare with trigger-based CDC (in-transaction cost) and query-based (misses deletes/truncates).
 
 ### Q49: Describe distributed-SQL architecture (CockroachDB/Spanner style).
-* Data splits into **ranges/tablets** (contiguous key space chunks, default ~512MB–2GB) replicated via **Raft groups** (typically 3–5 voters) — every range is its own consensus group; thousands coexist per node.
+* Data splits into **ranges/tablets** (contiguous key space chunks, default ~512MB–2GB) replicated via **Raft groups** (typically 3–5 voters) - every range is its own consensus group; thousands coexist per node.
 * Routing: stateless gateways map key→leaseholder via meta ranges/locations caches; requests to leaseholder replicas execute locally with quorum commits (Paxos/Raft log), giving serializable transactions via timestamp ordering + intent/resolve mechanisms (percolator lineage).
 * Clocks: Spanner couples TrueTime GPS/atomic-clock bounds with commit-wait for external consistency; CockroachDB uses hybrid-logical clocks with uncertainty windows restarting transactions on skew risk.
-* Rebalancing = moving ranges (raft members) between stores based on load/disk; schema changes via online distributed protocols. Interview framing: it's sharding + per-shard consensus + distributed MVCC — know which failure modes remain (cross-region latency, hotspot ranges, clock assumptions).
+* Rebalancing = moving ranges (raft members) between stores based on load/disk; schema changes via online distributed protocols. Interview framing: it's sharding + per-shard consensus + distributed MVCC - know which failure modes remain (cross-region latency, hotspot ranges, clock assumptions).
 
 ### Q50: How does FOR UPDATE SKIP LOCKED enable job queues, and how do you fix hot rows generally?
 ```sql
@@ -239,9 +239,9 @@ WHERE id = (
   FOR UPDATE SKIP LOCKED LIMIT 1
 ) RETURNING *;
 ```
-* `SKIP LOCKED` lets N workers each claim disjoint rows concurrently without blocking or failing — the standard Postgres/MySQL pattern for DB-backed work queues (visibility-timeout via claimed_at sweeps for crashed workers).
+* `SKIP LOCKED` lets N workers each claim disjoint rows concurrently without blocking or failing - the standard Postgres/MySQL pattern for DB-backed work queues (visibility-timeout via claimed_at sweeps for crashed workers).
 * General **hot-row contention** playbook: shard logical counters into K buckets summed on read; buffer/coalesce increments in memory flushing periodically; move queues to specialized systems at scale; shorten transaction scope religiously (no external calls inside txns); order multi-row updates consistently; use optimistic retry loops for low-contention entities.
-* Diagnosis path: lock waits (`pg_locks`/innodb status), xact duration histograms, deadlock logs — distinguishing lock waits from IO/CPU saturation before tuning anything.
+* Diagnosis path: lock waits (`pg_locks`/innodb status), xact duration histograms, deadlock logs - distinguishing lock waits from IO/CPU saturation before tuning anything.
 
 ---
 

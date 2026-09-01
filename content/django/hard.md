@@ -5,15 +5,15 @@
 ### Q1: How does the ORM compose SQL internally, and where does abstraction leak?
 * QuerySet builds a tree of compiler nodes (WhereNode/expressions), deferred until `get_compiler().as_sql()` runs against the vendor backend.
 * Leaks interviewers expect: DISTINCT + order_by on joined models forces sorting columns into SELECT breaking distinctness (fix via `.order_by()` reset or subqueries); aggregates over joins multiply rows; `extra()` escapes the model entirely.
-* Vendor variance: window functions, ON CONFLICT, index hints vary by backend — portability claim has edges.
+* Vendor variance: window functions, ON CONFLICT, index hints vary by backend - portability claim has edges.
 Depth signal: mention sqlcompiler alias generation and how annotate aliases collide.
 
 ---
 
 ### Q2: Explain MVCC interactions with Django ORM patterns on Postgres.
-* Readers see snapshot; writers create row versions — long transactions hold vacuum behind.
+* Readers see snapshot; writers create row versions - long transactions hold vacuum behind.
 * ORM hazards: iterating huge querysets inside atomic() extends transaction lifetime → table bloat; fix via iterator chunks OUTSIDE atomic or keyed batch loops each committing.
-* Hot updates churn index entries (HOT updates need no index-touching columns changed) — updating indexed status column frequently defeats HOT; design indexes accordingly.
+* Hot updates churn index entries (HOT updates need no index-touching columns changed) - updating indexed status column frequently defeats HOT; design indexes accordingly.
 * Serialization failures under REPEATABLE READ/SERIALIZABLE require retry wrappers around atomic blocks.
 
 ---
@@ -36,7 +36,7 @@ Points: unique idem_key arbitrates concurrency; on_commit guarantees enqueue onl
 
 ### Q4: What are the internals of select_related vs prefetch_related execution, including chained Prefetch limits?
 * select_related: single SQL with LEFT JOINs per relation path; alias explosion on very deep chains; nullable handled automatically.
-* prefetch_related: executes IN-query per relation binding ids in Python; chunking via queryset.iterator not applicable — memory proportional to fetched set.
+* prefetch_related: executes IN-query per relation binding ids in Python; chunking via queryset.iterator not applicable - memory proportional to fetched set.
 * Nested Prefetch objects compose filtered child sets; cannot reference sibling prefetch results within same round-trip (second-level prefetches run sequentially).
 Edge worth naming: reverse one-to-one uses select_related path efficiently; reverse FK always prefetch family.
 
@@ -55,7 +55,7 @@ Axes: broker features, reliability guarantees, ecosystem.
 * Celery: richest (routing, retries w/ backoff+jitter, chords/chains, beat), heavier ops surface.
 * Dramatiq: simpler API, sane defaults, actor-based; fewer advanced routing primitives.
 * RQ: minimal Redis jobs; great for small stacks.
-Decision inputs: exactly-once needs (none give it — design idempotent tasks), scheduling complexity, team familiarity, broker choice (Redis vs RabbitMQ/SQS). Include monitoring story (flower/celery events vs dead-letter dashboards).
+Decision inputs: exactly-once needs (none give it - design idempotent tasks), scheduling complexity, team familiarity, broker choice (Redis vs RabbitMQ/SQS). Include monitoring story (flower/celery events vs dead-letter dashboards).
 
 ---
 
@@ -96,9 +96,9 @@ Migration tooling answers expected: per-tenant migration runner with fan-out/fai
 
 ### Q11: What does ASGI change for Django, and how do channels/websockets integrate?
 * ASGI = async request/response + lifespan + long-lived protocol support; Django views may be sync (thread-pooled via ASGI wrapper) or async def natively.
-* Mixing: calling blocking ORM inside async view blocks event loop — use `sync_to_async` (or database_sync_to_async) with careful thread-sensitivity settings.
+* Mixing: calling blocking ORM inside async view blocks event loop - use `sync_to_async` (or database_sync_to_async) with careful thread-sensitivity settings.
 * Channels adds consumers/routing over websocket frames + channel layers (Redis) for group fan-out and cross-process messaging.
-Deployment nuance: daphne/uvicorn workers scale differently than gunicorn sync — sizing math changes.
+Deployment nuance: daphne/uvicorn workers scale differently than gunicorn sync - sizing math changes.
 
 ---
 
@@ -106,14 +106,14 @@ Deployment nuance: daphne/uvicorn workers scale differently than gunicorn sync �
 Rules:
 * ORM is sync-only historically → wrap in `sync_to_async`; each call hops threads unless `ThreadSensitiveContext` groups them (default thread-sensitive ties to same thread per request).
 * Reverse: async libraries called from sync views need `async_to_sync` managing event loop per call.
-* Avoid nested event loops (async_to_sync inside running loop raises) — structure boundaries at the edges.
-* Connection pools: DB connections are thread-local; async concurrency multiplies demand — pool sizing revisited.
+* Avoid nested event loops (async_to_sync inside running loop raises) - structure boundaries at the edges.
+* Connection pools: DB connections are thread-local; async concurrency multiplies demand - pool sizing revisited.
 
 ---
 
 ### Q13: What cache invalidation strategies exist beyond delete-on-write, and their trade-offs?
 * TTL-only: simple, staleness window accepted.
-* Generation/version keys: bump namespace on write; old entries expire lazily — no scans, slight read amplification on bump.
+* Generation/version keys: bump namespace on write; old entries expire lazily - no scans, slight read amplification on bump.
 * Event-driven precise deletes via signals/listeners: exact but coupling-heavy.
 * Cache-aside with stale-while-revalidate serving old value while refreshing (dogpile protection via locks/single-flight).
 Choose per key class: hot reads favor SWR; correctness-critical favor generation bumps.
@@ -131,7 +131,7 @@ Choose per key class: hot reads favor SWR; correctness-critical favor generation
 ### Q15: What is the N+1 writes problem in Django and how do bulk operations interact with signals?
 * Loops calling save() per row: N UPDATE round trips + N signal dispatches + full validation each time.
 * Fixes: queryset.update() (single SQL, skips signals/auto_now), bulk_create/bulk_update batches.
-* When signals must fire: batch then manually enqueue aggregate side-effect task once (not per-row) — redesign handlers to accept collections where possible.
+* When signals must fire: batch then manually enqueue aggregate side-effect task once (not per-row) - redesign handlers to accept collections where possible.
 
 ---
 
@@ -143,7 +143,7 @@ updated = Doc.objects.filter(pk=pk, version=old.version)\
            .update(content=new, version=old.version + 1)
 if updated == 0: raise ConcurrentModification
 ```
-* Conditional UPDATE returns rowcount — zero rows means someone else advanced version → surface merge/reload UX.
+* Conditional UPDATE returns rowcount - zero rows means someone else advanced version → surface merge/reload UX.
 * Pairs with select_for_update pessimistic alternative; choose by contention profile (low contention → optimistic wins).
 
 ---
@@ -169,7 +169,7 @@ Alerting on burn-rate SLOs rather than static thresholds.
 ### Q19: How would you design multi-step wizard state across requests securely?
 Options:
 * Server-side draft model keyed by opaque token stored in session; steps validate incrementally; final commit transactional.
-* Encrypted client-side state (signed blob) for stateless scale — size limits + tamper policy considerations.
+* Encrypted client-side state (signed blob) for stateless scale - size limits + tamper policy considerations.
 * Hybrid: server holds sensitive fields; client holds non-sensitive step index.
 Guards: expiry sweeps, resumability across devices only after auth binding, idempotent completion against double-submit (unique constraint on intent key).
 
@@ -178,7 +178,7 @@ Guards: expiry sweeps, resumability across devices only after auth binding, idem
 ### Q20: Explain contenttypes + generic relations pitfalls you've encountered operationally.
 * Orphaned generic targets after deletions (no FK cascade) → periodic integrity sweeps needed.
 * Query performance: filtering across generic relations requires UNION-ish patterns or denormalized indexes (target_type,target_id composite index mandatory).
-* Migrations renaming target models break stored content_type references (contenttypes migration handles rename if same app detected — cross-app moves don't).
+* Migrations renaming target models break stored content_type references (contenttypes migration handles rename if same app detected - cross-app moves don't).
 Verdict pattern: acceptable for peripheral features (flags/notes); core domain keeps explicit FKs.
 
 ### Q21: How do you implement full-text search in Postgres via Django and when do you escalate to external engines?
@@ -189,7 +189,7 @@ Escalate to Elasticsearch/Typesense when: faceting complexity, typo-tolerance at
 ---
 
 ### Q22: What is the difference between DEFERRABLE constraints usage and application-level checks?
-* Postgres UNIQUE/FK can be DEFERRABLE INITIALLY DEFERRED — enforced at COMMIT enabling intra-transaction reordering (swap unique values between rows without intermediate violation).
+* Postgres UNIQUE/FK can be DEFERRABLE INITIALLY DEFERRED - enforced at COMMIT enabling intra-transaction reordering (swap unique values between rows without intermediate violation).
 * Django: UniqueConstraint(deferrable=Deferrable.DEFERRED); FKs need raw SQL migration for deferral.
 Use cases: circular references seeded after both rows exist; renumbering sort orders.
 Trade-off: errors surface later (at commit) with less precise context.
@@ -198,7 +198,7 @@ Trade-off: errors surface later (at commit) with less precise context.
 
 ### Q23: How would you implement audit logging that captures WHO changed WHAT efficiently?
 Design:
-* Append-only audit table (entity_type, entity_id, actor_id, action, diff JSONB, at) written via overridden save/delete OR DB triggers (catches non-Django writes — often mandatory).
+* Append-only audit table (entity_type, entity_id, actor_id, action, diff JSONB, at) written via overridden save/delete OR DB triggers (catches non-Django writes - often mandatory).
 * Diff generation: django-diffy style field compare pre/post using from_db snapshot; store only changed fields.
 * Volume control: partition by month, async write via on_commit queue, PII scrubbing policy applied before persist.
 Read path: query per entity ordered desc; integrity via hash chaining if tamper-evidence required.
@@ -207,8 +207,8 @@ Read path: query per entity ordered desc; integrity via hash chaining if tamper-
 
 ### Q24: How does connection lifecycle work under gunicorn workers and what breaks with forked connections?
 * Workers fork after settings import; any DB connection created pre-fork shares socket → corruption. Django connects lazily post-fork (old-style preload apps caution).
-* CONN_MAX_AGE persists connections between requests within worker; stale broken connections raise InterfaceError — close_old_connections middleware/task hooks handle.
-* pgbouncer transaction mode forbids session state (SET, prepared statements) — adjust ORM features accordingly.
+* CONN_MAX_AGE persists connections between requests within worker; stale broken connections raise InterfaceError - close_old_connections middleware/task hooks handle.
+* pgbouncer transaction mode forbids session state (SET, prepared statements) - adjust ORM features accordingly.
 Interview probe: why does celery worker crash with "connection already closed" at 3am? Answer: max_age expiry mid-task → close_old_connections at task start.
 
 ---
@@ -232,15 +232,15 @@ Fixes: computed values passed from view, cached_fragment wrappers around expensi
 
 ### Q27: What is the correct way to serve large exports (CSV/Excel) from Django views?
 StreamingHttpResponse with generator yielding rows in chunks; iterator() on queryset with chunk_size; disable query caching per chunk; set content-disposition + nosniff.
-For expensive transforms: pre-generate into object storage asynchronously returning job status URL (polling/websocket) — avoids request-lifetime coupling.
-Memory math interview: "1M rows × 200B = 200MB — never buffer; stream or stage."
+For expensive transforms: pre-generate into object storage asynchronously returning job status URL (polling/websocket) - avoids request-lifetime coupling.
+Memory math interview: "1M rows × 200B = 200MB - never buffer; stream or stage."
 
 ---
 
 ### Q28: How do you implement idempotency keys for payment-ish POST endpoints in DRF?
 Flow:
 1. Client sends Idempotency-Key header; middleware/controller looks up key scope (user+route).
-2. Miss: create processing record (unique constraint arbitrates concurrent first arrivals — losers get 409/retry-until-resolved), execute business txn, store response snapshot, mark completed.
+2. Miss: create processing record (unique constraint arbitrates concurrent first arrivals - losers get 409/retry-until-resolved), execute business txn, store response snapshot, mark completed.
 3. Hit completed: replay stored response verbatim; hit processing: return 409 Retry-After.
 TTL sweep expires stale processing entries; hash request body mismatch → 422 client bug signal.
 
@@ -257,12 +257,12 @@ Hybrid standard answer: cookie sessions for web, JWT refresh flow for mobile, bo
 Components: flag service (env/db-backed) evaluated per request with stable bucketing (hash(user_id) % 100 < rollout); cached resolution (short TTL) avoiding per-request hits.
 Safety: kill switches defaulting off; dependency flags coordinating FE+BE; expiry reminders preventing zombie flags.
 Observability: per-cohort error/latency SLO comparison automating promotion; rollback = flag flip not redeploy.
-Anti-pattern naming: boolean env soup — flags need ownership metadata like real config.
+Anti-pattern naming: boolean env soup - flags need ownership metadata like real config.
 
 ### Q31: What does `python manage.py test` execution order guarantee, and why does it matter?
-* Tests run grouped by class within apps alphabetically; TransactionTestCase TRUNCATES tables and resets sequences — running BEFORE TestCases poisons their assumptions (sequence drift breaks pk assertions).
+* Tests run grouped by class within apps alphabetically; TransactionTestCase TRUNCATES tables and resets sequences - running BEFORE TestCases poisons their assumptions (sequence drift breaks pk assertions).
 * Django reorders known-safe groupings automatically; explicit ordering via test utilities (pytest-django handles isolation better).
-Lesson: unexplained "works alone fails in suite" usually traces here — explain the mechanism, not just the fix.
+Lesson: unexplained "works alone fails in suite" usually traces here - explain the mechanism, not just the fix.
 
 ---
 
@@ -296,13 +296,13 @@ Program:
 * Central compatibility matrix (Django LTS cadence alignment); deprecation-warning CI gate (`-W error::DeprecationWarning`) forcing early fixes.
 * Staging soak with production-shaped traffic replay; feature-flagged risky library swaps.
 * Rollout waves by service criticality with SLO watch; documented rollback pins.
-Cultural note: upgrade debt treated as capacity planning item, not heroics — quarterly allocation.
+Cultural note: upgrade debt treated as capacity planning item, not heroics - quarterly allocation.
 
 ---
 
 ### Q36: How do you secure against SSRF in Django features fetching user URLs?
 Controls: scheme allowlist (https), DNS resolve then validate ALL resolved IPs against blocklists (loopback/link-local/private/metadata 169.254.169.254), disable redirects or re-validate each hop, response size cap + timeout via streaming reads, egress proxy/network policy as belt-and-braces.
-Historical hook: image optimizer CVEs — keep dependencies patched; log attempted violations as security signals.
+Historical hook: image optimizer CVEs - keep dependencies patched; log attempted violations as security signals.
 
 ---
 
@@ -318,7 +318,7 @@ Modeling:
 * Roles via groups for global capabilities; per-object ACL table (user/group × object × level) for sharing.
 * Query enforcement: queryset filtering via EXISTS subquery joining ACL (custom manager `.visible_to(user)`), not post-fetch filtering.
 * Caching: permission resolution cached per user+object version; invalidation hooks on ACL writes.
-DRF integration: custom permission classes reading enforced querysets — authorization expressed once at data layer.
+DRF integration: custom permission classes reading enforced querysets - authorization expressed once at data layer.
 
 ---
 
@@ -332,35 +332,35 @@ Positioning: layered defense assuming each layer fails independently.
 ### Q40: Walk through implementing graceful shutdown for gunicorn + celery in a Django deployment.
 Web: SIGTERM → stop accepting (gunicorn master closes listeners) → drain inflight with timeout → close_old_connections → exit. preStop sleep bridges LB propagation.
 Celery: warm shutdown finishes current tasks (ack_late redelivers unfinished), cold kills after hard limit; revoke queued-but-unstarted safely since tasks idempotent.
-Verification: kill -9 chaos drills under load asserting zero user-visible errors — the acceptance bar.
+Verification: kill -9 chaos drills under load asserting zero user-visible errors - the acceptance bar.
 
 ### Q41: How does Django's password hashing stack work and how do you upgrade it live?
 * PASSWORD_HASHERS ordered list; first entry = default for new hashes; login verifies against stored hasher then REHASHES transparently to preferred (upgrader pattern).
 * Argon2id recommended (memory-hard) via argon2-cffi; iterations/time cost tunable per hardware.
 * Migration: append new hasher on top, roll out, monitor rehash coverage metric, prune legacy hashers once zero remain.
-Explains why changing order alone upgrades every user silently — elegant design worth articulating.
+Explains why changing order alone upgrades every user silently - elegant design worth articulating.
 
 ---
 
 ### Q42: What is the correct way to implement "email verification + invite" flows securely?
 Tokens: signed timestamps (itsdangerous/TimestampSigner or Django signer) binding user+purpose+expiry; single-use enforced by storing consumed token hash (not raw) with TTL sweep.
 Flows: register → unverified state gated from login; verify link sets verified; invites create inactive users accepting via token setting password (rotation on reuse detected).
-Delivery resilience: async send with retry; enumeration defenses — identical responses whether email exists or not.
+Delivery resilience: async send with retry; enumeration defenses - identical responses whether email exists or not.
 
 ---
 
 ### Q43: How would you diagnose a memory leak in a long-running gunicorn worker?
 Method:
 1. Confirm RSS slope across requests excluding GC noise; correlate with endpoint classes.
-2. Heap snapshots (memray flamegraphs / objgraph growth) diffing retained objects — chase growing type counts (querysets cached on module globals, middleware closures holding request).
+2. Heap snapshots (memray flamegraphs / objgraph growth) diffing retained objects - chase growing type counts (querysets cached on module globals, middleware closures holding request).
 3. Common Django culprits: module-level caches unbounded, logging handlers accumulating, C-extension leaks surfaced via tracemalloc absence in heap but RSS growth.
 4. Fix + soak regression test asserting plateau.
-Memray specifically deserves naming — it revolutionized Python leak hunting.
+Memray specifically deserves naming - it revolutionized Python leak hunting.
 
 ---
 
 ### Q44: How do you make Django templates safe against XSS while allowing rich content?
-Defaults: autoescape ON everywhere; `|safe`/mark_safe only for sanitized HTML — sanitize via bleach allowlist at INGESTION (stored clean), never at render ad hoc.
+Defaults: autoescape ON everywhere; `|safe`/mark_safe only for sanitized HTML - sanitize via bleach allowlist at INGESTION (stored clean), never at render ad hoc.
 Rich text pipeline: restricted editor schema → server-side sanitizer → versioned renderer; CSP nonce integration with `{% script_nonce %}`-style helpers for inline bootstrap JSON (use |escapejs for embedded data).
 Audit habit: grep CI banning new `|safe` without accompanying sanitizer import.
 
@@ -370,21 +370,21 @@ Audit habit: grep CI banning new `|safe` without accompanying sanitizer import.
 Composition:
 * ESI-style fragments (rarely available) vs client-side hydration of personalized widgets atop shared cached shell (Varnish surrogate keys invalidation per entity).
 * Django-native: cache expensive shared computations low-level keyed by entity versions; render personalization server-side each time (fast enough when queries tuned).
-* Edge personalization via cookie-aware CDN rules (Vary discipline!) — document Vary: Authorization pitfalls.
+* Edge personalization via cookie-aware CDN rules (Vary discipline!) - document Vary: Authorization pitfalls.
 Decision driven by personalization surface size: small widgets → edge composition; large → accept server render cost.
 
 ---
 
 ### Q46: What is your incident response playbook specific to a Django outage?
 Triage tree: error-rate spike → recent deploy/migration correlation → rollback lever (previous image + compatible migrations constraint honored); DB saturation → slow query kill procedure, pgbouncer stats, replica promotion criteria; queue backlog explosion → scale workers, shed non-critical schedules.
-Comms cadence template; postmortem doc referencing timeline auto-built from traces/logs; action items tracked with owners/dates — reviewed next incident for completion.
+Comms cadence template; postmortem doc referencing timeline auto-built from traces/logs; action items tracked with owners/dates - reviewed next incident for completion.
 Maturity marker: runbooks updated AFTER every incident with what was actually needed.
 
 ---
 
 ### Q47: How do you keep 200 developer-hours/year of boilerplate out of a multi-service Django org?
 Leverage points:
-* Service template repo (cookiecutter) shipping auth wiring, observability, health checks, Dockerfile, CI — golden path default.
+* Service template repo (cookiecutter) shipping auth wiring, observability, health checks, Dockerfile, CI - golden path default.
 * Shared internal packages: base models (UUID pk, timestamps), pagination envelope, permission primitives, testing utilities.
 * Lint/config distribution (pre-commit hooks central config); ADR culture documenting deviations.
 Measure adoption: % services on golden path; drift alerts via scheduled scans.
@@ -411,7 +411,7 @@ Synthesis:
 * Boring core (Django+Postgres+Redis+Celery) until measured otherwise; complexity budget spent on product differentiators.
 * Data integrity at DB layer (constraints, RLS, transactions) since apps evolve faster than schemas.
 * Observability as first-class deliverable of every PR, not afterthought.
-* Reversibility engineered via facades/flags — decisions cheap to change are cheap to make.
+* Reversibility engineered via facades/flags - decisions cheap to change are cheap to make.
 * Golden paths + registries scale humans; documentation-as-code scales knowledge.
 Close with: frameworks age; these principles carried across three framework generations of experience.
 

@@ -16,7 +16,7 @@ Unlike traditional queue-based schedulers, CFS uses a time-ordered **Red-Black T
 RCU is a lock-free synchronization mechanism optimized for read-heavy scenarios:
 *   **Lock-Free Readers:** Readers traverse shared data structures (via pointers) concurrently without acquiring any locks, disabling interrupts, or performing atomic operations.
 *   **Writers (Publish-Subscribe):** To modify an element, a writer allocates a new structure, copies the old element, updates the copy, and atomically updates the pointer to publish the new version.
-*   **Grace Period:** The old element cannot be deleted immediately because active readers might still be accessing it. The writer waits for a **Grace Period**—until all CPU cores have undergone a context switch (quiescent state)—guaranteeing no readers hold references to the old version, before safely reclaiming the memory.
+*   **Grace Period:** The old element cannot be deleted immediately because active readers might still be accessing it. The writer waits for a **Grace Period** - until all CPU cores have undergone a context switch (quiescent state) - guaranteeing no readers hold references to the old version, before safely reclaiming the memory.
 
 ### Q4: Compare Epoll, Poll, and Select for network I/O multiplexing.
 *   **`select` (POSIX):** Monitors file descriptors (FDs) using a bitmask. Limited to a hardcoded maximum of **1024 FDs**. It is highly inefficient because it requires copying the FD set from user space to kernel space on every call, and scanning the entire list linearly ($O(N)$) to identify active events.
@@ -162,7 +162,7 @@ In lock-free data structures, deleting a node is difficult because another concu
 Linux splits interrupt processing to minimize interrupt latency:
 *   **Hardirq (Top Half):** The physical ISR. Executes with interrupts disabled. It performs the absolute minimum work (e.g., acknowledging hardware, reading device registers, scheduling the bottom half) and exits immediately to keep the CPU responsive.
 *   **Softirq (Bottom Half):** Software interrupts that execute concurrently on any CPU core with interrupts re-enabled. Used for time-critical, high-throughput tasks (e.g., networking, SCSI block storage). Strictly statically defined at compile-time.
-*   **Tasklets:** Built on top of softirqs. Statically or dynamically allocated, but they are serialized—a tasklet can only execute on one CPU core at a time, making them easier to write than re-entrant softirqs.
+*   **Tasklets:** Built on top of softirqs. Statically or dynamically allocated, but they are serialized - a tasklet can only execute on one CPU core at a time, making them easier to write than re-entrant softirqs.
 
 ### Q25: Compare Type 1 and Type 2 Hypervisors.
 *   **Type 1 (Bare-Metal):** Runs directly on the host's physical hardware (e.g., VMware ESXi, Xen, KVM). It has absolute control over the physical CPU and memory, yielding near-native performance, high stability, and advanced hardware isolation.

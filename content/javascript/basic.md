@@ -292,8 +292,8 @@
 ---
 
 ### Q44: What is the difference between a statement and an expression?
-*   **Expression:** Any valid unit of code that resolves to a **value** — `2 + 3`, `user.name`, `() => {}`, ternaries, function calls.
-*   **Statement:** An instruction performing an action; it may *contain* expressions but does not itself produce a value — `if`, `for`, `while`, `switch`, declarations.
+*   **Expression:** Any valid unit of code that resolves to a **value** - `2 + 3`, `user.name`, `() => {}`, ternaries, function calls.
+*   **Statement:** An instruction performing an action; it may *contain* expressions but does not itself produce a value - `if`, `for`, `while`, `switch`, declarations.
 *   Consequences: expressions can be embedded anywhere a value fits (`const x = cond ? f() : g();`) while statements cannot (no `const x = if (...) ...`). Template literals, arrow function bodies and comma operators exploit expression-ness.
 *   Functional style (ternary chains, IIFEs returning values, logical operators as conditionals) exists precisely to convert statement logic into composable expressions.
 
@@ -306,33 +306,33 @@
 
 ### Q46: What is optional chaining (`?.`) and how does it behave?
 *   `obj?.prop`, `obj?.[expr]`, `fn?.(args)` short-circuit to `undefined` the moment the left side is `null`/`undefined` instead of throwing TypeError.
-*   Chains short-circuit entirely: `a?.b.c.d()` never evaluates `.c.d` if `a` is nullish — safe deep access without `&&` pyramids.
+*   Chains short-circuit entirely: `a?.b.c.d()` never evaluates `.c.d` if `a` is nullish - safe deep access without `&&` pyramids.
 *   Pairs with nullish coalescing for defaults: `const city = user?.address?.city ?? 'Unknown';`
 *   Gotchas: it does NOT guard against intermediate non-null objects lacking the property (only nullish checks); assignment targets are invalid (`a?.b = 1` throws); overuse hides genuine bugs where data should exist.
 
 ### Q47: Compare `for...in` and `for...of`.
-*   **`for...in`** iterates enumerable **string keys** of an object — includes inherited enumerable properties (use `Object.hasOwnProperty`/`Object.keys` to filter). Works on plain objects; on arrays it yields index strings ("0","1") plus any added props — an anti-pattern.
+*   **`for...in`** iterates enumerable **string keys** of an object - includes inherited enumerable properties (use `Object.hasOwnProperty`/`Object.keys` to filter). Works on plain objects; on arrays it yields index strings ("0","1") plus any added props - an anti-pattern.
 *   **`for...of`** iterates **values** of any iterable via the iterator protocol (`Symbol.iterator`): arrays, strings, Maps, Sets, NodeList, generators. Cannot be used on plain objects unless you make them iterable.
 *   Both support `break/continue/return`; `for...of` supports `await` inside async loops, `for...in` does not meaningfully.
 *   Rule of thumb: keys of data structures → `for...in` (rarely), sequences → `for...of`, transformations → array methods.
 
 ### Q48: Explain named exports vs default exports in ES Modules.
 *   **Named exports**: many per module, imported by exact name with braces `{ export const x }` / `import { x } from`. Refactor-safe (IDE renames work), tree-shaking friendly, explicit origin at call site.
-*   **Default export**: one per module, importable under any local name (`import Anything from './mod'`) — that anonymity breaks auto-imports/grep and invites inconsistent naming across a codebase.
+*   **Default export**: one per module, importable under any local name (`import Anything from './mod'`) - that anonymity breaks auto-imports/grep and invites inconsistent naming across a codebase.
 *   A module can mix both: `import React, { useState } from 'react'`.
 *   Re-exporting patterns: `export * from './utils'`, `export { default as Button } from './Button'` used to build barrel files/index modules.
 *   Team-style note: many style guides prefer named exports everywhere except entry components/classes.
 
 ### Q49: What are callbacks? Why did Promises emerge from their problems?
-*   A **callback** is a function passed as an argument to be invoked later — the original async primitive (`setTimeout(fn, 100)`, `el.addEventListener('click', fn)`, Node error-first callbacks `(err, result)`).
+*   A **callback** is a function passed as an argument to be invoked later - the original async primitive (`setTimeout(fn, 100)`, `el.addEventListener('click', fn)`, Node error-first callbacks `(err, result)`).
 *   **Problems at scale**:
-    *   **Inversion of control** — you hand your continuation to third-party code that may call it twice, never, or synchronously.
-    *   **Callback hell** — sequential async steps nest rightward into unreadable pyramids.
-    *   **Error handling fragmentation** — every level must check/receive `err`; try/catch cannot cross async boundaries.
+    *   **Inversion of control** - you hand your continuation to third-party code that may call it twice, never, or synchronously.
+    *   **Callback hell** - sequential async steps nest rightward into unreadable pyramids.
+    *   **Error handling fragmentation** - every level must check/receive `err`; try/catch cannot cross async boundaries.
 *   Promises fix this: values are first-class (call-safety guaranteed once-settled), chains flatten sequencing, and a single `.catch()` handles any upstream failure.
 
 ### Q50: What are getter/setter accessors? When are they useful?
-*   Properties backed by functions: `get fullName() { return this.first + ' ' + this.last }` — read like properties but compute dynamically; `set` intercepts writes.
+*   Properties backed by functions: `get fullName() { return this.first + ' ' + this.last }` - read like properties but compute dynamically; `set` intercepts writes.
 *   Defined in object literals or via `Object.defineProperty(obj, prop, { get, set, enumerable, configurable })` (class fields use `get`/`set` keywords).
 *   **Use cases**: computed/derived values without method-call syntax, validation/transformation on write (range clamping, normalization), lazy evaluation with caching, backward-compatible API evolution (swap a data field for an accessor invisibly).
 *   Caveats: accessors hide computation cost behind innocent-looking property reads (profiling surprise), setters that throw create surprising assignment failures, and JSON serialization uses only enumerable data properties unless getters are enumerated too.

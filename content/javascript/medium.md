@@ -215,9 +215,9 @@
 ---
 
 ### Q44: How does error propagation work through Promise chains?
-*   Each `.then(onFulfilled, onRejected)` returns a **new** promise; a rejection flows down the chain skipping every `onFulfilled` until the first rejection handler appears — afterwards the chain resumes normally (the rejection is considered handled and downstream receives that handler's return value).
+*   Each `.then(onFulfilled, onRejected)` returns a **new** promise; a rejection flows down the chain skipping every `onFulfilled` until the first rejection handler appears - afterwards the chain resumes normally (the rejection is considered handled and downstream receives that handler's return value).
 *   Errors thrown synchronously inside handlers convert into rejections of the next link, so `throw` composes uniformly with async failures.
-*   Placement matters: `.catch()` recovers only upstream failures; steps chained after it always run. Multiple sibling `.catch` calls on the same promise do not chain — attach one terminal handler per branch.
+*   Placement matters: `.catch()` recovers only upstream failures; steps chained after it always run. Multiple sibling `.catch` calls on the same promise do not chain - attach one terminal handler per branch.
 *   Anti-patterns: swallowing errors by returning a value from catch without re-throwing when recovery is impossible; forgetting to `await` async functions inside handlers (their rejection becomes `unhandledrejection`); mixing callbacks and promises in one flow.
 
 ### Q45: How does AbortController cancel fetch operations? Detail the flow.
@@ -227,11 +227,11 @@ fetch('/api/search', { signal: ctrl.signal })
   .catch(e => { if (e.name === 'AbortError') { /* expected */ } });
 ctrl.abort('user navigated away');
 ```
-*   The controller owns an `AbortSignal`; passing `signal` links the request. Calling `abort()` rejects the pending promise immediately and stops the body download — critical for typeahead cancellation and React unmount cleanup (saves bandwidth, battery, server load).
-*   One signal can serve many operations: `addEventListener('abort', ...)` listeners, streams, and event handlers all honor it — a single switch cancels a whole logical unit of work.
+*   The controller owns an `AbortSignal`; passing `signal` links the request. Calling `abort()` rejects the pending promise immediately and stops the body download - critical for typeahead cancellation and React unmount cleanup (saves bandwidth, battery, server load).
+*   One signal can serve many operations: `addEventListener('abort', ...)` listeners, streams, and event handlers all honor it - a single switch cancels a whole logical unit of work.
 *   Modern helpers: `AbortSignal.timeout(ms)` builds auto-aborting signals for deadlines; `signal.throwIfAborted()` lets hand-rolled async code participate in cancellation; the optional `abort(reason)` surfaces through `signal.reason` for richer diagnostics.
 
-### Q46: Debounce vs throttle — compare precisely and give use cases.
+### Q46: Debounce vs throttle - compare precisely and give use cases.
 *   **Debounce**: fires only after activity *stops* for N ms; every incoming event resets the timer → exactly-once-at-the-end behavior. Use: search-as-you-type API calls, autosave, resize-end recalculations.
 *   **Throttle**: fires at most once per N ms window while events keep arriving (leading/trailing edge variants) → periodic sampling under sustained load. Use: scroll/pointermove handlers, analytics batching, drag tracking.
 *   Decision rule: "I only care about the final settled state" → debounce; "I need regular updates during continuous activity" → throttle.
@@ -243,7 +243,7 @@ ctrl.abort('user navigated away');
 *   Every synchronous call pushes a frame (locals + return address) onto the fixed-size call stack (~10-15k frames deep typically). Exhaustion throws `RangeError: Maximum call stack size exceeded`.
 *   Mitigations:
     1.  **Rewrite iteratively** using an explicit loop/stack data structure.
-    2.  **Trampoline**: the recursive function returns a *thunk* (`() => nextStep`) instead of calling directly; a driver loop invokes thunks until a real value appears — stack depth stays constant because each thunk returns before the next executes.
+    2.  **Trampoline**: the recursive function returns a *thunk* (`() => nextStep`) instead of calling directly; a driver loop invokes thunks until a real value appears - stack depth stays constant because each thunk returns before the next executes.
     ```js
     const trampoline = fn => (...args) => {
       let result = fn(...args);
@@ -252,7 +252,7 @@ ctrl.abort('user navigated away');
     };
     ```
     3.  **Generators/async boundaries**: yielding or awaiting between steps drains queues and resets frames naturally.
-*   Note: ES6-specified proper tail calls would remove the need for self-recursion, but only JavaScriptCore (Safari) ships it — V8/SpiderMonkey intentionally did not, citing debugging/stacktrace costs.
+*   Note: ES6-specified proper tail calls would remove the need for self-recursion, but only JavaScriptCore (Safari) ships it - V8/SpiderMonkey intentionally did not, citing debugging/stacktrace costs.
 
 ### Q48: Explain function composition and pipe utilities.
 *   **Composition** builds pipelines from single-purpose functions: `compose(f, g)(x) = f(g(x))` (right-to-left, math convention); `pipe(f, g)(x) = g(f(x))` (left-to-right reading order).
@@ -261,7 +261,7 @@ const pipe = (...fns) => x => fns.reduce((v, f) => f(v), x);
 const slugify = pipe(str => str.trim(), s => s.toLowerCase(), s => s.replace(/\s+/g, '-'));
 ```
 *   Benefits: declarative data flow, trivially testable units, no intermediate variables, mirrors Unix pipes.
-*   Advanced concerns: stages are expected to be unary — multi-argument steps break the chain (curry them or pass tuples); async composition requires reducing over promise chains; debugging benefits from `tap`/logging stages inserted mid-pipeline.
+*   Advanced concerns: stages are expected to be unary - multi-argument steps break the chain (curry them or pass tuples); async composition requires reducing over promise chains; debugging benefits from `tap`/logging stages inserted mid-pipeline.
 
 ### Q49: How do you design custom Error classes properly?
 ```js

@@ -30,7 +30,7 @@ export default function TermsPage() {
           <section>
             <h2>1. Introduction &amp; Acceptance</h2>
             <p>
-              Welcome to <strong>DevPrep</strong> (accessible at <code>devprep.online</code>). These Terms and Conditions govern your access to and use of DevPrep&apos;s digital platform, coding interview codices, technical model answers, and digital educational materials.
+              Welcome to <strong>DevPrep</strong> (accessible at <code>www.devprep.online</code>). These Terms and Conditions govern your access to and use of DevPrep&apos;s digital platform, coding interview codices, technical model answers, and digital educational materials.
             </p>
             <p>
               By accessing or creating an account on DevPrep, you agree to be bound by these Terms. If you do not agree, you must discontinue use of the platform immediately.

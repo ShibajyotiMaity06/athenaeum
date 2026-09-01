@@ -5,14 +5,14 @@
 ### Q1: What is Django and what are its core design philosophies?
 * A high-level Python web framework enabling rapid development of secure, maintainable sites.
 * Core philosophies: **batteries-included** (ORM, auth, admin, forms shipped), **DRY**, **explicit is better than implicit**, **loose coupling** (apps are pluggable), **security by default** (CSRF/XSS/clickjacking protections on).
-* Follows the MVT pattern (Model-View-Template) — Django's flavor of MVC where templates play the "view" role and views act as controllers.
+* Follows the MVT pattern (Model-View-Template) - Django's flavor of MVC where templates play the "view" role and views act as controllers.
 
 ---
 
 ### Q2: Explain the MVT architecture.
-* **Model**: data layer — Python classes mapping to database tables (`models.Model`), owning validation and relationships.
-* **View**: request/response logic — receives HttpRequest, queries models, returns HttpResponse (function-based or class-based).
-* **Template**: presentation layer — HTML with Django Template Language (`{{ variable }}`, `{% tag %}`).
+* **Model**: data layer - Python classes mapping to database tables (`models.Model`), owning validation and relationships.
+* **View**: request/response logic - receives HttpRequest, queries models, returns HttpResponse (function-based or class-based).
+* **Template**: presentation layer - HTML with Django Template Language (`{{ variable }}`, `{% tag %}`).
 Flow: URL dispatcher routes to view → view pulls data via models → renders template → response. Contrast with MVC: there is no separate controller; the framework's URLconf + view fill that role.
 
 ---
@@ -20,15 +20,15 @@ Flow: URL dispatcher routes to view → view pulls data via models → renders t
 ### Q3: What is the role of settings.py?
 * Central configuration module: `INSTALLED_APPS`, database backends (`DATABASES`), middleware order, templates config, static/media roots, auth validators, i18n/timezone.
 * Environment separation handled by reading env vars (`os.environ.get`) or splitting modules (base/dev/prod).
-* Secrets never hardcoded — pulled from environment.
-* Settings are import-once Python — anything can be configured programmatically, which enables dynamic overrides in tests (`override_settings`).
+* Secrets never hardcoded - pulled from environment.
+* Settings are import-once Python - anything can be configured programmatically, which enables dynamic overrides in tests (`override_settings`).
 
 ---
 
 ### Q4: What are apps in Django?
-* Self-contained modules doing one thing ("blog", "accounts") — each with models/views/admin/tests migrations.
+* Self-contained modules doing one thing ("blog", "accounts") - each with models/views/admin/tests migrations.
 * Registered via `INSTALLED_APPS`; Django discovers models, signals, template tags automatically.
-* Design goal: reusable/pluggable — a well-built app can drop into other projects with minimal coupling.
+* Design goal: reusable/pluggable - a well-built app can drop into other projects with minimal coupling.
 * Rule of thumb: new feature area ⇒ new app, not a bigger monolithic app. Cross-app imports go through services or explicit imports, avoiding circular dependencies.
 
 ---
@@ -41,10 +41,10 @@ Interview tip: mention `inspectdb` (reverse-engineer models from legacy DB) as a
 
 ---
 
-### Q6: Explain migrations — what do makemigrations and migrate do?
+### Q6: Explain migrations - what do makemigrations and migrate do?
 * `makemigrations`: diffs current model definitions against recorded migration files, generating Python change scripts (add field, alter index...).
 * `migrate`: applies pending migrations to the actual database, recording them in `django_migrations`.
-* Migrations are versioned code — reviewable, testable, reversible (`migrate app_name 0004` rolls back).
+* Migrations are versioned code - reviewable, testable, reversible (`migrate app_name 0004` rolls back).
 * Watch-outs: editing applied migrations corrupts history; model changes without migrations drift silently in prod.
 
 ---
@@ -53,7 +53,7 @@ Interview tip: mention `inspectdb` (reverse-engineer models from legacy DB) as a
 ```py
 Book.objects.filter(author__name="Tolstoy", published__year__gte=2000).order_by("-published").first()
 ```
-* Object-Relational Mapper translating Python expressions into SQL — database-portable, injection-safe by construction.
+* Object-Relational Mapper translating Python expressions into SQL - database-portable, injection-safe by construction.
 * QuerySets are lazy: no SQL runs until iteration/slicing/len; chaining composes one query.
 * Field lookups (`__gte`, `__icontains`, `__in`) express WHERE clauses declaratively.
 Trade-off to mention: complex analytical SQL may still warrant `.raw()` or `connection.cursor()` escapes.
@@ -61,10 +61,10 @@ Trade-off to mention: complex analytical SQL may still warrant `.raw()` or `conn
 ---
 
 ### Q8: What is the difference between project and app?
-* **Project**: the whole deployment — settings, root URLconf, one manage.py; a container.
+* **Project**: the whole deployment - settings, root URLconf, one manage.py; a container.
 * **App**: a pluggable submodule implementing a capability (models+views+templates+admin).
 One project hosts many apps; an app ideally belongs to many projects (reusability).
-Common interview trap: "can two projects share an app?" — yes, if it's packaged properly and doesn't depend on project settings beyond configuration.
+Common interview trap: "can two projects share an app?" - yes, if it's packaged properly and doesn't depend on project settings beyond configuration.
 
 ---
 
@@ -75,38 +75,38 @@ urlpatterns = [
 ]
 ```
 * Routes clean URLs to views via `path()`/`re_path()`, capturing typed parameters (`<int:pk>`, `<slug:title>`).
-* `include()` mounts app-level urlconfs — namespacing via `app_name` enables reverse lookup `"books:detail"`.
-* Always use named URLs + `reverse()`/`{% url %}` instead of hardcoding paths — refactors stay safe.
+* `include()` mounts app-level urlconfs - namespacing via `app_name` enables reverse lookup `"books:detail"`.
+* Always use named URLs + `reverse()`/`{% url %}` instead of hardcoding paths - refactors stay safe.
 Ordering matters: first match wins.
 
 ---
 
 ### Q10: What is the Django admin and why is it powerful?
-* Auto-generated CRUD interface built from model metadata — production-quality list filters, search, inlines, permission checks.
+* Auto-generated CRUD interface built from model metadata - production-quality list filters, search, inlines, permission checks.
 * Enabled by registering models in `admin.py` (`@admin.register(Book)`), customizing `ModelAdmin` (list_display, search_fields, raw_id_fields for FK perf).
 * Value: instant internal tooling for ops/content teams without writing UI.
-Caveat: it's an internal tool — not a customer-facing product surface; heavy customization signals you need real views.
+Caveat: it's an internal tool - not a customer-facing product surface; heavy customization signals you need real views.
 
 ### Q11: Compare function-based views (FBVs) and class-based views (CBVs).
-* **FBV**: explicit function `(request, ...) -> response` — everything visible in one place, simplest to reason about and review.
-* **CBV**: classes composing behavior via mixins (`ListView`, `DetailView`, `CreateView`) — less repetition for CRUD, but logic hides across MRO chains.
+* **FBV**: explicit function `(request, ...) -> response` - everything visible in one place, simplest to reason about and review.
+* **CBV**: classes composing behavior via mixins (`ListView`, `DetailView`, `CreateView`) - less repetition for CRUD, but logic hides across MRO chains.
 Guidance: FBV for custom/complex flows; generic CBVs for standard object pages. `django-braces`/`LoginRequiredMixin` handle common needs.
-Interviewers like hearing: "I read CBVs through the MRO before editing" — shows respect for their hidden depth.
+Interviewers like hearing: "I read CBVs through the MRO before editing" - shows respect for their hidden depth.
 
 ---
 
 ### Q12: How do templates work? What are template inheritance and context?
 * DTL renders HTML with variable interpolation `{{ user.name }}` and tags `{% if %} {% for %} {% include %}`.
-* **Inheritance**: base.html defines `{% block content %}`; child templates extend and fill blocks — site chrome written once.
+* **Inheritance**: base.html defines `{% block content %}`; child templates extend and fill blocks - site chrome written once.
 * Context = dict passed by view (`render(request, "x.html", {"books": qs})`); `context_processors` inject globals (request, auth user) into every render.
-* Autoescaping is ON by default — XSS-safe unless you deliberately mark safe (`|safe`, `mark_safe`) which demands sanitized input.
+* Autoescaping is ON by default - XSS-safe unless you deliberately mark safe (`|safe`, `mark_safe`) which demands sanitized input.
 
 ---
 
 ### Q13: What is the difference between render(), redirect() and HttpResponse?
-* `render(request, template, ctx)` — full page render returning 200 with HTML.
-* `HttpResponse("text", status=201)` — raw response construction; JSON via `JsonResponse` (serializes + correct content-type).
-* `redirect(url_or_name)` — returns 302 (or 301 if specified) telling client to fetch elsewhere; use after successful POSTs (PRG pattern).
+* `render(request, template, ctx)` - full page render returning 200 with HTML.
+* `HttpResponse("text", status=201)` - raw response construction; JSON via `JsonResponse` (serializes + correct content-type).
+* `redirect(url_or_name)` - returns 302 (or 301 if specified) telling client to fetch elsewhere; use after successful POSTs (PRG pattern).
 Also know: `HttpResponseNotFound`, `get_object_or_404` shortcut raising Http404 → default 404 page.
 
 ---
@@ -116,17 +116,17 @@ Also know: `HttpResponseNotFound`, `get_object_or_404` shortcut raising Http404 
 book = get_object_or_404(Book, pk=pk, is_active=True)
 ```
 * Fetches one object or raises Http404 → Django renders the 404 handler; saves three lines of try/DoesNotExist per view.
-* Accepts the same lookups as filter — conditions belong in the query, not post-fetch checks.
+* Accepts the same lookups as filter - conditions belong in the query, not post-fetch checks.
 * Variants: `get_list_or_404` for empty-list cases.
 It's the idiomatic guard for detail/edit/delete views; interviewers expect it named immediately.
 
 ---
 
 ### Q15: Explain ForeignKey, OneToOneField and ManyToManyField.
-* **ForeignKey** — many-to-one: many books → one author; DB column author_id on book. `on_delete=CASCADE/PROTECT/SET_NULL` mandatory.
-* **OneToOneField** — unique FK: one user ↔ one profile; reverse access `user.profile`.
-* **ManyToManyField** — join table managed automatically: book.tags; supports `through=` model when the relationship carries data (date added).
-Know reverse accessors (`book.author`, `author.book_set` or related_name) — `related_name` questions appear constantly.
+* **ForeignKey** - many-to-one: many books → one author; DB column author_id on book. `on_delete=CASCADE/PROTECT/SET_NULL` mandatory.
+* **OneToOneField** - unique FK: one user ↔ one profile; reverse access `user.profile`.
+* **ManyToManyField** - join table managed automatically: book.tags; supports `through=` model when the relationship carries data (date added).
+Know reverse accessors (`book.author`, `author.book_set` or related_name) - `related_name` questions appear constantly.
 
 ---
 
@@ -134,17 +134,17 @@ Know reverse accessors (`book.author`, `author.book_set` or related_name) — `r
 * Renames the reverse accessor from the default lowercase_set: `Author.books` instead of `author.book_set.all()`.
 * Mandatory uniqueness: two FKs to same model need distinct names or Django errors.
 * `'+'` disables the reverse relation entirely.
-Readability win: ORM code reads like domain language — `author.books.filter(...)`. Interview follow-up: how to query the reverse relation directly → `Book.objects.filter(author=author)` or `author__in`.
+Readability win: ORM code reads like domain language - `author.books.filter(...)`. Interview follow-up: how to query the reverse relation directly → `Book.objects.filter(author=author)` or `author__in`.
 
 ---
 
 ### Q17: What does on_delete do? Compare CASCADE, PROTECT, SET_NULL.
 * Fires when referenced row is deleted:
-  * **CASCADE** — delete dependents too (posts die with author).
-  * **PROTECT** — raise ProtectedError blocking deletion until children handled (financial records).
-  * **SET_NULL** — nullify FK (requires null=True): orphaned items survive unowned.
+  * **CASCADE** - delete dependents too (posts die with author).
+  * **PROTECT** - raise ProtectedError blocking deletion until children handled (financial records).
+  * **SET_NULL** - nullify FK (requires null=True): orphaned items survive unowned.
   * Also SET_DEFAULT, DO_NOTHING (dangerous unless DB-level triggers manage it).
-Choice expresses DOMAIN intent — deleting a User cascading vs protecting invoices is a business decision, not a technical default.
+Choice expresses DOMAIN intent - deleting a User cascading vs protecting invoices is a business decision, not a technical default.
 
 ---
 
@@ -160,7 +160,7 @@ Hard truth worth stating: merged conflicts touching SAME field still need manual
 * Interactive REPL inside project context: `python manage.py shell` (IPython if installed).
 * Uses: quick ORM experiments, data fixes, inspecting generated SQL (`print(qs.query)`), ad-hoc scripts via `shell -c`.
 * Production hygiene: write one-off fixes as reviewed scripts/management commands instead of live shell surgery; wrap mutations in transactions.
-Mention `shell_plus` (django-extensions) auto-importing models — a beloved quality-of-life tool.
+Mention `shell_plus` (django-extensions) auto-importing models - a beloved quality-of-life tool.
 
 ---
 
@@ -170,7 +170,7 @@ class BookTests(TestCase):
     def setUp(self): self.author = Author.objects.create(name="A")
     def test_str(self): self.assertEqual(str(self.book), "Title")
 ```
-* `manage.py test` discovers `test*.py`; TestCase wraps EACH test in a database transaction rolled back afterward — fast isolation.
+* `manage.py test` discovers `test*.py`; TestCase wraps EACH test in a database transaction rolled back afterward - fast isolation.
 * Fixtures via factories (factory_boy) beat JSON fixtures for maintainability.
 * Extras: `override_settings`, `Client()` for request-level tests, LiveServerTestCase for selenium.
 Zero-config speed is why Django's testing story gets praised in interviews.
@@ -181,21 +181,21 @@ Zero-config speed is why Django's testing story gets praised in interviews.
 * Static assets live per-app `static/` dirs plus `STATICFILES_DIRS`; `collectstatic` gathers them into `STATIC_ROOT` for CDN/nginx serving in production.
 * ManifestStaticFilesStorage adds hashed filenames → safe far-future caching via `{% static %}`.
 * Dev runserver serves them automatically when DEBUG=True.
-Media (user uploads) is a separate pipeline — never mix the two configs.
+Media (user uploads) is a separate pipeline - never mix the two configs.
 
 ---
 
 ### Q22: null=True vs blank=True?
-* `null=True` — DATABASE stores NULL (non-string columns).
-* `blank=True` — VALIDATION allows empty (forms/serializers).
-Strings conventionally use `blank=True` with empty-string default and keep null=False — avoiding two "empty" representations.
+* `null=True` - DATABASE stores NULL (non-string columns).
+* `blank=True` - VALIDATION allows empty (forms/serializers).
+Strings conventionally use `blank=True` with empty-string default and keep null=False - avoiding two "empty" representations.
 Gotcha: unique+null permits multiple NULLs on Postgres; conditional UniqueConstraint solves it cleanly.
 
 ---
 
 ### Q23: Which model Meta options matter most?
-* `ordering` — default sort (needs index backing on big tables).
-* `constraints` — UniqueConstraint/CheckConstraint push integrity to the DB layer where app validation can't be bypassed.
+* `ordering` - default sort (needs index backing on big tables).
+* `constraints` - UniqueConstraint/CheckConstraint push integrity to the DB layer where app validation can't be bypassed.
 * `indexes`, `verbose_name(_plural)`, `default_permissions`.
 Name your constraints explicitly so future migrations can alter them stably.
 
@@ -203,14 +203,14 @@ Name your constraints explicitly so future migrations can alter them stably.
 
 ### Q24: What is get_absolute_url for?
 * Model method returning canonical URL: `reverse("book-detail", args=[self.pk])`.
-* Powers admin "view on site", sitemaps, email links — one object, one address.
+* Powers admin "view on site", sitemaps, email links - one object, one address.
 Keeps URL knowledge on the model instead of scattered hardcoded paths across templates.
 
 ---
 
 ### Q25: How do you write custom template tags/filters?
 * App package `templatetags/mytags.py` with `@register.filter` (value transforms) or `@register.simple_tag` (computed snippets); templates `{% load mytags %}` first.
-* Inclusion tags render subtemplates with computed context — reusable widgets without view coupling.
+* Inclusion tags render subtemplates with computed context - reusable widgets without view coupling.
 Discipline: presentation shaping in filters; business logic stays in Python/views.
 
 ---
@@ -218,7 +218,7 @@ Discipline: presentation shaping in filters; business logic stays in Python/view
 ### Q26: How does CSRF protection work?
 * CsrfViewMiddleware validates a per-session token submitted with unsafe methods: `{% csrf_token %}` in forms or `X-CSRFToken` header for AJAX (read from csrftoken cookie).
 * Failures return 403 before your view runs.
-* `@csrf_exempt` is a smell — legitimate mainly for webhooks that authenticate via signatures instead.
+* `@csrf_exempt` is a smell - legitimate mainly for webhooks that authenticate via signatures instead.
 SameSite cookies layer on top; both together are standard posture.
 
 ---
@@ -233,15 +233,15 @@ Bidirectional order explains nearly every "middleware didn't run" mystery.
 ---
 
 ### Q28: Fixtures vs factories?
-* Fixtures = serialized data files loaded via loaddata — good for reference/seed data (country codes, plans).
-* For tests they rot: opaque ids, merge conflicts, drift from models — factories (factory_boy) generate fresh consistent objects per test instead.
+* Fixtures = serialized data files loaded via loaddata - good for reference/seed data (country codes, plans).
+* For tests they rot: opaque ids, merge conflicts, drift from models - factories (factory_boy) generate fresh consistent objects per test instead.
 Rule of thumb interviewers accept instantly: reference data → fixtures; test data → factories.
 
 ---
 
 ### Q29: What changes when DEBUG=False?
 * Real 404/500 handlers activate; ALLOWED_HOSTS enforced; automatic static serving stops; error logging/emailing engages.
-Classic deploy breakage checklist item — every Django engineer has hit it once.
+Classic deploy breakage checklist item - every Django engineer has hit it once.
 Security: debug pages leak settings/source fragments; DEBUG=True must never ship.
 
 ---
@@ -259,7 +259,7 @@ Security: debug pages leak settings/source fragments; DEBUG=True must never ship
 ### Q32: How does pagination work in Django?
 * `Paginator(qs, per_page)` + page number → `Page` object with items, `has_next/previous`; ListView gets it via `paginate_by`.
 * Template renders windowed page links; invalid pages raise 404 (`allow_empty_first_page` nuance).
-* Large-offset pagination is slow on big tables — keyset/cursor pagination for APIs at scale.
+* Large-offset pagination is slow on big tables - keyset/cursor pagination for APIs at scale.
 
 ---
 
@@ -272,7 +272,7 @@ Classic PRG companion after redirects.
 
 ### Q34: What is the difference between request.GET and request.POST?
 * Both QueryDicts (multi-value aware: `.getlist("tags")`).
-* GET — query params, idempotent reads; POST — form/body data for mutations (CSRF-checked).
+* GET - query params, idempotent reads; POST - form/body data for mutations (CSRF-checked).
 * Body JSON endpoints parse `request.body` manually or use DRF request.data; files live in `request.FILES`.
 
 ---
@@ -290,12 +290,12 @@ Classic PRG companion after redirects.
 reverse("books:detail", kwargs={"pk": 5})
 ```
 Templates use `{% url 'books:detail' book.pk %}`.
-Benefit: URLs defined once in urlconf; renaming paths never breaks references — hardcoded hrefs are review red flags.
+Benefit: URLs defined once in urlconf; renaming paths never breaks references - hardcoded hrefs are review red flags.
 
 ---
 
 ### Q37: What is the login flow's session rotation concern?
-* On privilege change (login), call `login()` which cycles the session key internally — prevents fixation where attacker pre-plants a session id.
+* On privilege change (login), call `login()` which cycles the session key internally - prevents fixation where attacker pre-plants a session id.
 * Manual flows must remember `request.session.cycle_key()` before writing auth state.
 Pair with HttpOnly/SameSite cookies and secure flag in prod.
 
@@ -309,21 +309,21 @@ Pair with HttpOnly/SameSite cookies and secure flag in prod.
 ---
 
 ### Q39: What are management commands good for?
-* Custom CLI tasks living in apps (`management/commands/send_digest.py`) — cron jobs, backfills, maintenance scripts sharing project context (ORM access).
+* Custom CLI tasks living in apps (`management/commands/send_digest.py`) - cron jobs, backfills, maintenance scripts sharing project context (ORM access).
 * Options parsing via argparse add_arguments; output via self.stdout.write.
-Production hygiene: idempotent, batched, logged — they run unattended at 3am.
+Production hygiene: idempotent, batched, logged - they run unattended at 3am.
 
 ---
 
 ### Q40: What is check framework?
-* `manage.py check` runs registered system checks — misconfigurations, model errors, deprecated usage warnings.
+* `manage.py check` runs registered system checks - misconfigurations, model errors, deprecated usage warnings.
 * CI gate plus deploy gate (`manage.py check --deploy` surfacing security settings audit).
 Custom checks register via AppConfig.ready for org-specific invariants (e.g., "every model has Meta.indexes on FK").
 
 ### Q41: What are template context_processors you rely on?
 Built-ins: `request`, `auth` (user/permissions), `messages`, `media/static` resolvers, `tz`.
 Custom example: settings processor exposing SITE_NAME/branding globally so templates never hardcode.
-Cost note: runs on every render — keep cheap, cache heavy lookups.
+Cost note: runs on every render - keep cheap, cache heavy lookups.
 
 ---
 
@@ -335,20 +335,20 @@ Serve uploads from a different domain/origin than the app to neutralize stored-X
 ---
 
 ### Q43: What is the difference between HttpOnly session cookie and csrftoken cookie visibility?
-* sessionid: HttpOnly — JS cannot read it (XSS can't steal sessions).
-* csrftoken: readable by JS by design (double-submit pattern) — its safety comes from same-origin policy, not secrecy.
+* sessionid: HttpOnly - JS cannot read it (XSS can't steal sessions).
+* csrftoken: readable by JS by design (double-submit pattern) - its safety comes from same-origin policy, not secrecy.
 Explaining WHY one is hidden and the other isn't is a favorite junior-filter question.
 
 ---
 
 ### Q44: What is an AppConfig for?
-* Per-app configuration class (`apps.py`) — name, label, verbose name, and crucially `ready()` hook where signal receivers register and imports with side effects belong.
+* Per-app configuration class (`apps.py`) - name, label, verbose name, and crucially `ready()` hook where signal receivers register and imports with side effects belong.
 * Label collisions across apps resolved here too.
 
 ---
 
 ### Q45: What is reverse lazy and when needed?
-* `reverse_lazy("home")` defers URL resolution to call time — required where urlconfs aren't loaded yet (settings like LOGIN_URL, model defaults, declarative CBV attributes).
+* `reverse_lazy("home")` defers URL resolution to call time - required where urlconfs aren't loaded yet (settings like LOGIN_URL, model defaults, declarative CBV attributes).
 
 ---
 
@@ -361,13 +361,13 @@ Explaining WHY one is hidden and the other isn't is a favorite junior-filter que
 ### Q47: How do you handle timezone-aware datetimes?
 * USE_TZ=True stores UTC; aware datetimes everywhere in code (`django.utils.timezone.now()`).
 * Convert for display per-user via `timezone.localtime()` / template filters with active timezone.
-Naive datetime mixing is the classic bug source — name the exception it raises.
+Naive datetime mixing is the classic bug source - name the exception it raises.
 
 ---
 
 ### Q48: What is the difference between save() and update()?
 * instance.save() runs full lifecycle (signals, auto_now fields) per object.
-* queryset.update() issues single UPDATE bypassing signals/save logic — fast bulk changes but skips side effects.
+* queryset.update() issues single UPDATE bypassing signals/save logic - fast bulk changes but skips side effects.
 Choosing wrongly either way is a classic bug story interviewers collect.
 
 ---

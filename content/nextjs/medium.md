@@ -445,7 +445,7 @@ The Next.js client router cache cannot be bypassed easily through standard ancho
 ---
 
 ### Q44: Why do request waterfalls happen in Server Components and how do you eliminate them?
-* Sequential `await`s create artificial latency: each fetch waits for the previous even when independent — TTFB/LCP degrade linearly with chain depth.
+* Sequential `await`s create artificial latency: each fetch waits for the previous even when independent - TTFB/LCP degrade linearly with chain depth.
 ```tsx
 // BAD: ~a+b+c ms
 const user = await getUser();
@@ -461,42 +461,42 @@ const [orders, recs] = await Promise.all([getOrders(id), getRecs(id)]);
 ### Q45: What per-request fetch cache options exist (`cache`, `next.revalidate`, `next.tags`)?
 * `{ cache: 'force-cache' }` (default for GET in stable versions): read/write the Data Cache keyed by URL+options.
 * `{ cache: 'no-store' }`: always fetch fresh, skip both Data Cache and Full Route Cache participation for that segment.
-* `{ next: { revalidate: 60 } }`: time-based ISR semantics for that resource — cached, refreshed after TTL.
+* `{ next: { revalidate: 60 } }`: time-based ISR semantics for that resource - cached, refreshed after TTL.
 * `{ next: { tags: ['products'] } }`: attaches tag for `revalidateTag('products')` on-demand invalidation from Server Actions/Route Handlers.
 * Combinations compose (tag + revalidate); POST requests are never cached. Knowing which knob answers "freshness policy per endpoint" is the interviewer's litmus test for App Router data-layer fluency.
 
-### Q46: Route Handlers vs Server Actions — how do you choose?
+### Q46: Route Handlers vs Server Actions - how do you choose?
 * **Server Actions**: mutations triggered from your own UI (forms, buttons); RPC-style, progressive-enhancement friendly, automatic revalidation integration, no client fetch boilerplate; not meant as public APIs.
 * **Route Handlers**: HTTP endpoints needed by third parties, webhooks (Stripe/GitHub), mobile apps, SSE streams, or anything requiring exact REST semantics, headers, and cache-control.
 * Decision rules: browser-only consumer + mutation → Action; external caller or non-HTML client → Route Handler; idempotent public reads → Route Handler with caching; optimistic-update flows → Actions with `useOptimistic`.
 * Security framing differs too: Actions get built-in CSRF posture + closure privacy; Handlers need explicit auth/CORS/rate-limiting like any API.
 
 ### Q47: What is useReportWebVitals and how do teams act on it?
-* Client hook receiving Core Web Vitals entries (LCP, INP, CLS, FCP, TTFB) with ratings ('good'/'needs-improvement'/'poor') as they finalize — forward them to analytics (GA4, Datadog RUM, custom collector).
+* Client hook receiving Core Web Vitals entries (LCP, INP, CLS, FCP, TTFB) with ratings ('good'/'needs-improvement'/'poor') as they finalize - forward them to analytics (GA4, Datadog RUM, custom collector).
 ```tsx
 'use client';
 import { useReportWebVitals } from 'next/web-vitals';
 useReportWebVitals(metric => navigator.sendBeacon('/vitals', JSON.stringify(metric)));
 ```
 * Place once in a top-level client component; pairs with route change reporting for per-page scorecards.
-* Operational value: ties field data to deploys — regressions in INP after shipping a heavy client bundle surface immediately; combine with `web-vitals` attribution build for debugging culprits.
+* Operational value: ties field data to deploys - regressions in INP after shipping a heavy client bundle surface immediately; combine with `web-vitals` attribution build for debugging culprits.
 * Interview angle: know why sendBeacon (fire-and-forget during unload) beats fetch here.
 
 ### Q48: How do you customize image loading (loaders, remotePatterns, priorities)?
-* `remotePatterns` in next.config whitelists external origins with protocol/hostname/port/pathname precision — safer replacement for the old wildcard `domains`.
+* `remotePatterns` in next.config whitelists external origins with protocol/hostname/port/pathname precision - safer replacement for the old wildcard `domains`.
 * Custom `loader` functions translate src→URL for third-party CDNs (Cloudinary/imgix/Akamai) letting `next/image` keep its layout/CLS guarantees while resizing happens remotely.
-* `priority` prop preloads LCP candidates (hero banners) — injects preload link, disables lazy-load; pair with `sizes` so the browser picks correct candidate widths.
+* `priority` prop preloads LCP candidates (hero banners) - injects preload link, disables lazy-load; pair with `sizes` so the browser picks correct candidate widths.
 * `unoptimized` opts individual images or globally out of the optimizer (static export, already-optimized sources); `deviceSizes/imageSizes` tune the generated srcset ladder.
 
 ### Q49: Describe a production-grade JWT auth flow with httpOnly cookies in Next.js.
-* Login (Route Handler or Server Action): verify credentials → sign short-lived access JWT (+ refresh token) → set cookies `httpOnly; Secure; SameSite=Lax; Path=/` — inaccessible to XSS-running JS.
+* Login (Route Handler or Server Action): verify credentials → sign short-lived access JWT (+ refresh token) → set cookies `httpOnly; Secure; SameSite=Lax; Path=/` - inaccessible to XSS-running JS.
 * Requests carry identity automatically; server components/actions read via `cookies()`; middleware performs cheap expiry checks and redirects unauthenticated users for protected route groups.
 * Refresh strategy: silent rotation endpoint exchanging refresh token (rotation detection = theft signal), or backend-for-frontend sessions storing revocable state server-side.
 * Logout clears cookies + revokes server session; consider CSRF tokens for cookie-authenticated mutations outside SameSite protection.
 * Why not localStorage: any XSS exfiltrates tokens; httpOnly shrinks blast radius. Expect follow-ups on secret management, clock skew, and role claims placement.
 
 ### Q50: How do you implement i18n in the App Router?
-* Built-in Pages Router i18n routing (`i18n` config, locale-prefixed paths) does NOT apply to the App Router — teams implement strategies directly:
+* Built-in Pages Router i18n routing (`i18n` config, locale-prefixed paths) does NOT apply to the App Router - teams implement strategies directly:
   1. **Segment-based locales**: `app/[lang]/layout.tsx` validating locale param, loading dictionaries server-side, setting `lang` attribute; static generation via generateStaticParams over locales.
   2. **Middleware negotiation**: detect Accept-Language/cookie, redirect to prefixed path (edge-fast, no flash).
   3. **Libraries**: next-intl (mature App Router story: server+client message contexts, formatting), next-i18next (Pages-oriented), LinguiJS.

@@ -13,13 +13,27 @@ function extractDomain(url) {
   }
 }
 
+export function removeBigDashes(text) {
+  if (!text || typeof text !== "string") return text;
+  let str = text;
+  str = str.replace(/(^|\n)\s*[—–]\s*/g, "$1- ");
+  str = str.replace(/\s*[—–]\s*/g, " - ");
+  str = str.replace(/(\w+)\s*--\s*(\w+)/g, "$1 - $2");
+  str = str.replace(/([),."`'])\s*--\s*(\w+)/g, "$1 - $2");
+  str = str.replace(/(\w+)\s*--\s*([("`'])/g, "$1 - $2");
+  str = str.replace(/\s+--\s+/g, " - ");
+  str = str.replace(/[ \t]{2,}/g, " ");
+  return str;
+}
+
 export function cleanMarkdownAsterisks(str) {
   if (!str || typeof str !== "string") return str;
-  return str
+  let cleaned = str
     .replace(/\*\*\*(.*?)\*\*\*/g, "$1")
     .replace(/\*\*(.*?)\*\*/g, "$1")
     .replace(/(^|[^\w*])\*([^*\n]+?)\*([^\w*]|$)/g, "$1$2$3")
     .replace(/\*\*/g, "");
+  return removeBigDashes(cleaned);
 }
 
 export function normalizeTechSlug(rawTech = "") {

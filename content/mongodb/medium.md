@@ -237,47 +237,47 @@
 ### Q44: Explain the ESR rule for designing compound indexes.
 * Order compound index keys by: **E**quality fields first (most selective equality matches), then **S**ort fields (matching sort order/directions), then **R**ange fields last.
 * Rationale: equality predicates pin contiguous index prefixes; placing sort keys next lets the walker return rows already ordered (no blocking SORT stage); range keys after sort still allow scanning within each sorted group.
-* Counter-example that interviewers love: `{status: 1, created_at: -1}` vs `{created_at: -1, status: 1}` for `find({status:'open'}).sort({created_at:-1})` — only ESR ordering avoids in-memory sort.
+* Counter-example that interviewers love: `{status: 1, created_at: -1}` vs `{created_at: -1, status: 1}` for `find({status:'open'}).sort({created_at:-1})` - only ESR ordering avoids in-memory sort.
 * When both a range and a sort exist and both can't be served perfectly, measure: sometimes favoring sort avoids the 100MB sort-limit crash; sometimes favoring selectivity wins overall. Use explain to verify IXSCAN + no SORT.
 
 ### Q45: What is index intersection? Why can't MongoDB combine arbitrary indexes?
 * The planner can sometimes intersect multiple single-field indexes (AND of their key sets) using AND_SORTED/AND_HASH stages, or union them for $or.
-* Limitations: intersection cannot leverage sort orders, usually loses against one good compound index, and often costs more than COLLSCAN — the planner treats it as fallback, not strategy.
+* Limitations: intersection cannot leverage sort orders, usually loses against one good compound index, and often costs more than COLLSCAN - the planner treats it as fallback, not strategy.
 * Unlike SQL Server-style engines, MongoDB won't merge arbitrary multi-key plans dynamically; the practical guidance is: design purpose-built compound indexes (ESR) instead of hoping intersections save you.
 * Diagnose via explain: seeing `IXSCAN` repeated inside an `AND_SORTED` stage signals your schema lacks the right composite index.
 
 ### Q46: What does hint() do and when should you force an index?
 * `hint()` overrides planner choice, forcing a named/partial index spec or `$natural` (collection order).
 * Legit uses: emergency mitigation during a planner regression while the real fix ships; benchmarking alternatives deterministically; exploiting tiny hot indexes where the planner's stats misjudge; stable plans for latency-critical endpoints.
-* Dangers: hard-coding hints freezes schema evolution (index renames break prod), blocks future better plans, and hides statistics problems — treat hints as tactical medicine with an expiry note in the code review.
+* Dangers: hard-coding hints freezes schema evolution (index renames break prod), blocks future better plans, and hides statistics problems - treat hints as tactical medicine with an expiry note in the code review.
 * Related: `planCacheClear` to flush bad cached plans after stats/index changes.
 
 ### Q47: What are wildcard indexes? Where do they shine and fail?
 * `createIndex({ "$**": 1 })` (or subdocument paths like `attributes.$**`) automatically indexes every scalar field under the target path, including keys inside dynamic subdocuments and array elements (multikey semantics apply).
-* Perfect for truly schemaless payloads: product attributes, CMS metadata, form-builder answers — queries like `{'attributes.color': 'red'}` get IXSCAN without pre-declaring hundreds of indexes.
-* Costs & gaps: not usable as the sole support for sorts (except limited cases), cannot be unique/sparse/TTL in full generality, larger index footprint than targeted indexes, and equality-only strength — heavy analytical paths still deserve real compound indexes.
+* Perfect for truly schemaless payloads: product attributes, CMS metadata, form-builder answers - queries like `{'attributes.color': 'red'}` get IXSCAN without pre-declaring hundreds of indexes.
+* Costs & gaps: not usable as the sole support for sorts (except limited cases), cannot be unique/sparse/TTL in full generality, larger index footprint than targeted indexes, and equality-only strength - heavy analytical paths still deserve real compound indexes.
 * Wildcard projections let you restrict coverage to specific subtree paths to control bloat.
 
-### Q48: Ordered vs unordered bulkWrite — how do they differ under errors?
+### Q48: Ordered vs unordered bulkWrite - how do they differ under errors?
 * **Ordered** executes sequentially, stopping at the first error (default). Guarantees order-dependent semantics like upsert-then-update chains; a duplicate-key at item 5 leaves items 6+ unexecuted.
-* **Unordered** parallelizes/dispatches freely and attempts everything, collecting all errors into a `BulkWriteError` summary — dramatically faster for independent ops (initial loads) and resilient to individual duplicates.
-* Both remain atomic per-operation only — there's no cross-operation transaction unless wrapped explicitly in a session transaction.
+* **Unordered** parallelizes/dispatches freely and attempts everything, collecting all errors into a `BulkWriteError` summary - dramatically faster for independent ops (initial loads) and resilient to individual duplicates.
+* Both remain atomic per-operation only - there's no cross-operation transaction unless wrapped explicitly in a session transaction.
 * Interview nuance: uniqueness violations during unordered initial sync are typical (idempotent re-runs), so pair unordered bulk with upserts for replayable migrations.
 
 ### Q49: Explain the schema versioning pattern for zero-downtime document migration.
 * Add a `schema_version` field to documents; readers branch on version to normalize old shapes on the fly; writers emit the newest version.
-* Backfill migrates old documents lazily (on write/read) or via throttled background jobs — avoiding giant rewrite waves, index churn, and lock pressure.
+* Backfill migrates old documents lazily (on write/read) or via throttled background jobs - avoiding giant rewrite waves, index churn, and lock pressure.
 * Combined with dual-read logic this enables rolling deploys: old code reads v1 fine, new code tolerates both, and cleanup drops v1 branches after telemetry shows zero old-version traffic.
 * Contrast with relational expand-contract: Mongo's flexible schema makes the "expand" phase free, so the discipline moves into application-layer compatibility code and observability of version mix.
 
 ### Q50: Name common MongoDB schema design patterns and what problems they solve.
-* **Subset pattern**: keep hot recent comments embedded, archive the tail in a side collection — bounded document size with fast reads.
+* **Subset pattern**: keep hot recent comments embedded, archive the tail in a side collection - bounded document size with fast reads.
 * **Extended Reference**: duplicate a few frequently joined fields (author name) into child docs to skip $lookup, accepting controlled staleness.
-* **Computed pattern**: persist derived values (order totals, counters) updated on write — trades write cost for read speed.
-* **Bucket pattern**: time-series/IoT readings grouped per hour/day into one document — fewer documents, smaller indexes.
+* **Computed pattern**: persist derived values (order totals, counters) updated on write - trades write cost for read speed.
+* **Bucket pattern**: time-series/IoT readings grouped per hour/day into one document - fewer documents, smaller indexes.
 * **Outlier pattern**: flag pathological entities (celebrity followers) for special handling instead of letting them distort average access patterns.
-* **Polymorphic pattern**: one collection, discriminated shapes via `type` field — leverages Mongo's flexible schema deliberately.
-* Expect follow-up: each pattern trades normalization purity for measured access-path efficiency — name the workload that motivates it.
+* **Polymorphic pattern**: one collection, discriminated shapes via `type` field - leverages Mongo's flexible schema deliberately.
+* Expect follow-up: each pattern trades normalization purity for measured access-path efficiency - name the workload that motivates it.
 
 ---
 

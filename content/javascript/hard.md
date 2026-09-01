@@ -229,49 +229,49 @@
 ### Q44: Explain TypedArrays, ArrayBuffer views, and endianness handling.
 *   An `ArrayBuffer` is raw fixed-length binary memory; **views** interpret it: typed arrays (`Int8Array`, `Uint32Array`, `Float64Array`) give indexed access, `DataView` gives explicit-offset reads/writes.
 *   Typed arrays use the *platform's* byte order (virtually always little-endian) for their accessors; multi-byte values written via one view may misread through another without conversion.
-*   `DataView` methods take an explicit littleEndian flag (`dv.getUint32(0, true)`) — the only safe way to parse network/file formats that mandate big-endian (e.g., PNG, TCP headers).
-*   Advanced notes: `SharedArrayBuffer` enables cross-worker shared memory (requires COOP/COEP headers); buffers can be **detached** (transfer via `postMessage`/`structuredClone`) leaving zero-length husks — check `byteLength`; alignment matters for performance (misaligned Float64 reads deopt fast paths).
+*   `DataView` methods take an explicit littleEndian flag (`dv.getUint32(0, true)`) - the only safe way to parse network/file formats that mandate big-endian (e.g., PNG, TCP headers).
+*   Advanced notes: `SharedArrayBuffer` enables cross-worker shared memory (requires COOP/COEP headers); buffers can be **detached** (transfer via `postMessage`/`structuredClone`) leaving zero-length husks - check `byteLength`; alignment matters for performance (misaligned Float64 reads deopt fast paths).
 
 ### Q45: How does backpressure work in Web Streams? Explain queuing strategies.
 *   Producers can outpace consumers; **backpressure** communicates downstream slowness upstream so memory stays bounded.
-*   Each `ReadableStream` carries a `queuing strategy` (`highWaterMark`): chunks count against `desiredSize`. When internal queue length exceeds HWM, `desiredSize` goes negative and the source's `pull()` stops being called — pull-style sources simply pause.
-*   `pipeThrough`/`pipeTo` propagate desire through transforms: a slow `WritableStream` (its own HWM via `write()` promise resolution) stalls the transform, which stalls the reader, which pauses the producer — end-to-end pressure without buffering explosions.
+*   Each `ReadableStream` carries a `queuing strategy` (`highWaterMark`): chunks count against `desiredSize`. When internal queue length exceeds HWM, `desiredSize` goes negative and the source's `pull()` stops being called - pull-style sources simply pause.
+*   `pipeThrough`/`pipeTo` propagate desire through transforms: a slow `WritableStream` (its own HWM via `write()` promise resolution) stalls the transform, which stalls the reader, which pauses the producer - end-to-end pressure without buffering explosions.
 *   Push-style sources (sockets, events) must observe cancellation/backpressure manually (pause socket on `pull` absence). `CountQueuingStrategy` vs `ByteLengthQueuingStrategy` choose counting units: chunks vs accumulated bytes (correct for variable-size binary streams).
 
 ### Q46: What are Proxy invariant violations? Why do certain traps throw?
-*   Proxy traps must uphold the invariants of JS object semantics; breaking them throws `TypeError` even if your trap code never throws — the engine audits results against the target's truth.
+*   Proxy traps must uphold the invariants of JS object semantics; breaking them throws `TypeError` even if your trap code never throws - the engine audits results against the target's truth.
 *   Examples:
     1.  `get` returning a different value for a non-configurable, non-writable target property (value is frozen by spec).
     2.  `has`/`isExtensible`/`getOwnPropertyDescriptor` reporting existence/configurability inconsistently with the target.
     3.  `ownKeys` including keys not present on a non-extensible target, or omitting required ones.
     4.  `defineProperty` succeeding where the target would reject (non-extensible target).
     5.  `setPrototypeOf` violating non-extensible prototype locking.
-*   Consequence for library authors (reactive frameworks): proxies over frozen/sealed objects lose power — traps throw instead of silently diverging; hence Vue 3 requires non-frozen reactive targets, and `Object.freeze(state)` becomes an escape hatch from reactivity.
+*   Consequence for library authors (reactive frameworks): proxies over frozen/sealed objects lose power - traps throw instead of silently diverging; hence Vue 3 requires non-frozen reactive targets, and `Object.freeze(state)` becomes an escape hatch from reactivity.
 
 ---
 
 ### Q47: Explain Atomics.wait and Atomics.notify for cross-thread coordination.
-*   `Atomics.wait(i32Array, index, expectedValue, timeout)` puts the current worker thread to **sleep** until another thread stores a different value at that index and calls `Atomics.notify`, or until timeout — a futex-like primitive ported from OS kernels.
+*   `Atomics.wait(i32Array, index, expectedValue, timeout)` puts the current worker thread to **sleep** until another thread stores a different value at that index and calls `Atomics.notify`, or until timeout - a futex-like primitive ported from OS kernels.
 *   Pattern: shared int acts as a state flag; consumers spin-wait via wait() (zero CPU vs polling loops), producers write with `Atomics.store` then wake N sleepers with notify(index, count).
-*   Constraints: only allowed on `SharedArrayBuffer` views; **cannot run on the main thread** (browsers forbid blocking UI — throws), so main-thread coordination uses `Atomics.pause`-style spinning or async polling with `postMessage` fallbacks.
-*   Combined with `Atomics.compareExchange` you build mutexes, condition variables, semaphores, and lock-free queues entirely over shared memory — the foundation of threaded Wasm and SharedArrayBuffer worker pools.
+*   Constraints: only allowed on `SharedArrayBuffer` views; **cannot run on the main thread** (browsers forbid blocking UI - throws), so main-thread coordination uses `Atomics.pause`-style spinning or async polling with `postMessage` fallbacks.
+*   Combined with `Atomics.compareExchange` you build mutexes, condition variables, semaphores, and lock-free queues entirely over shared memory - the foundation of threaded Wasm and SharedArrayBuffer worker pools.
 
 ### Q48: What are scheduler.yield(), scheduler.postTask(), and isInputPending()?
 *   The Prioritized Task Scheduling API replaces setTimeout(0)-style yielding with real priorities: `scheduler.postTask(callback, { priority: 'user-blocking' | 'user-visible' | 'background' })` plus AbortSignal support for cancellation.
-*   `await scheduler.yield()` lets the event loop process higher-priority work mid-task, then resumes the continuation — crucial for long list rendering without starving input; unlike setTimeout it preserves priority ordering and doesn't dump work into the macrotask free-for-all.
+*   `await scheduler.yield()` lets the event loop process higher-priority work mid-task, then resumes the continuation - crucial for long list rendering without starving input; unlike setTimeout it preserves priority ordering and doesn't dump work into the macrotask free-for-all.
 *   `navigator.isInputPending()` lets eager loop processors check whether user input is queued, breaking work early to keep INP low.
-*   Interview framing: these APIs operationalize Core Web Vitals work — chunking tasks while keeping input latency sub-100ms, something developers previously approximated with requestIdleCallback hacks and manual time-boxing.
+*   Interview framing: these APIs operationalize Core Web Vitals work - chunking tasks while keeping input latency sub-100ms, something developers previously approximated with requestIdleCallback hacks and manual time-boxing.
 
 ### Q49: Explain import maps and module federation.
 *   **Import maps** (native browser feature): JSON `<script type="importmap">` mapping bare specifiers ('lodash-es') or paths to URLs, letting browsers resolve npm-style imports without bundlers; supports scopes for per-dependency version resolution and multiple versions coexisting.
 *   Use cases: CDN-driven no-build apps, gradual micro-frontends, polyfill pinning; limitations: map must load before any module fetch (blocking), no integrity-per-entry granularity beyond standard attributes.
-*   **Module Federation** (Webpack 5/Rspack): runtime sharing of independently deployed bundles — a host consumes remote containers' exposed modules at execution time, sharing singletons (React!) via negotiated shared dependency versions.
+*   **Module Federation** (Webpack 5/Rspack): runtime sharing of independently deployed bundles - a host consumes remote containers' exposed modules at execution time, sharing singletons (React!) via negotiated shared dependency versions.
 *   Federation solves team-scale deployment independence (each micro-frontend ships on its own cadence) at the cost of version-skew risk, runtime failure modes across network boundaries, and harder testing matrices.
 
 ### Q50: Why are timers clamped in browsers? Explain side-channel mitigation timing.
-*   Browsers clamp `setTimeout/setInterval` delays: minimum ~4ms after 5 nested levels, throttled to 1Hz+ in background tabs, and heavily clamped under battery saver or intensive throttling — protecting CPU/battery and making cross-site timing attacks noisy.
+*   Browsers clamp `setTimeout/setInterval` delays: minimum ~4ms after 5 nested levels, throttled to 1Hz+ in background tabs, and heavily clamped under battery saver or intensive throttling - protecting CPU/battery and making cross-site timing attacks noisy.
 *   **Side channels**: high-resolution timers (`performance.now()` nominally microsecond-precise) enabled cache-timing attacks (Spectre-class probes measuring memory-access latencies to leak cross-origin data).
-*   Mitigations shipped: precision reduction (coarsening to ~100µs or 1ms without cross-origin isolation), Site Isolation processes, and requiring COOP/COEP headers before granting `SharedArrayBuffer`/full-resolution timers — the reason those features now demand isolation.
+*   Mitigations shipped: precision reduction (coarsening to ~100µs or 1ms without cross-origin isolation), Site Isolation processes, and requiring COOP/COEP headers before granting `SharedArrayBuffer`/full-resolution timers - the reason those features now demand isolation.
 *   Practical consequences: animation/game loops must not rely on precise short timeouts (use rAF); benchmarks need statistical repetition; security reviews treat timing as a real exfiltration channel even in "pure" JS.
 
 ---

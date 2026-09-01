@@ -213,21 +213,21 @@
 ---
 
 ### Q44: How does CommonJS module caching work? What happens with circular imports?
-* Every file evaluates exactly once; subsequent requires return the cached `module.exports` — effectively making modules singletons per process.
-* Circular A↔B: whichever loads first starts evaluating; when its require reaches the other, that module begins executing and, if it requires back, receives the **partial exports** object (whatever was assigned so far) — not an error, just incomplete data.
+* Every file evaluates exactly once; subsequent requires return the cached `module.exports` - effectively making modules singletons per process.
+* Circular A↔B: whichever loads first starts evaluating; when its require reaches the other, that module begins executing and, if it requires back, receives the **partial exports** object (whatever was assigned so far) - not an error, just incomplete data.
 * Symptom: importing a function works (hoisted assignments) while top-level constants come back undefined depending on entry order.
-* Fixes: break cycle via a third shared module, move require calls inside functions (deferred), or restructure dependencies outright. ES Modules behave differently (live bindings + TDZ) — comparing both shows depth.
+* Fixes: break cycle via a third shared module, move require calls inside functions (deferred), or restructure dependencies outright. ES Modules behave differently (live bindings + TDZ) - comparing both shows depth.
 
 ### Q45: Why does stream.pipeline() exist when .pipe() already chains streams?
-* `pipe()` forwards data but **does not reliably propagate errors or completion**: a failing readable leaves the writer hanging; premature writer close doesn't destroy the reader — leaks and zombie processes follow.
+* `pipe()` forwards data but **does not reliably propagate errors or completion**: a failing readable leaves the writer hanging; premature writer close doesn't destroy the reader - leaks and zombie processes follow.
 * `pipeline(...streams, cb)` wires every pair bidirectionally: any stage erroring destroys all stages and invokes the callback once with the first error; promises variant (`promises.pipeline`) integrates with async/await.
-* It also handles stream destruction ordering correctly on abort signals (`{ signal }` supported) — essential for request-timeouts cancelling multi-stage transforms.
+* It also handles stream destruction ordering correctly on abort signals (`{ signal }` supported) - essential for request-timeouts cancelling multi-stage transforms.
 * Rule: never ship `pipe()` in new code paths; mention `Stream.promises.pipeline` plus `finished()` for observing standalone stream lifecycles.
 
 ### Q46: Why is database connection pooling critical in Node, and how do you size pools?
-* Opening a DB connection costs TCP+auth+TLS round trips (~ms each) — per-request creation collapses throughput and exhausts server-side connection caps.
+* Opening a DB connection costs TCP+auth+TLS round trips (~ms each) - per-request creation collapses throughput and exhausts server-side connection caps.
 * Pools maintain warm sockets: checkout/release around queries, queue waiters when exhausted, health-check idle connections, and cap concurrency protecting the database (a pool is also a natural rate limiter).
-* Sizing math: roughly `(cores of DB server × 2–4)` total across the fleet, divided by instance count — more is NOT faster; oversized pools cause context-switch thrash and lock contention at the DB (Postgres famously degrades past ~2-4x cores active).
+* Sizing math: roughly `(cores of DB server × 2–4)` total across the fleet, divided by instance count - more is NOT faster; oversized pools cause context-switch thrash and lock contention at the DB (Postgres famously degrades past ~2-4x cores active).
 * Operational details: acquire timeouts with clear errors, statement_timeout enforcement, pool metrics exported (waiting count, max used), and draining on graceful shutdown.
 
 ### Q47: Describe the Node.js Chrome DevTools debugging workflow (--inspect).
@@ -246,14 +246,14 @@
   5. Least-privilege CI tokens (OIDC instead of long-lived NPM_TOKEN), 2FA on publisher accounts.
 
 ### Q49: What changed with native fetch in Node (undici)? What is the global dispatcher?
-* Node ≥18 ships WHATWG `fetch` globally, implemented atop **undici** — a faster, spec-compliant HTTP/1.1 client replacing the old `http.Agent` world (keep-alive by default, HTTP pipelining options, better streaming).
-* Tuning happens via `setGlobalDispatcher(new Agent({ connections, pipelining, keepAliveTimeout, headersTimeout, bodyTimeout }))` — the lever for socket exhaustion fixes that previously meant hacking http.globalAgent.
+* Node ≥18 ships WHATWG `fetch` globally, implemented atop **undici** - a faster, spec-compliant HTTP/1.1 client replacing the old `http.Agent` world (keep-alive by default, HTTP pipelining options, better streaming).
+* Tuning happens via `setGlobalDispatcher(new Agent({ connections, pipelining, keepAliveTimeout, headersTimeout, bodyTimeout }))` - the lever for socket exhaustion fixes that previously meant hacking http.globalAgent.
 * Differences from browsers: no CORS, cookies opt-in, response bodies are web streams; `AbortSignal` fully honored including timeouts via `AbortSignal.timeout()`.
 * Gotchas: undici ignores system proxy env vars by default (ProxyAgent needed), DNS caching differs from cURL expectations, and mixing legacy axios(http)-stack clients means two connection pools to reason about.
 
 ### Q50: How should you size worker/thread/process pools using os.availableParallelism()?
-* `os.availableParallelism()` (modern replacement for `os.cpus().length`, respecting cgroup limits) gives usable core count inside containers — cpus().length lies on k8s pods with CPU quotas, causing massive oversubscription.
-* Pool sizing heuristics: CPU-bound pools ≈ parallelism − 1 (leave headroom for the event loop); I/O-bound threadpool tasks stay bounded by libuv's UV_THREADPOOL_SIZE (default 4 — raise only when profiling shows getaddrinfo/fs/crypto waits queuing); external service pools sized by downstream capacity (DB formula from pooling question).
+* `os.availableParallelism()` (modern replacement for `os.cpus().length`, respecting cgroup limits) gives usable core count inside containers - cpus().length lies on k8s pods with CPU quotas, causing massive oversubscription.
+* Pool sizing heuristics: CPU-bound pools ≈ parallelism − 1 (leave headroom for the event loop); I/O-bound threadpool tasks stay bounded by libuv's UV_THREADPOOL_SIZE (default 4 - raise only when profiling shows getaddrinfo/fs/crypto waits queuing); external service pools sized by downstream capacity (DB formula from pooling question).
 * Combine with queue-depth metrics: target utilization ~70%, back-pressure via bounded queues, shed load beyond SLO rather than growing queues unboundedly.
 
 ---

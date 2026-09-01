@@ -439,7 +439,7 @@ Autonomous AI agents interact with backend APIs programmatically without human o
 
 *   **Page & Architecture Summary:**
     *   *Problem Statement:* How to design backend APIs that prevent AI agent hallucinations, enforce strict parameter safety, and minimize execution blast-radius during automated multi-step workflows.
-    *   *Core Concept:* Agent Experience (AX) — Strong JSON Schema contracts, dry-run confirmation modes, and capability-based tokens.
+    *   *Core Concept:* Agent Experience (AX) - Strong JSON Schema contracts, dry-run confirmation modes, and capability-based tokens.
 *   **Key Design Decisions:**
     1.  *Strict Schema Validation & Zero Tolerance for Ambiguity:* Define endpoints using OpenAPI 3.1 with `additionalProperties: false`. Enforce strict typed enums and numeric ranges so the gateway rejects malformed LLM tool arguments immediately.
     2.  *Two-Phase Mutation & Dry-Run Modes:* Provide `dry_run=true` or preview flags on destructive actions (e.g., deleting servers, making transfers) allowing the agent to inspect the simulated outcome before final execution.

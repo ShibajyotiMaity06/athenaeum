@@ -235,24 +235,24 @@
 ### Q44: Contrast copy-on-write vs delta/update-in-place page storage organizations.
 * **Update-in-place (heap/B+ tree)**: modifications rewrite pages in place; the WAL log protects durability, and old versions vanish immediately (MVCC needs separate version store or undo logs).
 * **Copy-on-write (CoW)**: writers clone the affected page, modify the copy, and publish it by updating a pointer (e.g., LMDB, Bw-tree style CAS on page mappings, ZFS blocks). Readers traverse immutable snapshots lock-free.
-* **Append-only / LSM flavor**: writes go to new files/memtables; compaction merges later — great write throughput, read amplification from merging levels.
+* **Append-only / LSM flavor**: writes go to new files/memtables; compaction merges later - great write throughput, read amplification from merging levels.
 * **Trade-off matrix**: CoW = cheap snapshots, crash-consistent atomically, but amplifies small random writes (whole-page churn + GC of stale pages); in-place = compact stable storage, but contended latches and torn-page recovery complexity.
 
 ### Q45: How does PostgreSQL Serializable Snapshot Isolation (SSI) detect conflicts at runtime?
 * SSI (PostgreSQL ≥ 9.1) achieves true serializability on top of MVCC *without* read locks, by detecting **dangerous structures**: two consecutive rw-antidependencies forming a cycle (T1 reads what T2 wrote, T2 reads what T3 wrote, T3 writes what T1 read ⇒ potential pivot cycle).
-* Mechanics: readers take **SIREAD locks** (predicate-level, coarse granularity — page/table level, not row-exact) recording "I read this data". Writers check whether any concurrent transaction holds SIREAD on rows they modify.
-* On detection, the engine **aborts one participant** with serialization failure (`could not serialize access`) — the application must retry. False positives are possible (conservative), which is the price for optimistic serializability.
-* Interview angle: contrast with SQL Server's range-locking serializable — SSI trades aborts for concurrency; long read-only transactions increase conflict surface.
+* Mechanics: readers take **SIREAD locks** (predicate-level, coarse granularity - page/table level, not row-exact) recording "I read this data". Writers check whether any concurrent transaction holds SIREAD on rows they modify.
+* On detection, the engine **aborts one participant** with serialization failure (`could not serialize access`) - the application must retry. False positives are possible (conservative), which is the price for optimistic serializability.
+* Interview angle: contrast with SQL Server's range-locking serializable - SSI trades aborts for concurrency; long read-only transactions increase conflict surface.
 
 ### Q46: Explain vectorized (batch-wise) execution and late materialization in columnar engines.
-* **Vectorized execution**: operators process a *vector* (e.g., 1024 values) per invocation instead of one tuple at a time (classic Volcano iterator). Benefits: amortizes virtual-call overhead, keeps values in CPU caches, enables SIMD (AVX) filters/aggregates — often 10x+ analytic speedups (DuckDB, ClickHouse, SQL Server batch mode).
+* **Vectorized execution**: operators process a *vector* (e.g., 1024 values) per invocation instead of one tuple at a time (classic Volcano iterator). Benefits: amortizes virtual-call overhead, keeps values in CPU caches, enables SIMD (AVX) filters/aggregates - often 10x+ analytic speedups (DuckDB, ClickHouse, SQL Server batch mode).
 * **Late materialization**: in column stores, selection/projection operate on compact column slices returning row IDs; the wide row is assembled from individual columns *only at the end*, and only for surviving rows. Early filters therefore avoid stitching entire rows that get discarded.
 * Together they explain why analytical engines outperform row-store OLTP engines on scans even with identical I/O: less interpretation overhead + minimal tuple construction.
 
 ### Q47: Explain the Saga pattern and compensating transactions for distributed database workflows.
 * A **saga** decomposes a distributed business transaction into a sequence of local ACID transactions across services, each publishing its completion; failures trigger **compensating transactions** that semantically undo earlier steps (refund payment, release seat, restore stock).
 * **Choreography**: services react to each other's events (loose coupling, flow hidden). **Orchestration**: a central coordinator drives steps explicitly (visible flow, central failure domain).
-* Guarantees differ from 2PC: sagas are *eventually consistent* and expose intermediate states to concurrent readers — design compensations to be idempotent and retry-safe.
+* Guarantees differ from 2PC: sagas are *eventually consistent* and expose intermediate states to concurrent readers - design compensations to be idempotent and retry-safe.
 * Pitfalls: compensation itself failing (needs retry queues/dead-letter handling), lost-update between saga steps requiring semantic locks (pending/reserved status columns), and ordering constraints (cannot ship before payment confirmed).
 
 ### Q48: Explain quorum-based consistency in replicated databases (R+W>N).
@@ -264,12 +264,12 @@
 ### Q49: What is Change Data Capture (CDC)? Compare log-based vs trigger/query-based capture.
 * **CDC** streams every committed row mutation as an event, letting downstream systems (caches, search indexes, warehouses, sagas) mirror state asynchronously with low latency.
 * **Log-based (preferred)**: tail the engine's redo/binlog/WAL (Debezium + Kafka, Oracle GoldenGate). Near-zero production impact, ordered, transactionally accurate, includes DDL metadata. Requires log retention and format/tooling expertise.
-* **Trigger-based**: audit tables filled by triggers — easy but doubles write cost and adds latency inside transactions.
-* **Query/timestamp-based**: poll `updated_at` columns — simplest, but misses deletes, has polling latency, and needs reliable clocks/indexes.
+* **Trigger-based**: audit tables filled by triggers - easy but doubles write cost and adds latency inside transactions.
+* **Query/timestamp-based**: poll `updated_at` columns - simplest, but misses deletes, has polling latency, and needs reliable clocks/indexes.
 * Hard parts: schema evolution mid-stream, exactly-once delivery into sinks (at-least-once + idempotent upserts), initial snapshot coordination, and PII scrubbing before events leave the trust boundary.
 
 ### Q50: Describe the expand-contract pattern for zero-downtime schema migrations.
-* **Expand**: deploy additive, backward-compatible changes — add nullable column/new table/backfill in batches, dual-write old+new fields, ship code that reads old and optionally writes new.
+* **Expand**: deploy additive, backward-compatible changes - add nullable column/new table/backfill in batches, dual-write old+new fields, ship code that reads old and optionally writes new.
 * **Migrate**: backfill historical rows online (batched updates respecting lock budgets), verify parity with checksums, cut reads over behind a feature flag once confident.
 * **Contract**: after all instances run the new code path (watch metrics/logs for stragglers), remove legacy writes, then finally drop old columns/constraints in a separate deployment.
 * Rules: never combine expand+contract in one release; every step must be rollback-friendly; keep both write paths idempotent during overlap. This is how large teams evolve schemas under continuous traffic without maintenance windows (complements online DDL tools like gh-ost/pg-rollback-less approaches).

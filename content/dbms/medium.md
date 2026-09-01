@@ -250,7 +250,7 @@
 
 ### Q44: What is a covering index? What do INCLUDE columns add?
 * A **covering index** contains every column a query needs, so the engine answers it purely from the index without touching the base table (an *index-only scan* / *covered query*).
-* **Key columns** (leftmost prefix) serve seeks and ordering; **INCLUDE columns** are stored only at leaf level — they extend coverage without bloating the seek structure or participating in sorting:
+* **Key columns** (leftmost prefix) serve seeks and ordering; **INCLUDE columns** are stored only at leaf level - they extend coverage without bloating the seek structure or participating in sorting:
 ```sql
 CREATE INDEX ix_orders_cust ON orders (customer_id, order_date)
 INCLUDE (total_amount, status);
@@ -261,12 +261,12 @@ SELECT order_date, total_amount FROM orders WHERE customer_id = 42;
 
 ### Q45: How does Snapshot Isolation differ from SERIALIZABLE?
 * **Snapshot Isolation (SI)**: each transaction reads a consistent point-in-time snapshot taken at `BEGIN`; readers never block writers and vice versa (MVCC). It prevents dirty/non-repeatable reads but still permits **write skew** (two transactions read overlapping data and write disjoint rows, violating a business invariant).
-* **SERIALIZABLE**: guarantees executions are equivalent to some serial order — prevents write skew too, either via locking ranges (SQL Server serializable, next-key locks in MySQL) or via SSI (PostgreSQL).
+* **SERIALIZABLE**: guarantees executions are equivalent to some serial order - prevents write skew too, either via locking ranges (SQL Server serializable, next-key locks in MySQL) or via SSI (PostgreSQL).
 * SI is dramatically more concurrent and usually sufficient; choose true serializable when invariants span multiple rows read then written independently (e.g., on-call doctor scheduling, balance-vs-overdraft checks).
 
 ### Q46: Explain vertical vs horizontal scaling of databases.
-* **Vertical scaling (scale-up)**: move to a bigger machine — more CPU/RAM/NVMe. Pros: no application change, keeps a single copy (no consistency issues). Cons: hardware ceilings, cost grows non-linearly, single point of failure, maintenance windows.
-* **Horizontal scaling (scale-out)**: add more nodes — replication for read scaling, sharding/partitioning for write+data scaling. Pros: near-linear capacity, fault isolation, elastic growth. Cons: cross-shard joins/transactions become hard, resharding pain, operational complexity (routing layers, rebalancing, monitoring).
+* **Vertical scaling (scale-up)**: move to a bigger machine - more CPU/RAM/NVMe. Pros: no application change, keeps a single copy (no consistency issues). Cons: hardware ceilings, cost grows non-linearly, single point of failure, maintenance windows.
+* **Horizontal scaling (scale-out)**: add more nodes - replication for read scaling, sharding/partitioning for write+data scaling. Pros: near-linear capacity, fault isolation, elastic growth. Cons: cross-shard joins/transactions become hard, resharding pain, operational complexity (routing layers, rebalancing, monitoring).
 * Typical progression: tune/index → read replicas + cache → vertical bump → shard by tenant/key. Interviewers expect you to justify *when* to switch rather than just defining terms.
 
 ### Q47: What are computed/generated columns?
@@ -282,7 +282,7 @@ CREATE INDEX ix_total ON orders(total_with_tax);
 
 ### Q48: What are system-versioned (temporal) tables?
 * Tables where the engine automatically keeps full row history: updates/deletes move prior versions into a history table, timestamped with period columns (`VALID_FROM`, `VALID_TO`).
-* Query modes: current data normally, or time travel — `FOR SYSTEM_TIME AS OF '2026-01-01'` (SQL Server) / range queries — to reconstruct any past state.
+* Query modes: current data normally, or time travel - `FOR SYSTEM_TIME AS OF '2026-01-01'` (SQL Server) / range queries - to reconstruct any past state.
 * **Use cases**: audits and regulatory compliance, slowly-changing-dimension style analytics, debugging "what did the record look like when the bug hit", forensic correction of bad batch jobs.
 * Costs: storage growth (mitigate with retention policies), no direct history-table writes, some DDL restrictions. Replaces hand-rolled trigger-based audit tables.
 
@@ -293,10 +293,10 @@ CREATE INDEX ix_total ON orders(total_with_tax);
 * For heavy relevance search (facets, typo tolerance, synonyms), dedicated engines (Elasticsearch/OpenSearch) sit beside the RDBMS, kept in sync via CDC or dual writes.
 
 ### Q50: What is the query plan cache? Explain simple vs forced parameterization.
-* Engines compile SQL into execution plans; caching lets repeated statements skip parsing/optimization. Cache is keyed by statement hash, so literal differences (`id = 5` vs `id = 6`) normally produce distinct entries — cache pollution and compilation storms under load.
+* Engines compile SQL into execution plans; caching lets repeated statements skip parsing/optimization. Cache is keyed by statement hash, so literal differences (`id = 5` vs `id = 6`) normally produce distinct entries - cache pollution and compilation storms under load.
 * **Simple parameterization**: the engine auto-replaces trivial literals with parameters for simple queries.
 * **Forced parameterization**: instructs the optimizer to parameterize almost all literals, maximizing reuse.
-* Trade-off — **parameter sniffing**: a plan compiled for the first parameter value may be terrible for skewed distributions of later values. Mitigations: `OPTION(RECOMPILE)`, local variables, plan guides, OPTIMIZE FOR UNKNOWN, statistics hygiene.
+* Trade-off - **parameter sniffing**: a plan compiled for the first parameter value may be terrible for skewed distributions of later values. Mitigations: `OPTION(RECOMPILE)`, local variables, plan guides, OPTIMIZE FOR UNKNOWN, statistics hygiene.
 
 ---
 

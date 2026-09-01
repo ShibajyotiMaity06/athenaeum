@@ -170,10 +170,10 @@ Every store change (any key!) reruns the selector → filter returns a fresh arr
 
 **Fixes ladder:**
 1. Subscribe to primitives/stable refs only: split into `s.items` then derive in render via useMemo keyed by `s.items`.
-2. `useShallow` wrapper: `useStore(useShallow(s => s.items.filter(...)))` — shallow-compares array/object contents.
+2. `useShallow` wrapper: `useStore(useShallow(s => s.items.filter(...)))` - shallow-compares array/object contents.
 3. Store-side memoization: keep the derived collection IN state, recomputed only when source changes.
 
-The trap generalizes to `.map`, object literals `{ a: s.x, b: s.y }`, and sort/filter chains — the #1 Zustand performance question in interviews.
+The trap generalizes to `.map`, object literals `{ a: s.x, b: s.y }`, and sort/filter chains - the #1 Zustand performance question in interviews.
 
 ---
 
@@ -191,7 +191,7 @@ const useStore = createWithEqualityFn(config, shallow);
 
 Trade-off analysis:
 * **Per-call useShallow**: explicit, greppable intent; noise at scale; easy to forget on the one hot path.
-* **Store-wide equality**: consistent behavior, less boilerplate; hides comparison semantics from call sites — reviewers can't see whether a selector is cheap-shallow or expensive-deep without checking creation.
+* **Store-wide equality**: consistent behavior, less boilerplate; hides comparison semantics from call sites - reviewers can't see whether a selector is cheap-shallow or expensive-deep without checking creation.
 * Custom fns possible (e.g., `Object.is` default restored per-call via options where needed).
 
 Guidance: small apps per-call; large teams often standardize store-wide shallow PLUS lint rules flagging heavy selectors.
@@ -207,7 +207,7 @@ persist(config, {
 })
 ```
 * `createJSONStorage` wraps ANY synchronous Storage-like API (localStorage, sessionStorage, react-native AsyncStorage wrapped, MMKV sync mode).
-* **Async engines** (IndexedDB): supply custom storage object implementing `getItem/setItem/removeItem` returning promises — Zustand handles async hydration; expose hydration status via `onRehydrateStorage` / `useStore.persist.hasHydrated()` before gating UI.
+* **Async engines** (IndexedDB): supply custom storage object implementing `getItem/setItem/removeItem` returning promises - Zustand handles async hydration; expose hydration status via `onRehydrateStorage` / `useStore.persist.hasHydrated()` before gating UI.
 * SSR guard: lazily resolve storage inside the factory so server imports don't touch `window`.
 
 Interview depth: explain WHY the JSON layer exists (serialize Maps/Dates deliberately, versioning metadata envelope) and what breaks with raw JSON.stringify round-trips.
@@ -233,9 +233,9 @@ persist(config, {
 })
 ```
 * Stored payloads carry `state.version`; mismatch triggers `migrate(persistedState, storedVersion)` BEFORE merge into live state.
-* Without migration, shape drift manifests as undefined-field bugs weeks later on machines with ancient localStorage — the classic production incident story.
+* Without migration, shape drift manifests as undefined-field bugs weeks later on machines with ancient localStorage - the classic production incident story.
 * Strategies: sequential migrations (walk-forward chain) vs latest-only transforms; keep migrations pure + unit-tested with real captured payloads.
-* Version bump discipline: bump ONLY when persisted shape changes — not on unrelated refactors.
+* Version bump discipline: bump ONLY when persisted shape changes - not on unrelated refactors.
 
 ---
 
@@ -246,18 +246,18 @@ persist(config, {
 partialize: s => ({ theme: s.theme, sidebar: s.sidebarWidth })
 // loading/error/token-transient fields intentionally excluded
 ```
-Persisting volatile fields replays yesterday's spinner states — the canonical bug interviewers cite.
+Persisting volatile fields replays yesterday's spinner states - the canonical bug interviewers cite.
 
 **Merge strategies** control HOW persisted data enters current state on rehydrate:
-* Default: shallow merge persisted over initial — new code-added fields survive (good), removed fields linger (bad — handle in migrate).
-* Custom `merge(current, persisted)`: full control — e.g., deep-merging nested settings, dropping unknown keys, validating shapes before acceptance.
-* Interaction gotcha: partialize excludes a field, but OLD storage still contains it — custom merge should whitelist expected keys defensively against tampered/stale blobs.
+* Default: shallow merge persisted over initial - new code-added fields survive (good), removed fields linger (bad - handle in migrate).
+* Custom `merge(current, persisted)`: full control - e.g., deep-merging nested settings, dropping unknown keys, validating shapes before acceptance.
+* Interaction gotcha: partialize excludes a field, but OLD storage still contains it - custom merge should whitelist expected keys defensively against tampered/stale blobs.
 
 ---
 
 ### Q11: What does `subscribeWithSelector` unlock beyond plain subscribe?
 **Answer:**
-Plain `subscribe(listener)` fires on EVERY state change with whole state — coarse filtering lands inside listener bodies.
+Plain `subscribe(listener)` fires on EVERY state change with whole state - coarse filtering lands inside listener bodies.
 
 ```js
 const unsub = useStore.subscribe(
@@ -268,10 +268,10 @@ const unsub = useStore.subscribe(
 ```
 * First argument = SELECTOR; listener fires only when selected slice changes (custom equality supported).
 * Second arg receives `(newSlice, previousSlice)` enabling delta logic.
-* Options: `equalityFn` custom compare; `fireImmediately` invokes listener once at subscription with current value — handy for initializing side systems.
-* Returns unsubscribe — ALWAYS pair with useEffect cleanup or leak listeners across mounts/HMR.
+* Options: `equalityFn` custom compare; `fireImmediately` invokes listener once at subscription with current value - handy for initializing side systems.
+* Returns unsubscribe - ALWAYS pair with useEffect cleanup or leak listeners across mounts/HMR.
 
-Primary use cases: analytics watchers, cross-store bridges, imperative widget syncing (chart redraws) — reactive glue outside render paths.
+Primary use cases: analytics watchers, cross-store bridges, imperative widget syncing (chart redraws) - reactive glue outside render paths.
 
 ---
 
@@ -285,8 +285,8 @@ type CartSlice = StateCreator<
 >;
 export const createCartSlice: StateCreator<...> = (set, get) => ({ ... });
 ```
-* **T** = the WHOLE store type after combination — slices may read sibling slices through `get()` with correct typing.
-* **Mutators tuple** declares middlewares wrapping the store ABOVE this creator: entries like `['zustand/immer', never]` transform `set` into draft-based setter; ordering in the tuple mirrors runtime composition order — wrong order = mysterious typing/runtime mismatches.
+* **T** = the WHOLE store type after combination - slices may read sibling slices through `get()` with correct typing.
+* **Mutators tuple** declares middlewares wrapping the store ABOVE this creator: entries like `['zustand/immer', never]` transform `set` into draft-based setter; ordering in the tuple mirrors runtime composition order - wrong order = mysterious typing/runtime mismatches.
 * When slices are created standalone-then-combined, type them as partial-store creators and let the combiner assemble the full T.
 
 Interviewers use this to probe whether someone has maintained REAL multi-slice TS codebases versus toy examples.
@@ -295,13 +295,13 @@ Interviewers use this to probe whether someone has maintained REAL multi-slice T
 
 ### Q13: How do you avoid circular dependencies between slices/stores?
 **Answer:**
-Failure mode: cartSlice imports userSlice for `get().coupon()` while userSlice imports cartSlice to invalidate carts on logout — bundlers resolve cycles arbitrarily → undefined-at-init errors that "only happen sometimes."
+Failure mode: cartSlice imports userSlice for `get().coupon()` while userSlice imports cartSlice to invalidate carts on logout - bundlers resolve cycles arbitrarily → undefined-at-init errors that "only happen sometimes."
 
 Patterns:
-1. **Event direction flip**: lower-level slice exposes an event/hook (`onLogout(cb)` registry); higher-level slice subscribes — dependency becomes one-directional.
-2. **Orchestrator action**: a third coordinating module imports BOTH slices' stores and sequences calls — neither slice knows the other.
-3. **Lazy indirection**: dynamic accessor functions (`getUserStore()` imported lazily inside the action body) breaking static cycles — pragmatic escape hatch, last resort.
-4. Restructure data: if two slices truly need mutual reads constantly, they're one domain — merge them.
+1. **Event direction flip**: lower-level slice exposes an event/hook (`onLogout(cb)` registry); higher-level slice subscribes - dependency becomes one-directional.
+2. **Orchestrator action**: a third coordinating module imports BOTH slices' stores and sequences calls - neither slice knows the other.
+3. **Lazy indirection**: dynamic accessor functions (`getUserStore()` imported lazily inside the action body) breaking static cycles - pragmatic escape hatch, last resort.
+4. Restructure data: if two slices truly need mutual reads constantly, they're one domain - merge them.
 
 Detection: circular-dependency-plugin in bundler CI + eslint import/no-cycle gates.
 
@@ -317,7 +317,7 @@ search: async (term) => {
   set({ searching: true, searchError: null });
   try {
     const res = await api.search(term, { signal: get()._ctrl?.signal });
-    if (reqId !== get()._lastReqId) return;       // stale — discard
+    if (reqId !== get()._lastReqId) return;       // stale - discard
     set({ results: res, searching: false });
   } catch (e) {
     if (e.name === 'AbortError') return;
@@ -330,7 +330,7 @@ search: async (term) => {
 * **AbortController** cancels obsolete network work (store the controller in state/ref; abort previous on new call).
 * Both together: cancel for efficiency, id-guard for correctness (some APIs ignore aborts).
 
-Same pattern applies to pagination jumps and optimistic flows — expect to whiteboard it.
+Same pattern applies to pagination jumps and optimistic flows - expect to whiteboard it.
 
 ---
 
@@ -350,8 +350,8 @@ toggleTodo: async (id) => {
 ```
 Hardening beyond toy version:
 * Snapshot ONLY the affected slice, not whole state.
-* Concurrent toggles: snapshot-per-mutation stack or patch-based undo entries keyed by request-id — naive whole-array restore clobbers sibling optimistic edits landing meanwhile.
-* Server reconciliation: replace local guess with canonical response fields (timestamps/server ids) post-success — temp ids swapped via stable client-token mapping.
+* Concurrent toggles: snapshot-per-mutation stack or patch-based undo entries keyed by request-id - naive whole-array restore clobbers sibling optimistic edits landing meanwhile.
+* Server reconciliation: replace local guess with canonical response fields (timestamps/server ids) post-success - temp ids swapped via stable client-token mapping.
 * UI affordances: pending styling while unconfirmed; disable conflicting actions on same entity until settled.
 
 Expect follow-ups on batching many optimistics and ordering guarantees.
@@ -360,7 +360,7 @@ Expect follow-ups on batching many optimistics and ordering guarantees.
 
 ### Q16: What do memoized selector factories add, Reselect-style?
 **Answer:**
-Problem: derived computation reruns on EVERY selector invocation even when inputs unchanged — expensive sorts/aggregations punish render paths.
+Problem: derived computation reruns on EVERY selector invocation even when inputs unchanged - expensive sorts/aggregations punish render paths.
 
 ```js
 import { createSelector } from 'reselect';
@@ -371,14 +371,14 @@ const selectVisibleTodos = createSelector(
 );
 const visible = useStore(selectVisibleTodos);
 ```
-* Memoization caches LAST result keyed by input identity (default equality) — repeated polls with unchanged inputs return cached ref (also fixing the getSnapshot stability trap).
+* Memoization caches LAST result keyed by input identity (default equality) - repeated polls with unchanged inputs return cached ref (also fixing the getSnapshot stability trap).
 * Parameterized variants need factories: `makeSelectById = () => createSelector(...)` creating per-component memo instances (shared instance across ids thrashes its single-slot cache).
-* Cache-size caveat: default size 1 — alternating access patterns evict constantly; configure larger or split selectors.
-* Alternative school: compute-on-write (materialize in actions) — compare trade-offs fluently.
+* Cache-size caveat: default size 1 - alternating access patterns evict constantly; configure larger or split selectors.
+* Alternative school: compute-on-write (materialize in actions) - compare trade-offs fluently.
 
 ---
 
-### Q17: Computed-on-read vs write-time materialization — full decision framework?
+### Q17: Computed-on-read vs write-time materialization - full decision framework?
 **Answer:**
 | Axis | Derive-on-read | Materialize-on-write |
 |---|---|---|
@@ -391,7 +391,7 @@ Rules distilled:
 1. Cheap derivations (< ~microseconds, small collections) → derive inline; simplicity wins.
 2. Hot paths / large N / used by MANY components → materialize via SINGLE internal updater all mutations route through (single-writer principle prevents drift).
 3. Cross-slice derivations → orchestrator action or selector-composition with memoization.
-4. When materialized derivations grow complex, question whether it's SERVER data wearing a disguise — move to query-layer computed fields.
+4. When materialized derivations grow complex, question whether it's SERVER data wearing a disguise - move to query-layer computed fields.
 
 Interview gold: narrate a real drift bug caused by scattered write-side maintenance.
 
@@ -399,13 +399,13 @@ Interview gold: narrate a real drift bug caused by scattered write-side maintena
 
 ### Q18: What's the correct pattern for hydrating stores from Next.js server props WITHOUT cross-request leaks?
 **Answer:**
-Naive hazard: module-singleton store mutated during Server Component render persists across requests on the server — User B's page could render User A's primed state.
+Naive hazard: module-singleton store mutated during Server Component render persists across requests on the server - User B's page could render User A's primed state.
 
 Safe ladder:
-1. **Props→client-boundary seeding** (basic): pass server data as props into a `'use client'` wrapper that seeds the store in effects — server render stays store-free.
+1. **Props→client-boundary seeding** (basic): pass server data as props into a `'use client'` wrapper that seeds the store in effects - server render stays store-free.
 2. **Hydration-safe merge**: initialize client store defaults matching SSR markup expectations, then merge real payload post-mount (skipHydration pattern for persisted stores).
-3. **Per-request factories** (full solution): `createUserStore(initialData)` invoked in a Provider holding the instance in useRef/context — every request/tree gets isolation; components consume via `useStore(context, selector)` form of useStore.
-Know when each tier suffices — interviewers escalate scenarios (concurrent requests, streaming RSC, auth-sensitive slices) probing whether the singleton danger is truly understood.
+3. **Per-request factories** (full solution): `createUserStore(initialData)` invoked in a Provider holding the instance in useRef/context - every request/tree gets isolation; components consume via `useStore(context, selector)` form of useStore.
+Know when each tier suffices - interviewers escalate scenarios (concurrent requests, streaming RSC, auth-sensitive slices) probing whether the singleton danger is truly understood.
 
 ---
 
@@ -432,7 +432,7 @@ export function useUserStore<T>(selector: (s: UserState) => T): T {
 ```
 Points to articulate:
 * useRef-lazy-init guarantees ONE instance per Provider lifetime (StrictMode double-render safe).
-* Consumers NEVER import the singleton — swapping to provider-less testing/storybook works by rendering custom providers.
+* Consumers NEVER import the singleton - swapping to provider-less testing/storybook works by rendering custom providers.
 * SSR: provider lives per-request tree → isolation achieved without globals.
 Trade-off: loses import-anywhere ergonomics; adopt only where isolation requirements demand.
 
@@ -441,22 +441,22 @@ Trade-off: loses import-anywhere ergonomics; adopt only where isolation requirem
 ### Q20: How do you synchronize Zustand state across browser tabs?
 **Answer:**
 Options ladder:
-1. **storage event** (persist freebie): other-tab localStorage writes fire `window.addEventListener('storage', ...)` — rehydrate or patch store manually. Limitation: fires only in OTHER tabs, string payloads, latency variable.
-2. **BroadcastChannel**: purpose-built same-origin messaging — structured clone payloads, instant:
+1. **storage event** (persist freebie): other-tab localStorage writes fire `window.addEventListener('storage', ...)` - rehydrate or patch store manually. Limitation: fires only in OTHER tabs, string payloads, latency variable.
+2. **BroadcastChannel**: purpose-built same-origin messaging - structured clone payloads, instant:
 ```js
 const bc = new BroadcastChannel('cart-sync');
 bc.onmessage = (e) => useCart.setState(e.data);
 useCart.subscribe((s) => bc.postMessage({ items: s.items }));
 ```
 Guard against echo loops (ignore self-originated via tab-id stamps) and message storms (throttle high-frequency slices).
-3. **Server-mediated**: realtime channel (websocket/SSE) as truth — tabs converge through backend events; required when multi-device consistency matters anyway.
+3. **Server-mediated**: realtime channel (websocket/SSE) as truth - tabs converge through backend events; required when multi-device consistency matters anyway.
 Conflict policy decision: last-write-wins acceptable for prefs; CRDT-ish counters/version vectors for counters/inventory (hard level expands).
 
 ---
 
 ### Q21: How do you test Zustand stores in isolation?
 **Answer:**
-Vanilla-first unit testing — no React needed:
+Vanilla-first unit testing - no React needed:
 ```js
 beforeEach(() => {
   useCart.setState({ items: [], coupon: null }, false); // reset to clean slate
@@ -468,26 +468,26 @@ it('adds item', () => {
 });
 ```
 Essentials interviewers probe:
-* **Reset between tests** — setState full-replace (replace flag true with fresh initialState factory) prevents inter-test coupling; export `createInitialState()` factory for exact resets.
+* **Reset between tests** - setState full-replace (replace flag true with fresh initialState factory) prevents inter-test coupling; export `createInitialState()` factory for exact resets.
 * **Persist mocking**: inject memory storage adapter (or skipHydration + manual rehydrate with fixture JSON).
 * **Async actions**: await promises + flush microtasks; fake timers for debounced/throttled actions.
-* **Mocking API layers**: dependency-inject fetch clients into store factory OR msw intercepting network — prefer msw keeping store code honest.
+* **Mocking API layers**: dependency-inject fetch clients into store factory OR msw intercepting network - prefer msw keeping store code honest.
 Hook-level tests (renderHook from @testing-library/react) reserved for selector/integration verification.
 
 ---
 
 ### Q22: What are the gotchas testing components that USE Zustand?
 **Answer:**
-1. **Module-singleton leakage across tests**: imported store carries prior test mutations — reset in beforeEach OR provide per-test store via mock (jest.mock returning factory) when isolation is paramount.
-2. **act() warnings**: direct setState outside React events triggers updates — wrap in act() or drive through rendered interactions (userEvent.click invoking actions) letting RTL handle batching.
-3. **Selector assertions vs DOM assertions**: prefer asserting RENDERED OUTPUT (screen.getByText) — white-box getState assertions couple tests to internals.
-4. **Persist interference**: storage writes hit jsdom localStorage across tests — clear storage or swap memory adapter globally.
-5. **Subscription timing**: useSyncExternalStore requires effects flushed — findBy/waitFor async queries instead of synchronous getBy after async actions.
+1. **Module-singleton leakage across tests**: imported store carries prior test mutations - reset in beforeEach OR provide per-test store via mock (jest.mock returning factory) when isolation is paramount.
+2. **act() warnings**: direct setState outside React events triggers updates - wrap in act() or drive through rendered interactions (userEvent.click invoking actions) letting RTL handle batching.
+3. **Selector assertions vs DOM assertions**: prefer asserting RENDERED OUTPUT (screen.getByText) - white-box getState assertions couple tests to internals.
+4. **Persist interference**: storage writes hit jsdom localStorage across tests - clear storage or swap memory adapter globally.
+5. **Subscription timing**: useSyncExternalStore requires effects flushed - findBy/waitFor async queries instead of synchronous getBy after async actions.
 Pattern worth naming: a `renderWithStore(store, ui)` helper centralizing provider/reset conventions for team consistency.
 
 ---
 
-### Q23: Why does curried typing `create<T>()(...)` exist — what breaks without it?
+### Q23: Why does curried typing `create<T>()(...)` exist - what breaks without it?
 **Answer:**
 Middleware-heavy stores hit TypeScript inference walls with direct instantiation:
 
@@ -498,7 +498,7 @@ const useStore = create<PersistedState>(persist((set) => ({...}), {name:'x'}));
 // ✅ curried: type param explicit, middlewares infer cleanly
 const useStore = create<PersistedState>()(persist((set) => ({...}), {name:'x'}));
 ```
-Mechanics: TS cannot simultaneously infer T from the initializer AND thread middleware mutator tuples through overloaded generics in one call — splitting into two calls lets the FIRST bind T precisely, the SECOND resolve middleware composition types (Mutators tuple accumulating [immer,persist...] signatures).
+Mechanics: TS cannot simultaneously infer T from the initializer AND thread middleware mutator tuples through overloaded generics in one call - splitting into two calls lets the FIRST bind T precisely, the SECOND resolve middleware composition types (Mutators tuple accumulating [immer,persist...] signatures).
 
 Consequences when skipped: `set` typed as vanilla (no immer draft), persist's partialize typing degrades to unknown, mysterious errors pointing INSIDE zustand types rather than your code.
 
@@ -512,23 +512,23 @@ Rule to state plainly: any store using ≥1 middleware → curried form. Zero-mi
 actionA();   // set({a}) → notifies → schedules render
 actionB();   // set({b}) → notifies → coalesced into SAME render
 ```
-* Notifications remain synchronous per set; RENDER work batches — subscribers reading state between sets (via getState in other stores' listeners!) see intermediates even though DOM doesn't.
-* Pre-React-18 contexts (setTimeout/promise chains) rendered per-set — migration-era bugs where components flicker through intermediates disappear under createRoot.
-* Escape hatch awareness: flushSync exists for React, but NO equivalent forces synchronous render between two sets — design invariants assuming atomic multi-set transitions must instead consolidate into ONE set call.
-Cross-store orchestration inherits this: sequencing matters at NOTIFICATION granularity, not render granularity — a distinction interviewers love extracting.
+* Notifications remain synchronous per set; RENDER work batches - subscribers reading state between sets (via getState in other stores' listeners!) see intermediates even though DOM doesn't.
+* Pre-React-18 contexts (setTimeout/promise chains) rendered per-set - migration-era bugs where components flicker through intermediates disappear under createRoot.
+* Escape hatch awareness: flushSync exists for React, but NO equivalent forces synchronous render between two sets - design invariants assuming atomic multi-set transitions must instead consolidate into ONE set call.
+Cross-store orchestration inherits this: sequencing matters at NOTIFICATION granularity, not render granularity - a distinction interviewers love extracting.
 
 ---
 
-### Q25: Why is reading state via getState() in callbacks preferred over captured values — edge cases included?
+### Q25: Why is reading state via getState() in callbacks preferred over captured values - edge cases included?
 **Answer:**
 Core staleness scenario covered elsewhere; advanced edges:
-1. **Throttled/debounced handlers**: created once, invoked many times later — captured values fossilize; getState reads now.
+1. **Throttled/debounced handlers**: created once, invoked many times later - captured values fossilize; getState reads now.
 2. **Event-emitter subscriptions registered in effects with [] deps**: listener lives forever; closure state ages.
-3. **Optimistic flows comparing CURRENT vs SNAPSHOT-at-start**: capture startSnapshot deliberately AND read fresh state for conflict checks — mixing both intentionally.
-4. **SSR/hydration caution**: callbacks executing BEFORE rehydration complete read defaults — gate critical reads behind hasHydrated checks.
-5. **Transients contrast**: pointer-move handlers shouldn't even call getState per event at 120Hz — refs/transient patterns (hard level) supersede.
+3. **Optimistic flows comparing CURRENT vs SNAPSHOT-at-start**: capture startSnapshot deliberately AND read fresh state for conflict checks - mixing both intentionally.
+4. **SSR/hydration caution**: callbacks executing BEFORE rehydration complete read defaults - gate critical reads behind hasHydrated checks.
+5. **Transients contrast**: pointer-move handlers shouldn't even call getState per event at 120Hz - refs/transient patterns (hard level) supersede.
 
-Formulate the principle: closures freeze DATA; getState freezes nothing — choose per-read-freshness requirement.
+Formulate the principle: closures freeze DATA; getState freezes nothing - choose per-read-freshness requirement.
 
 ---
 
@@ -537,9 +537,9 @@ Formulate the principle: closures freeze DATA; getState freezes nothing — choo
 Layered proposal:
 * **Store slice**: machine status ('idle'|'loading'|'success'|'error') + `errorCode` (stable machine string) + optional `errorDetail`. NEVER raw Error objects in state (unserializable under persist/devtools).
 * **Action contract**: catch → classify (network/validation/auth-expiry via error.code) → set status+code → RETHROW only when callers need custom branching; default swallow-after-record keeps call sites clean.
-* **Global side-channel**: dedicated `useErrors` store receiving (domain, code, correlationId) events — single toast/notification renderer subscribes there, decoupling presentation from domain slices.
+* **Global side-channel**: dedicated `useErrors` store receiving (domain, code, correlationId) events - single toast/notification renderer subscribes there, decoupling presentation from domain slices.
 * **Recovery affordances**: every error state pairs an actionable retry/clear action; auth-expiry errors trigger global redirect interceptor.
-Testing matrix: each classification path asserted via mocked api failures — taxonomy tests prevent regression to console.error-and-pray patterns.
+Testing matrix: each classification path asserted via mocked api failures - taxonomy tests prevent regression to console.error-and-pray patterns.
 
 ---
 
@@ -555,11 +555,11 @@ useOverlays = create((set) => ({
 }))
 ```
 Production details separating senior answers:
-* **Typed registries**: `ModalMap = { confirm: FC<ConfirmProps>, ... }` — push('confirm', props) fully type-checked; payload serialization safety (no functions in props for persist/debug friendliness).
+* **Typed registries**: `ModalMap = { confirm: FC<ConfirmProps>, ... }` - push('confirm', props) fully type-checked; payload serialization safety (no functions in props for persist/debug friendliness).
 * **Stacking rules**: z-order management, escape-key pops top-only, focus trap restoration per layer.
 * **Toast policies**: max-N visible (queue overflow drops oldest INFO, preserves ERROR), per-kind TTL, dedupe window suppressing identical bursts, aria-live region announcements.
 * **Cleanup guarantees**: route-change sweep closing transient overlays (flag per overlay), timers cleared on dismiss to avoid ghost updates post-unmount.
-Rendered ONCE at root via portals — imperative `notify()` callable from anywhere including non-React modules.
+Rendered ONCE at root via portals - imperative `notify()` callable from anywhere including non-React modules.
 
 ---
 
@@ -571,10 +571,10 @@ Choose **temporal middleware (zundo)** when:
 * No side-effect reversal semantics required (pure UI/document state).
 
 Go **bespoke** when:
-* Patch-based efficiency needed (huge normalized graphs — inverse-patch history via immer patches shrinking memory 10-100x).
+* Patch-based efficiency needed (huge normalized graphs - inverse-patch history via immer patches shrinking memory 10-100x).
 * Coalescing/grouping logic is domain-specific (drag sessions = single step; typing bursts = word-boundary steps) beyond middleware's handleSet options.
-* Selective undo of SPECIFIC operations (undo last comment without touching concurrent edits) — requires operation-log architecture, not snapshot stacks.
-* Server-collaborative context: local undo must integrate with remote op streams (OT/CRDT adjacency) — middleware abstractions collapse here.
+* Selective undo of SPECIFIC operations (undo last comment without touching concurrent edits) - requires operation-log architecture, not snapshot stacks.
+* Server-collaborative context: local undo must integrate with remote op streams (OT/CRDT adjacency) - middleware abstractions collapse here.
 Decision artifact worth citing: prototype with zundo, instrument memory/granularity pain, escalate deliberately.
 
 ---
@@ -608,11 +608,11 @@ Taxonomy of drift bugs:
 3. Cross-store sync lag: mirror updated by subscription that unsubscribed during HMR.
 
 Systematic defenses:
-* **Single-writer helper**: ALL mutations of source collection flow through `mutateItems(fn)` which alone recomputes derivatives — grep-enforceable convention.
+* **Single-writer helper**: ALL mutations of source collection flow through `mutateItems(fn)` which alone recomputes derivatives - grep-enforceable convention.
 * **Derivation ownership comment/lint tag** marking materialized fields; PR template checklist row.
 * **Invariant assertions in dev**: subscribe-with-selector watcher asserting total === recompute(items), throwing loudly on drift (cheap canary).
-* Prefer derive-on-read by DEFAULT; materialize only measured hot paths — fewer materializations, fewer drift opportunities.
-War-story framing: recount catching drift via the dev invariant before customers did — proves operational maturity.
+* Prefer derive-on-read by DEFAULT; materialize only measured hot paths - fewer materializations, fewer drift opportunities.
+War-story framing: recount catching drift via the dev invariant before customers did - proves operational maturity.
 
 ---
 
@@ -621,24 +621,24 @@ War-story framing: recount catching drift via the dev invariant before customers
 Ownership rule: Query libs OWN server-derived data (fetch lifecycle, dedupe, retries, invalidations, optimistic mutation helpers). Zustand owns CLIENT-authored truth: UI preferences, wizard progress, selections spanning routes, unsynced drafts, realtime-maintained session state.
 
 Interaction seams:
-* Mutations write THROUGH query lib (`useMutation` onSuccess → cache updates) so invalidation machinery stays coherent — copying results INTO zustand forks truth (the classic anti-pattern).
-* Zustand feeds PARAMETERS to queries (filters/selectIds) — query keyed by them; zustand never mirrors query OUTPUT.
-* Occasional legit bridging: realtime websocket stream owning live-updated entities in zustand while query serves historical lists — document the partition explicitly.
-Interview litmus: "If I refresh the page, what SHOULD disappear?" — server data vanishes (cache refetches); client intent persists appropriately (persist middleware). Anything violating that intuition is misplaced.
+* Mutations write THROUGH query lib (`useMutation` onSuccess → cache updates) so invalidation machinery stays coherent - copying results INTO zustand forks truth (the classic anti-pattern).
+* Zustand feeds PARAMETERS to queries (filters/selectIds) - query keyed by them; zustand never mirrors query OUTPUT.
+* Occasional legit bridging: realtime websocket stream owning live-updated entities in zustand while query serves historical lists - document the partition explicitly.
+Interview litmus: "If I refresh the page, what SHOULD disappear?" - server data vanishes (cache refetches); client intent persists appropriately (persist middleware). Anything violating that intuition is misplaced.
 
 ---
 
 ### Q32: How should stores react to route changes (reset/keep decisions)?
 **Answer:**
 Decision matrix per slice:
-* **Reset-on-navigate**: wizard steps, ephemeral search drafts (unless URL-backed), one-off form states — implement via route-subscription middleware or layout-level effect keyed by pathname segment.
-* **Keep-across-navigation**: theme, auth/session, cart, recently-viewed caps — these ARE app-session state.
-* **URL-promoted state**: filters/sort/tabs belong IN search params; store holds only derived conveniences (parsed enums) — never duplicate canonical values.
+* **Reset-on-navigate**: wizard steps, ephemeral search drafts (unless URL-backed), one-off form states - implement via route-subscription middleware or layout-level effect keyed by pathname segment.
+* **Keep-across-navigation**: theme, auth/session, cart, recently-viewed caps - these ARE app-session state.
+* **URL-promoted state**: filters/sort/tabs belong IN search params; store holds only derived conveniences (parsed enums) - never duplicate canonical values.
 
 Implementation patterns:
 * Central `useRouteSync` hook mapping route-pattern → reset actions table (declarative, greppable).
-* Store-side guard: actions accept `scopeKey`; stale-scope responses discarded (route changed mid-flight) — combines race-condition and reset concerns.
-Anti-pattern: sprinkling resets in every component's useEffect — leaks whenever someone adds a new entry point.
+* Store-side guard: actions accept `scopeKey`; stale-scope responses discarded (route changed mid-flight) - combines race-condition and reset concerns.
+Anti-pattern: sprinkling resets in every component's useEffect - leaks whenever someone adds a new entry point.
 
 ---
 
@@ -652,10 +652,10 @@ onLinkHover / onRouteMatch:
   }
 ```
 Store-side support requirements:
-* **In-flight dedupe**: load(id) checks pending map — hover+click double-fires collapse to one request.
+* **In-flight dedupe**: load(id) checks pending map - hover+click double-fires collapse to one request.
 * **Cache-with-TTL**: entries carry fetchedAt; stale-on-read triggers background refresh while serving cached instantly (SWR semantics hand-rolled).
 * **Error caching nuance**: failed fetches retryable sooner than successes; negative-cache windows prevent hammering dead endpoints.
-Contrast with query-library prefetch APIs — when teams already run TanStack Query, duplicating prefetch plumbing in Zustand signals misplaced ownership (boundary question again). Standalone justification: realtime-maintained entities where websocket freshness matters more than HTTP cache semantics.
+Contrast with query-library prefetch APIs - when teams already run TanStack Query, duplicating prefetch plumbing in Zustand signals misplaced ownership (boundary question again). Standalone justification: realtime-maintained entities where websocket freshness matters more than HTTP cache semantics.
 
 ---
 
@@ -671,20 +671,20 @@ State shape:
 }
 ```
 Design decisions to articulate:
-* **Commit-per-step**: step forms validate locally (RHF), COMMIT validated snapshots into store on advance — store never sees half-valid intermediates; revisiting steps edits committed drafts.
+* **Commit-per-step**: step forms validate locally (RHF), COMMIT validated snapshots into store on advance - store never sees half-valid intermediates; revisiting steps edits committed drafts.
 * **Navigation guards**: canLeave(step) predicates centralizing dirty-checks; browser beforeunload integration for unsaved warnings.
-* **Resume capability**: persist drafts (+version) letting users continue days later — expiry policy on stale drafts.
-* **Branching flows**: declarative transitions table (step→conditions→next) rather than hardcoded order — product rule changes stay data-edits.
-Testing payoff: pure reducer-style tests drive (action sequence → assertions) without rendering — fast exhaustive coverage of flow logic.
+* **Resume capability**: persist drafts (+version) letting users continue days later - expiry policy on stale drafts.
+* **Branching flows**: declarative transitions table (step→conditions→next) rather than hardcoded order - product rule changes stay data-edits.
+Testing payoff: pure reducer-style tests drive (action sequence → assertions) without rendering - fast exhaustive coverage of flow logic.
 
 ---
 
 ### Q35: What's your playbook for migrating Context+useReducer domains INTO Zustand incrementally?
 **Answer:**
 Strangler sequencing:
-1. **Map the domain**: enumerate context value consumers + reducer cases — inventory defines parity checklist.
-2. **Bridge phase**: build zustand store mirroring state; Provider continues working by SUBSCRIBING to store and re-rendering context value from snapshot — BOTH systems live off single truth during migration.
-3. **Consumer-by-consumer flip**: convert components to direct `useStore(selector)` — each PR small/revertible; context still functional for stragglers.
+1. **Map the domain**: enumerate context value consumers + reducer cases - inventory defines parity checklist.
+2. **Bridge phase**: build zustand store mirroring state; Provider continues working by SUBSCRIBING to store and re-rendering context value from snapshot - BOTH systems live off single truth during migration.
+3. **Consumer-by-consumer flip**: convert components to direct `useStore(selector)` - each PR small/revertible; context still functional for stragglers.
 4. **Retire shell**: last consumer gone → delete provider/context/reducer; remove bridge subscription.
 Migration-specific gotchas to name: dispatch identity assumptions (context consumers relying on stable dispatch → zustand actions equally stable ✓), selective-subscription improvements often SURFACE latent over-rendering (fix opportunistically), testing swaps from reducer-unit tests to action-flow tests.
 Rollout guardrail: feature-flag store adoption per route enabling instant revert paths.
@@ -708,11 +708,11 @@ const op = createAsyncAction('checkout', async (payload, { get, set }) => {
 });
 ```
 Convention list to propose:
-* Status machine names standardized ('idle/loading/success/error') — UI switch statements uniform.
-* Classification mandatory (network/validation/authz) mapping to error codes — raw messages never stored.
+* Status machine names standardized ('idle/loading/success/error') - UI switch statements uniform.
+* Classification mandatory (network/validation/authz) mapping to error codes - raw messages never stored.
 * Request-id/abort wiring REQUIRED for user-initiated searches; optional for fire-and-forget mutations documented as such.
 * Optimistic mutations declare rollback strategy in review checklist.
-* No side-channel navigation/toasts INSIDE store actions — events emitted, presentation layer reacts (testability + reuse).
+* No side-channel navigation/toasts INSIDE store actions - events emitted, presentation layer reacts (testability + reuse).
 Codify via eslint rules + PR template checkboxes; conventions decay without enforcement teeth.
 
 ---
@@ -729,37 +729,37 @@ reserve(itemId):
      confirm → attach reservationId; deny → rollback localStock++, notify reason
 ```
 Correctness properties:
-* **Server authority on truth**: client counts are PROJECTIONS for UX speed — checkout revalidates server-side regardless of optimistic state.
-* **Expiry handling**: reservations carry TTLs; sweeper releases abandoned holds (tab closed mid-flow) — both client display AND server hold lifecycle mirrored.
+* **Server authority on truth**: client counts are PROJECTIONS for UX speed - checkout revalidates server-side regardless of optimistic state.
+* **Expiry handling**: reservations carry TTLs; sweeper releases abandoned holds (tab closed mid-flow) - both client display AND server hold lifecycle mirrored.
 * **Concurrent-user visibility**: other users' reservations arrive via websocket deltas reconciling local projections (last-write-wins per entity version stamps).
 * **Failure UX taxonomy**: denial reasons mapped (sold-out vs payment-hold vs quota) driving distinct messaging.
-Interview framing: optimistic patterns meet business invariants — walk the reconciliation tree confidently.
+Interview framing: optimistic patterns meet business invariants - walk the reconciliation tree confidently.
 
 ---
 
 ### Q38: How do stores participate in feature-flagged dual-write migrations?
 **Answer:**
-Scenario: replacing legacy cart implementation behind flag — both implementations alive during transition.
+Scenario: replacing legacy cart implementation behind flag - both implementations alive during transition.
 Store-layer responsibilities:
-* **Source-of-truth routing**: flag decides which engine mutates on user actions; reads blend per flag (shadow-mode writes to NEW store while UI reads OLD — validating new engine invisibly).
+* **Source-of-truth routing**: flag decides which engine mutates on user actions; reads blend per flag (shadow-mode writes to NEW store while UI reads OLD - validating new engine invisibly).
 * **Schema negotiation**: persisted envelopes versioned per engine; migration job transforms legacy storage payloads into new shapes lazily on first load post-flag-flip.
-* **Telemetry parity**: identical event names emitted from both paths tagged engine-version — SLO comparison gates rollout percentages.
+* **Telemetry parity**: identical event names emitted from both paths tagged engine-version - SLO comparison gates rollout percentages.
 * **Rollback hygiene**: flag-off restores legacy path; new-store artifacts quarantined (not deleted) until stability window passes; dual-write window kept SHORT (dual-write bugs compound over time).
-Generalize the pattern: any stateful system replacement (stores, caches, SDKs) inherits this shadow-compare methodology — interviewers reward recognizing the generality.
+Generalize the pattern: any stateful system replacement (stores, caches, SDKs) inherits this shadow-compare methodology - interviewers reward recognizing the generality.
 
 ---
 
-### Q39: Where do computed SELECTORS belong — colocated, centralized, or generated?
+### Q39: Where do computed SELECTORS belong - colocated, centralized, or generated?
 **Answer:**
 Three schools compared:
-* **Colocated with slice files** (recommended default): selectors near the state shape they interpret — change detection trivially local; imports explicit.
+* **Colocated with slice files** (recommended default): selectors near the state shape they interpret - change detection trivially local; imports explicit.
 * **Centralized selectors.ts barrels**: convenient discovery initially, becomes dependency-magnet (everything imports everything) hurting code-splitting and cycle risk.
-* **Generated/auto-selectors** (auto-zustand-selectors-hooks): boilerplate reduction for trivial passthroughs — fine for primitives; hides complexity for composed ones (reviewers can't see cost).
+* **Generated/auto-selectors** (auto-zustand-selectors-hooks): boilerplate reduction for trivial passthroughs - fine for primitives; hides complexity for composed ones (reviewers can't see cost).
 Rules worth proposing:
-* Trivial passthroughs inline at consumption (`s => s.name`) — zero ceremony.
+* Trivial passthroughs inline at consumption (`s => s.name`) - zero ceremony.
 * Reused/composed selectors exported named (selectCartTotal) WITH memoization notes documenting input sensitivity.
 * Selector unit tests alongside slice tests covering memoization behavior (identity stability assertions).
-Anti-pattern call-out: selectors importing OTHER SLICES' internals — route cross-domain derivation through full-state selectors or orchestrator actions.
+Anti-pattern call-out: selectors importing OTHER SLICES' internals - route cross-domain derivation through full-state selectors or orchestrator actions.
 
 ---
 
@@ -770,12 +770,12 @@ Core principle: store DEADLINES, not ticking values.
 { saleEndsAt: ts }                    // stored once
 const secondsLeft = useSale(s => Math.max(0, Math.ceil((s.saleEndsAt - Date.now())/1000)))
 ```
-Ticking driver: ONE rAF/interval ticker component (or shared ticker store emitting tick events via transient subscription) — never N intervals per consumer.
+Ticking driver: ONE rAF/interval ticker component (or shared ticker store emitting tick events via transient subscription) - never N intervals per consumer.
 Edge craft:
 * Clock skew: trust SERVER timestamps delivered with payloads; compute offsets once.
-* Background-tab throttling: interval clamping stalls countdowns — rAF-alignment or timestamp-delta math self-corrects on visibility restore.
-* Expiry side effects (auto-close modal, release reservation): deadline watcher subscribing with selector on derived expired boolean firing ONCE (guard flag) — idempotent transitions.
-Persist caution: absolute timestamps persist safely (unlike countdown remainders which freeze offline) — another interview-favorite nuance.
+* Background-tab throttling: interval clamping stalls countdowns - rAF-alignment or timestamp-delta math self-corrects on visibility restore.
+* Expiry side effects (auto-close modal, release reservation): deadline watcher subscribing with selector on derived expired boolean firing ONCE (guard flag) - idempotent transitions.
+Persist caution: absolute timestamps persist safely (unlike countdown remainders which freeze offline) - another interview-favorite nuance.
 
 ---
 
@@ -796,7 +796,7 @@ Architecture:
 Perf/artifacts:
 * [ ] Materialized derivations justified with measurement; single-writer maintained.
 * [ ] Devtools naming present for complex actions.
-Turn the checklist into lint/CI where possible — human checklists complement automation, not replace it.
+Turn the checklist into lint/CI where possible - human checklists complement automation, not replace it.
 
 ---
 
@@ -811,17 +811,17 @@ const canCheckout = () => {
   return items.length > 0 && !!token;
 };
 ```
-2. **Event publication**: source store emits domain events (via tiny emitter or subscribeWithSelector watchers); interested stores self-update — publishers stay ignorant.
-3. **Orchestrator module**: feature-level coordinator importing both stores, owning transaction-like sequences with compensation paths (the checkout example — cart+auth+history).
+2. **Event publication**: source store emits domain events (via tiny emitter or subscribeWithSelector watchers); interested stores self-update - publishers stay ignorant.
+3. **Orchestrator module**: feature-level coordinator importing both stores, owning transaction-like sequences with compensation paths (the checkout example - cart+auth+history).
 Governance rules:
-* Stores NEVER import each other directly (cycle + coupling) — only orchestrators/event-buses connect them.
+* Stores NEVER import each other directly (cycle + coupling) - only orchestrators/event-buses connect them.
 * Orchestrators live at FEATURE boundaries, unit-tested with real stores.
-* Document invariant windows: multi-step sequences expose intermediate states to subscribers — order operations preserving validity.
+* Document invariant windows: multi-step sequences expose intermediate states to subscribers - order operations preserving validity.
 Symptom triggering refactor: an action body reading ≥2 foreign stores = extract orchestrator.
 
 ---
 
-### Q43: What does the Immer middleware actually buy — and what does it cost?
+### Q43: What does the Immer middleware actually buy - and what does it cost?
 **Answer:**
 ```js
 import { immer } from 'zustand/middleware/immer';
@@ -831,13 +831,13 @@ const useStore = create(immer((set) => ({
 })));
 ```
 Buys:
-* Nested updates written mutably — library materializes structural-sharing immutable next-states (Proxy drafts + copy-on-write).
+* Nested updates written mutably - library materializes structural-sharing immutable next-states (Proxy drafts + copy-on-write).
 * Drift-bug class (forgotten spreads) eliminated structurally.
 Costs/limits interviewers probe:
-* Proxy overhead on every update path — measured hot loops may prefer raw spreads (benchmark!).
+* Proxy overhead on every update path - measured hot loops may prefer raw spreads (benchmark!).
 * Map/Set require enableMapSet; class instances/complex objects need produce-friendly semantics.
-* Devtools payloads show finalized states (drafts invisible) — usually fine, occasionally confusing during step-debugging.
-* Freezing behavior: produced states frozen by default — accidental downstream mutation throws loudly (feature!) but interop with mutation-happy legacy utils breaks.
+* Devtools payloads show finalized states (drafts invisible) - usually fine, occasionally confusing during step-debugging.
+* Freezing behavior: produced states frozen by default - accidental downstream mutation throws loudly (feature!) but interop with mutation-happy legacy utils breaks.
 Rule: adopt for DEEP domains; skip for flat primitive-heavy stores where spreads are trivial.
 
 ---
@@ -855,14 +855,14 @@ const useStore = create(
     })
   )
 );
-// useStore(s => s.count) — fully inferred WITHOUT manual interface!
+// useStore(s => s.count) - fully inferred WITHOUT manual interface!
 ```
 Value proposition:
-* Type inference derives State ∪ Actions intersection automatically from the two arguments — eliminates hand-maintained interface duplication for simple stores.
+* Type inference derives State ∪ Actions intersection automatically from the two arguments - eliminates hand-maintained interface duplication for simple stores.
 * Enforces conceptual separation: pure defaults vs behaviors.
 Limits:
-* Middlewares composition typing still pushes toward curried create<T>() patterns — combine plays best standalone or with light middleware.
-* Refactors renaming inferred shapes ripple silently (no explicit contract) — larger teams often prefer EXPLICIT interfaces for greppability despite boilerplate.
+* Middlewares composition typing still pushes toward curried create<T>() patterns - combine plays best standalone or with light middleware.
+* Refactors renaming inferred shapes ripple silently (no explicit contract) - larger teams often prefer EXPLICIT interfaces for greppability despite boilerplate.
 Positioning sentence: combine is DX sugar for small stores; explicit generics remain the enterprise-grade contract.
 
 ---
@@ -872,7 +872,7 @@ Positioning sentence: combine is DX sugar for small stores; explicit generics re
 Three tools, one goal (avoid redundant renders from constructed selections):
 1. **Creation-time default** (`createWithEqualityFn(config, shallow)`): consistent store-wide semantics; invisible to readers; risk = reviewers can't see comparison costs at call sites.
 2. **Call-site useShallow**: maximal visibility/greppability; noise grows; forgetting one hot selector keeps the bug.
-3. **Selector refactoring** (return primitives/stable refs, split selections): eliminates the COMPARISON question entirely — often fastest AND clearest.
+3. **Selector refactoring** (return primitives/stable refs, split selections): eliminates the COMPARISON question entirely - often fastest AND clearest.
 
 Decision flow to present:
 * Can the selector return narrower/stabler values? → refactor FIRST (zero comparator overhead).
@@ -888,34 +888,34 @@ Trigger points ranked by intent strength: link hover/focus-start > viewport-appr
 Store-side requirements (expanding basic-level answer):
 * Dedupe map: `pending:Set<key>`, `cache:Map<key,{data,fetchedAt}>`.
 * TTL classes: entity-type-specific staleness windows; soft-expiry serves-stale-while-refreshing.
-* Cancellation on abandonment: hover-out aborts via AbortController — otherwise prefetch storms waste bandwidth.
+* Cancellation on abandonment: hover-out aborts via AbortController - otherwise prefetch storms waste bandwidth.
 * Priority lanes: viewport-triggered > hover-triggered when contending (simple queue weights).
 Guardrails: budget caps per session (max N speculative fetches), never prefetch auth-gated expensive reports blindly (cost attacks), respect Save-Data hints.
-Measurement loop: prefetch-hit-rate telemetry (fetched-but-unused ratio) tuning trigger aggressiveness — prefetch programs decay without usage feedback.
+Measurement loop: prefetch-hit-rate telemetry (fetched-but-unused ratio) tuning trigger aggressiveness - prefetch programs decay without usage feedback.
 
 ---
 
 ### Q47: What's the disciplined stance on storing form DRAFTS across sessions in Zustand?
 **Answer:**
 Scope discipline:
-* Persist ONLY committed checkpoints (step completions), not keystroke streams — storage write amplification + privacy exposure (PII in localStorage) argue hard against live-draft persistence.
-* Draft envelope: `{ formId, schemaVersion, savedAt, values }` — schemaVersion gates restore (old drafts dropped or migrated); savedAt drives expiry policy (7-day purge typical).
+* Persist ONLY committed checkpoints (step completions), not keystroke streams - storage write amplification + privacy exposure (PII in localStorage) argue hard against live-draft persistence.
+* Draft envelope: `{ formId, schemaVersion, savedAt, values }` - schemaVersion gates restore (old drafts dropped or migrated); savedAt drives expiry policy (7-day purge typical).
 * Sensitive-field handling: field-level exclusion list (CVV/passwords NEVER persisted even in drafts); encryption adapters change threat surface marginally (hard-level caveats apply).
 UX restoration contract:
-* Restore prompt rather than silent overwrite ("Continue draft from Tuesday?") — surprising auto-fill erodes trust.
-* Server-side draft sync for high-value flows (job applications) — localStorage is convenience tier, not durability tier.
-Testing matrix: version-mismatch, expiry boundary, sensitive-field scrubbing — the unglamorous tests that prevent support tickets.
+* Restore prompt rather than silent overwrite ("Continue draft from Tuesday?") - surprising auto-fill erodes trust.
+* Server-side draft sync for high-value flows (job applications) - localStorage is convenience tier, not durability tier.
+Testing matrix: version-mismatch, expiry boundary, sensitive-field scrubbing - the unglamorous tests that prevent support tickets.
 
 ---
 
 ### Q48: What HMR pitfalls specifically bite Zustand stores in Vite vs Next?
 **Answer:**
 Vite specifics:
-* Module re-eval recreates stores unless cached on `import.meta.hot.data` — provided pattern earlier; ADDITIONAL gotcha: files exporting BOTH components and stores invalidate together (component edit resets store) — enforce store-only modules via lint.
-* Dependency-optimized re-runs (rare dep discovery) can double-execute init in same session — idempotent initializers defensive habit.
+* Module re-eval recreates stores unless cached on `import.meta.hot.data` - provided pattern earlier; ADDITIONAL gotcha: files exporting BOTH components and stores invalidate together (component edit resets store) - enforce store-only modules via lint.
+* Dependency-optimized re-runs (rare dep discovery) can double-execute init in same session - idempotent initializers defensive habit.
 Next.js Fast Refresh specifics:
-* Preserves state ONLY when files export components exclusively — mixing store exports forces full reload (state lost) silently confusing devs.
-* App-router client-boundary rules: store files imported by BOTH server tree accidentally break refresh + leak to server bundles — `'use client'` directive atop store modules mandatory.
+* Preserves state ONLY when files export components exclusively - mixing store exports forces full reload (state lost) silently confusing devs.
+* App-router client-boundary rules: store files imported by BOTH server tree accidentally break refresh + leak to server bundles - `'use client'` directive atop store modules mandatory.
 Universal diagnostics: "state vanished on save" → module re-eval; "actions fire twice" → duplicated listeners from pre-HMR subscriptions never cleaned (subscribe cleanup discipline again); "stale closure hell after edits" → components holding old store references post-swap (remount or accept-refresh pattern).
 
 ---
@@ -940,21 +940,21 @@ class MiniCart extends HTMLElement {
 ```
 Safety properties to emphasize:
 * Selector-scoped subscriptions (subscribeWithSelector) preventing foreign-framework churn from unrelated updates.
-* Explicit teardown mapped to HOST lifecycle (ngOnDestroy/disconnectedCallback) — leaks hide easier outside React's devtools.
+* Explicit teardown mapped to HOST lifecycle (ngOnDestroy/disconnectedCallback) - leaks hide easier outside React's devtools.
 * One-directional command flow: foreign frameworks call exported ACTIONS; they never setState directly (validation/aborts bypassed otherwise).
-Strategic framing: vanilla core lets Zustand serve as org-wide state bus during incremental framework migrations — a genuine differentiator versus hook-locked alternatives.
+Strategic framing: vanilla core lets Zustand serve as org-wide state bus during incremental framework migrations - a genuine differentiator versus hook-locked alternatives.
 
 ---
 
 ### Q50: Which wasted-render INVESTIGATION workflow do you run when a Zustand screen feels sluggish?
 **Answer:**
 Stepwise protocol:
-1. **Quantify**: React Profiler record interacting — flamegraph + commit table identify components rendering per interaction (counts vs expectation).
-2. **Attribute**: Profiler's why-did-render (props changed listing) — store-driven rerenders trace to specific selectors.
+1. **Quantify**: React Profiler record interacting - flamegraph + commit table identify components rendering per interaction (counts vs expectation).
+2. **Attribute**: Profiler's why-did-render (props changed listing) - store-driven rerenders trace to specific selectors.
 3. **Selector audit on suspects**: constructed references? whole-store destructure? wide slices including hot keys? Fix ladder: narrow → useShallow → materialize-on-write.
-4. **Subscription fanout check**: temporary instrumentation counting listener invocations per action — N listeners × irrelevant-change notifications = subscribeWithSelector/split-store candidates.
+4. **Subscription fanout check**: temporary instrumentation counting listener invocations per action - N listeners × irrelevant-change notifications = subscribeWithSelector/split-store candidates.
 5. **Verify**: probe harness re-run asserting render budgets; lock with CI perf test.
-Communications craft: bring BEFORE/AFTER render counts + interaction latency deltas to review — performance work earns credibility through numbers, and this exact workflow demonstrates repeatable methodology rather than guess-and-memoize.
+Communications craft: bring BEFORE/AFTER render counts + interaction latency deltas to review - performance work earns credibility through numbers, and this exact workflow demonstrates repeatable methodology rather than guess-and-memoize.
 
 ---
 

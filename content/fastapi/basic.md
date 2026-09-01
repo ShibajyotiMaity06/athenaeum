@@ -11,7 +11,7 @@
 
 ### Q2: What role do type hints play in FastAPI?
 * They ARE the framework contract: parameters annotated `int`, `UUID`, Pydantic models drive parsing, validation, serialization and the OpenAPI schema.
-* Wrong types yield automatic 422 responses with precise error locations — no manual checking code.
+* Wrong types yield automatic 422 responses with precise error locations - no manual checking code.
 * Editors autocomplete everything; mypy catches mismatches pre-runtime.
 Interview line: "In FastAPI you don't validate inputs; you DECLARE them."
 
@@ -55,7 +55,7 @@ async def create(item: ItemIn): ...
 ### Q6: What is Pydantic and what does v2 change?
 * Data validation/serialization library using type hints; core rewritten in Rust for v2 → massive speed gains.
 * v2 changes worth naming: `model_config` replaces inner Config class, `field_validator`/`model_validator` decorators replace v1 validators, `.model_dump()` replaces `.dict()`, stricter defaults on coercion.
-* Settings management via `BaseSettings` reads env vars with validation — config as code.
+* Settings management via `BaseSettings` reads env vars with validation - config as code.
 
 ---
 
@@ -63,7 +63,7 @@ async def create(item: ItemIn): ...
 * Every app serves `/docs` (Swagger UI) and `/redoc` plus raw OpenAPI JSON at `/openapi.json`.
 * Generated from route decorators, type hints, response_model, status codes, tags, and docstrings (become descriptions).
 * Customize metadata: title/version/contact at app creation; `include_in_schema=False` hides internals.
-This free contract enables client generation — mention openapi-generator as workflow.
+This free contract enables client generation - mention openapi-generator as workflow.
 
 ---
 
@@ -74,16 +74,16 @@ Analogy for interviews: "Starlette is Flask-like micro layer; Uvicorn is gunicor
 
 ---
 
-### Q9: Sync vs async def endpoints — when does each make sense?
-* `async def`: I/O-bound handlers awaiting non-blocking libs (httpx, asyncpg) — high concurrency on one event loop.
-* Plain `def`: FastAPI runs them in the threadpool automatically — safe for blocking SDKs (boto3, legacy DB drivers) without freezing the loop.
-Anti-pattern: `async def` containing `time.sleep` or blocking driver calls — stalls EVERY request. Rule: await what's async; delegate what blocks.
+### Q9: Sync vs async def endpoints - when does each make sense?
+* `async def`: I/O-bound handlers awaiting non-blocking libs (httpx, asyncpg) - high concurrency on one event loop.
+* Plain `def`: FastAPI runs them in the threadpool automatically - safe for blocking SDKs (boto3, legacy DB drivers) without freezing the loop.
+Anti-pattern: `async def` containing `time.sleep` or blocking driver calls - stalls EVERY request. Rule: await what's async; delegate what blocks.
 
 ---
 
 ### Q10: What are status codes handling options in FastAPI?
 * Default per method (200 GET, 201 for POST with status_code param override on decorator).
-* Raise `HTTPException(status_code=404, detail="Item not found")` for errors — returns {"detail": ...} envelope.
+* Raise `HTTPException(status_code=404, detail="Item not found")` for errors - returns {"detail": ...} envelope.
 * Return `JSONResponse(status_code=201)` directly when custom headers/content needed.
 Custom exception handlers map domain errors to consistent envelopes globally.
 
@@ -109,14 +109,14 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db=Depends(get_d
 @app.get("/me"); async def me(user: User = Depends(get_current_user)): ...
 ```
 * Reuse by chaining: admin endpoints depend on get_current_user then check role.
-* OpenAPI shows the padlock UI automatically — free docs integration.
+* OpenAPI shows the padlock UI automatically - free docs integration.
 
 ---
 
 ### Q13: What are routers and why structure apps with them?
 * `APIRouter(prefix="/users", tags=["users"])` groups related operations; app includes routers (`app.include_router(users_router)`).
 * Benefits: modular files, repeated prefix/dependencies/tags declared once, versioned APIs (`/api/v1`) composed cleanly.
-* Dependencies on router apply to all its routes — auth gating an entire module in one line.
+* Dependencies on router apply to all its routes - auth gating an entire module in one line.
 
 ---
 
@@ -126,7 +126,7 @@ app.add_middleware(CORSMiddleware, allow_origins=[...], allow_credentials=True,
                    allow_methods=["*"], allow_headers=["*"])
 ```
 * Also GZipMiddleware, TrustedHostMiddleware; custom ASGI/HTTP middleware functions or classes supported.
-* Ordering matters — added later wraps outermost.
+* Ordering matters - added later wraps outermost.
 CORS specifics to name: preflight OPTIONS handling, credentials require explicit origins (never `*`).
 
 ---
@@ -159,7 +159,7 @@ Multiple files: `list[UploadFile]`.
 ### Q18: What is the difference between Path, Query, Body, Header, Cookie parameter classes?
 * They declare WHERE a value comes from plus constraints/metadata (alias, examples, deprecated).
 * Without them FastAPI infers location heuristically; explicit classes remove ambiguity (e.g., scalar body payloads need `Body(embed=True)`).
-* All feed the OpenAPI schema — examples improve generated docs quality noticeably.
+* All feed the OpenAPI schema - examples improve generated docs quality noticeably.
 
 ---
 
@@ -172,14 +172,14 @@ Consistency principle: clients should parse ONE error shape across the API.
 
 ### Q20: What does `if __name__ == "__main__": uvicorn.run(...)` do vs production run?
 * Dev convenience enabling `python main.py --reload`.
-* Production: uvicorn/gunicorn worker management externally — multiple workers, bind host/port, proxy headers trust, no reload.
+* Production: uvicorn/gunicorn worker management externally - multiple workers, bind host/port, proxy headers trust, no reload.
 Knowing you never ship the __main__ block as the deploy story signals operational maturity.
 
 ---
 
 ### Q21: WSGI vs ASGI in one sentence each?
-* **WSGI**: synchronous callable — one request per worker thread; Flask/Django classic world.
-* **ASGI**: async extension adding WebSockets/long-lived connections plus event-loop concurrency — FastAPI/Starlette territory. Uvicorn serves it.
+* **WSGI**: synchronous callable - one request per worker thread; Flask/Django classic world.
+* **ASGI**: async extension adding WebSockets/long-lived connections plus event-loop concurrency - FastAPI/Starlette territory. Uvicorn serves it.
 
 ---
 
@@ -192,22 +192,22 @@ class Filter(BaseModel):
 @app.get("/items")
 async def items(f: Annotated[Filter, Query()]): ...
 ```
-* `Query()` on a model aggregates query params into one validated object — tidy signatures for option-heavy endpoints. Same pattern exists for Header()/Cookie().
+* `Query()` on a model aggregates query params into one validated object - tidy signatures for option-heavy endpoints. Same pattern exists for Header()/Cookie().
 
 ---
 
 ### Q23: What does Annotated add over default-value dependency style?
-* `param: Annotated[User, Depends(get_user)]` keeps the TYPE pure without default sentinels — mypy-strict friendly and the modern docs pattern. Multiple metadata stack cleanly on top.
+* `param: Annotated[User, Depends(get_user)]` keeps the TYPE pure without default sentinels - mypy-strict friendly and the modern docs pattern. Multiple metadata stack cleanly on top.
 
 ---
 
 ### Q24: Where does an HTTPException raised inside a DEPENDENCY land relative to handler logic?
-* Dependency failures resolve before body parsing and before your handler runs — cheapest rejection point for auth errors; same global exception handlers process them.
+* Dependency failures resolve before body parsing and before your handler runs - cheapest rejection point for auth errors; same global exception handlers process them.
 
 ---
 
 ### Q25: What do route tags control?
-* Docs organization only — grouping/sections/order in Swagger & ReDoc. Zero runtime effect; include-time tag metadata adds descriptions.
+* Docs organization only - grouping/sections/order in Swagger & ReDoc. Zero runtime effect; include-time tag metadata adds descriptions.
 
 ---
 
@@ -227,12 +227,12 @@ async def items(f: Annotated[Filter, Query()]): ...
 ---
 
 ### Q29: Why set explicit OpenAPI operation ids?
-* Stabilizes generated client function names — auto-generated ids churn across refactors breaking codegen consumers.
+* Stabilizes generated client function names - auto-generated ids churn across refactors breaking codegen consumers.
 
 ---
 
 ### Q30: What does include_in_schema=False hide?
-* Removes a live route from OpenAPI/docs while keeping it routable — health probes, internal endpoints, legacy paths.
+* Removes a live route from OpenAPI/docs while keeping it routable - health probes, internal endpoints, legacy paths.
 
 ---
 
@@ -242,7 +242,7 @@ async def items(f: Annotated[Filter, Query()]): ...
 ---
 
 ### Q32: How is `{item_id:int}` validated?
-* Path converter coerces + validates; violations return automatic 422 pinpointing the path parameter — no manual checks required.
+* Path converter coerces + validates; violations return automatic 422 pinpointing the path parameter - no manual checks required.
 
 ---
 
@@ -252,7 +252,7 @@ async def items(f: Annotated[Filter, Query()]): ...
 ---
 
 ### Q34: How do you set cookies/headers alongside a normal JSON return?
-* Inject `response: Response`, mutate `response.set_cookie(...)`/headers, then return your object — framework merges both into the final response.
+* Inject `response: Response`, mutate `response.set_cookie(...)`/headers, then return your object - framework merges both into the final response.
 
 ---
 
@@ -262,7 +262,7 @@ async def items(f: Annotated[Filter, Query()]): ...
 ---
 
 ### Q36: How should CORS origins be configured for real deployments?
-* Origins list from Settings injected into CORSMiddleware; wildcard + credentials is spec-illegal — enforce explicit origin lists via config validation.
+* Origins list from Settings injected into CORSMiddleware; wildcard + credentials is spec-illegal - enforce explicit origin lists via config validation.
 
 ---
 
@@ -277,12 +277,12 @@ async def items(f: Annotated[Filter, Query()]): ...
 ---
 
 ### Q39: What is app.mount for?
-* Delegating prefixes to sub-applications or StaticFiles instances — versioned splits and admin panels living beside your API with full isolation.
+* Delegating prefixes to sub-applications or StaticFiles instances - versioned splits and admin panels living beside your API with full isolation.
 
 ---
 
 ### Q40: How can CI catch accidental OpenAPI changes?
-* Test asserting /openapi.json against stored snapshot (or oasdiff-style compare) — schema becomes a reviewed artifact like code.
+* Test asserting /openapi.json against stored snapshot (or oasdiff-style compare) - schema becomes a reviewed artifact like code.
 
 ---
 
@@ -296,7 +296,7 @@ async def upload_file(file: UploadFile = File(...)):
     contents = await file.read()
     return {"filename": file.filename, "content_type": file.content_type, "size": len(contents)}
 ```
-* `UploadFile` uses a SpooledTemporaryFile stored in memory until a threshold, then spills to disk — preventing memory exhaustion compared to raw `bytes = File(...)`.
+* `UploadFile` uses a SpooledTemporaryFile stored in memory until a threshold, then spills to disk - preventing memory exhaustion compared to raw `bytes = File(...)`.
 
 ---
 

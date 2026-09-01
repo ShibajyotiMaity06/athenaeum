@@ -29,7 +29,7 @@ export default function ShippingPage() {
           <section>
             <h2>1. Nature of Product (100% Digital SaaS)</h2>
             <p>
-              <strong>DevPrep does not sell or ship physical merchandise.</strong> All services offered on <code>devprep.online</code> are 100% digital cloud-based educational software and technical question codices.
+              <strong>DevPrep does not sell or ship physical merchandise.</strong> All services offered on <code>www.devprep.online</code> are 100% digital cloud-based educational software and technical question codices.
             </p>
           </section>
 

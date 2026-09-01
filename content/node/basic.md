@@ -267,44 +267,44 @@
 
 ---
 
-### Q44: npm vs npx — what is the difference?
+### Q44: npm vs npx - what is the difference?
 * **npm** installs/manages packages and runs scripts defined in package.json (`npm run dev`, `npm i -D jest`).
-* **npx** executes a package binary without requiring a global install — it checks local `node_modules/.bin` first, then fetches temporarily (`npx create-next-app@latest`).
+* **npx** executes a package binary without requiring a global install - it checks local `node_modules/.bin` first, then fetches temporarily (`npx create-next-app@latest`).
 * Value: running one-off CLIs (generators, formatters) without polluting global scope, and always executing the project-local version of a tool (avoids version drift between global and local installs).
-* Security note: blindly npx-ing unfamiliar packages executes arbitrary code — pin versions for anything sensitive.
+* Security note: blindly npx-ing unfamiliar packages executes arbitrary code - pin versions for anything sensitive.
 
 ### Q45: What are Node.js core modules? Name the most used ones.
-* Modules compiled into Node itself — no install needed, imported by bare name (`require('fs')`). They win over npm packages of the same name unless prefixed (`node:fs` explicitly guarantees the builtin).
+* Modules compiled into Node itself - no install needed, imported by bare name (`require('fs')`). They win over npm packages of the same name unless prefixed (`node:fs` explicitly guarantees the builtin).
 * Everyday essentials: **fs** (filesystem), **path**, **http/https**, **crypto**, **os**, **url**, **util**, **events**, **stream**, **zlib**, **child_process**, **dns**, **net**, **assert**, **buffer**.
 * Modern additions worth naming: **fetch/AbortController (globals via undici)**, **node:test** runner, **worker_threads**, **diagnostics_channel**, **readline/promises**.
 
 ### Q46: How do setTimeout/setInterval work in Node, and what do .unref()/.ref() do?
-* Timers schedule callbacks onto the event loop's *timers phase*, executed after their delay — subject to queue congestion (delays stretch under load; they are minimums, not guarantees).
-* `setInterval` re-queues each tick; long-running handlers cause overlap drift — self-scheduling `setTimeout` chains give cleaner pacing.
-* `.unref()` detaches a timer from keeping the event loop alive: an app whose only pending handle is an unref'd timer will exit — perfect for keepalive pings or cleanup sweeps in short-lived scripts. `.ref()` reverses it.
+* Timers schedule callbacks onto the event loop's *timers phase*, executed after their delay - subject to queue congestion (delays stretch under load; they are minimums, not guarantees).
+* `setInterval` re-queues each tick; long-running handlers cause overlap drift - self-scheduling `setTimeout` chains give cleaner pacing.
+* `.unref()` detaches a timer from keeping the event loop alive: an app whose only pending handle is an unref'd timer will exit - perfect for keepalive pings or cleanup sweeps in short-lived scripts. `.ref()` reverses it.
 * Clearing: `clearTimeout/clearInterval` cancel pending ticks (interval handles change identity after first fire in some engines).
 
 ### Q47: What are the classic JSON.parse/stringify pitfalls?
-* **Circular structures** throw `TypeError: Converting circular structure to JSON` — need replacer with WeakSet tracking or libraries (flatted).
+* **Circular structures** throw `TypeError: Converting circular structure to JSON` - need replacer with WeakSet tracking or libraries (flatted).
 * **Lossy round-trips**: undefined functions/values dropped from objects (nullified in arrays), Dates become ISO strings, Maps/Sets → `{}`, BigInt throws, -0→0, NaN/Infinity → null.
 * **Prototype pollution on parse**: `"__proto__"` keys revive as own properties (mitigate with reviver filters or hardened parsers).
-* Performance: stringify dominates CPU profiles for large payloads — streaming serializers exist; also `JSON.parse` of untrusted data is a DoS vector (deep nesting bombs).
+* Performance: stringify dominates CPU profiles for large payloads - streaming serializers exist; also `JSON.parse` of untrusted data is a DoS vector (deep nesting bombs).
 
 ### Q48: What is the difference between stdout and stderr in Node?
-* `console.log` writes to **stdout** (fd 1); `console.error/warn` write to **stderr** (fd 2) — separate streams shell pipelines can split: `node app.js > out.log 2> err.log`.
-* Both are synchronous when pointing at files/TTYs on POSIX (and pipes on Windows) but **asynchronous** when piped on POSIX — huge synchronous writes can interleave oddly under load.
+* `console.log` writes to **stdout** (fd 1); `console.error/warn` write to **stderr** (fd 2) - separate streams shell pipelines can split: `node app.js > out.log 2> err.log`.
+* Both are synchronous when pointing at files/TTYs on POSIX (and pipes on Windows) but **asynchronous** when piped on POSIX - huge synchronous writes can interleave oddly under load.
 * Custom tooling should route diagnostics/errors to stderr so machine-readable output on stdout stays clean (`jq`-able).
 * Related: `process.stdout.isTTY` detects terminal vs pipe, enabling color decisions; writing after process exit throws EPIPE.
 
 ### Q49: How do you terminate a Node process properly? Explain exit codes.
-* Natural exit: event loop empties. Forced: `process.exit(code)` truncates pending async writes (stdout may lose logs) — prefer setting `process.exitCode = N` and letting the loop drain.
+* Natural exit: event loop empties. Forced: `process.exit(code)` truncates pending async writes (stdout may lose logs) - prefer setting `process.exitCode = N` and letting the loop drain.
 * Conventional codes: 0 success; 1 general failure; others app-defined (npm treats non-zero as script failure).
-* Signals: SIGINT (Ctrl+C), SIGTERM (docker/k8s stop) trigger handlers — start graceful shutdown there, then exit deliberately; unhandled fatal states (`uncaughtException`) should log + exit nonzero rather than limp along.
+* Signals: SIGINT (Ctrl+C), SIGTERM (docker/k8s stop) trigger handlers - start graceful shutdown there, then exit deliberately; unhandled fatal states (`uncaughtException`) should log + exit nonzero rather than limp along.
 * `--exit-unhandled-rejections=throw`-era defaults made rejection crashes consistent; know your runtime's flag defaults when auditing behavior.
 
 ### Q50: What is dotenv and how should configuration be layered?
 * `dotenv` loads `.env` key/values into `process.env` at boot (never commit real secrets; commit `.env.example`).
-* Layering best practice: defaults in code ← environment-specific `.env.<NODE_ENV>` ← process env injected by the platform (CI/containers) — later sources override earlier (`dotenv` supports `override` option).
+* Layering best practice: defaults in code ← environment-specific `.env.<NODE_ENV>` ← process env injected by the platform (CI/containers) - later sources override earlier (`dotenv` supports `override` option).
 * Validation step: schema-check required vars at startup (zod/joi/env-schema) so missing config fails fast with a clear message instead of undefined-variable bugs at 3am.
 * Beyond dotenv: platform secret managers (AWS SSM/Secrets Manager, Vault) with SDK retrieval avoid secrets-on-disk entirely; watch for `NODE_ENV` misuse as feature flag (use explicit flags).
 

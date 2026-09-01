@@ -193,20 +193,20 @@
 ---
 
 ### Q44: What are const type parameters (TS 5.0) and what problem do they solve?
-* `<const T>` infers literal/tuple types *without* requiring `as const` at every call site: `function firstOf<const T extends readonly unknown[]>(arr: T): T[number]` — `firstOf(['a','b'])` infers `readonly ['a','b']`, not `string[]`.
+* `<const T>` infers literal/tuple types *without* requiring `as const` at every call site: `function firstOf<const T extends readonly unknown[]>(arr: T): T[number]` - `firstOf(['a','b'])` infers `readonly ['a','b']`, not `string[]`.
 * Motivation: generic helpers over literal data (event-name registries, route tables, typed query builders) previously forced awkward `as const` sprinkling or lost precision.
 * Semantics: affects inference only (like contextual as-const), not assignability rules; object literals get readonly properties, arrays become readonly tuples, literals stop widening.
 * Interplay notes: combines with `extends readonly unknown[]` bounds; doesn't affect non-generic contexts; supersedes many `DeepReadonlyLiteral` hack utilities.
 
 ### Q45: What do explicit variance annotations (`in`/`out`) add in TS 4.7+?
-* Interfaces may declare variance intent: `interface Source<out T> { get(): T }`, `interface Sink<in T> { put(v: T): void }` — compiler verifies structural usage actually matches, erroring at declaration if not.
-* Benefits: faster checking (skip structural variance computation for annotated params — measurable in big monorepos), dramatically better error messages at misuse sites (variance mismatch reported where the wrong assignment happens, with the offending property named).
+* Interfaces may declare variance intent: `interface Source<out T> { get(): T }`, `interface Sink<in T> { put(v: T): void }` - compiler verifies structural usage actually matches, erroring at declaration if not.
+* Benefits: faster checking (skip structural variance computation for annotated params - measurable in big monorepos), dramatically better error messages at misuse sites (variance mismatch reported where the wrong assignment happens, with the offending property named).
 * Rules: `out`=covariant (output positions only), `in`=contravariant (input positions), `in out`=invariant; method-position bivariance still applies separately (annotations govern property/function-property positions).
-* Adoption guidance: library authors annotate public generic interfaces first — internal types rarely need it; mismatches surface latent unsoundness worth fixing.
+* Adoption guidance: library authors annotate public generic interfaces first - internal types rarely need it; mismatches surface latent unsoundness worth fixing.
 
 ### Q46: How do interface declarations merge, and what conflicts error vs overload?
 * Non-function members with identical names must be **identical types**, else compile error (`Subsequent property declarations must have the same type`).
-* Function members merge into **overloads** — later interfaces' signatures appear first in resolution order (reverse declaration order quirk).
+* Function members merge into **overloads** - later interfaces' signatures appear first in resolution order (reverse declaration order quirk).
 * Same-named interfaces across modules merge only within shared scope (global augmentations collide dangerously); namespace+interface merging composes statics onto shapes.
 * Practical consequences: patching third-party types relies on merging being additive; defensive library design uses `type` aliases (no merging) to lock shapes; linters ban global interface augmentation outside dedicated `.d.ts` files to prevent invisible coupling.
 
@@ -225,7 +225,7 @@ const User2 = Timestamped(User);
 new User2().stamp();          // fully typed, including created/stamp
 ```
 * Key mechanics: constrained generic preserves the incoming constructor shape; returned class expression extends it, adding members; chained mixins compose (`Timestamped(SoftDelete(Activatable(Base)))`) with intersection-flavored member accumulation.
-* Pitfalls: private/protected members don't flow through structural bases cleanly (use protected-by-convention or symbol keys), decorator-style metadata ordering issues, and nominal identity loss (two mixed chains aren't assignable) — sometimes branded tokens restore safety.
+* Pitfalls: private/protected members don't flow through structural bases cleanly (use protected-by-convention or symbol keys), decorator-style metadata ordering issues, and nominal identity loss (two mixed chains aren't assignable) - sometimes branded tokens restore safety.
 
 ### Q48: How can template literal types encode state machines?
 * Combine literal unions, template interpolation, and conditional mapping to type valid transitions:
@@ -238,11 +238,11 @@ const table: Transition[] = ['idle --FETCH--> loading', 'loading --RESOLVE--> id
 table.push('idle --RESOLVE--> loading');
 ```
 * Escalations: mapped transition records keyed by templated keys (`{ [K in `${State}_${Event}`]?: State }`), path-typed routers (`/${string}/${number}`), SQL/query DSL fragments, and i18n key trees derived from message catalogs.
-* Limits: combinatorial explosion inflates check times on large graphs; error messages degrade; runtime guarantees still require the actual reducer/table — types constrain authors, not execution.
+* Limits: combinatorial explosion inflates check times on large graphs; error messages degrade; runtime guarantees still require the actual reducer/table - types constrain authors, not execution.
 
 ### Q49: How do `isolatedModules` and type elision interact under single-file transpilers?
-* Transpilers (esbuild/swc/babel) process file-by-file — no whole-program type info to decide whether an imported binding is type-only; `isolatedModules: true` makes TS reject constructs whose meaning depends on cross-file analysis (const enums re-exported, classes-as-types ambiguities, re-exporting types without `export type`).
-* Elision rules: plain `import { Foo } from './x'` used only in type positions would traditionally drop the import during emit — impossible decision for single-file tools, hence the mandate for explicit `import type`/`export type`.
+* Transpilers (esbuild/swc/babel) process file-by-file - no whole-program type info to decide whether an imported binding is type-only; `isolatedModules: true` makes TS reject constructs whose meaning depends on cross-file analysis (const enums re-exported, classes-as-types ambiguities, re-exporting types without `export type`).
+* Elision rules: plain `import { Foo } from './x'` used only in type positions would traditionally drop the import during emit - impossible decision for single-file tools, hence the mandate for explicit `import type`/`export type`.
 * Failure modes when ignored: runtime crashes importing modules with side effects, bundler dead-code misjudgments, dual-package hazards in ESM/CJS interop.
 * Modern baseline: enable isolatedModules everywhere, add verbatimModuleSyntax for stricter clarity, and treat const enum usage as deprecated in library surfaces.
 
@@ -259,8 +259,8 @@ function parse(json: string): Result<Config, SyntaxError> {
 const r = parse(input);
 if (!r.ok) { /* r.error narrowed */ } else { /* r.value narrowed */ }
 ```
-* Discriminant `ok` drives exhaustive narrowing; helpers (`map`, `andThen/flatMap`, `unwrapOr`) compose pipelines without throwing through stack frames — errors become values in signatures, visible to callers and enforced at every hop.
-* Contrast with exceptions: invisible in type signatures, un-enumerable failure modes; Result trades ergonomics (no early throws) for total function honesty — libraries like neverthrow/zod formalize it.
+* Discriminant `ok` drives exhaustive narrowing; helpers (`map`, `andThen/flatMap`, `unwrapOr`) compose pipelines without throwing through stack frames - errors become values in signatures, visible to callers and enforced at every hop.
+* Contrast with exceptions: invisible in type signatures, un-enumerable failure modes; Result trades ergonomics (no early throws) for total function honesty - libraries like neverthrow/zod formalize it.
 * Advanced: differentiate error unions (`Result<T, ParseErr | NetworkErr>`), accumulate validation errors via Either-left lists, and keep thrown exceptions for truly exceptional invariant violations only.
 
 ---

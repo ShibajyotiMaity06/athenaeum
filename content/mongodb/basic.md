@@ -224,44 +224,44 @@
 ---
 
 ### Q44: What is a namespace in MongoDB?
-* A **namespace** is the full name of a collection: `<database>.<collection>` — e.g., `shop.orders`. Indexes get their own namespaces suffixed internally (`db.$ix` structures managed by the engine).
+* A **namespace** is the full name of a collection: `<database>.<collection>` - e.g., `shop.orders`. Indexes get their own namespaces suffixed internally (`db.$ix` structures managed by the engine).
 * Naming rules: database names are case-sensitive on case-sensitive filesystems (avoid mixed case for portability), collection names may not contain `$` or null, cannot start with `system.` (reserved).
 * Length limits existed historically (~255 bytes total); very long namespaces hurt readability and tooling.
-* Interview angle: since WiredTiger, collections map to table files internally and the old "namespace hash in mmapv1" trivia is obsolete — but the naming discipline still matters.
+* Interview angle: since WiredTiger, collections map to table files internally and the old "namespace hash in mmapv1" trivia is obsolete - but the naming discipline still matters.
 
-### Q45: deleteOne/deleteMany vs drop() vs remove — what is the difference?
+### Q45: deleteOne/deleteMany vs drop() vs remove - what is the difference?
 * `deleteOne(filter)` / `deleteMany(filter)` remove matching documents but keep the collection, its indexes, and its settings; deletions generate oplog entries and go through replication.
 * `drop()` removes the entire collection *including indexes*, collection options (validator, capped), and is effectively instant metadata surgery rather than per-document work.
 * Deleting a whole collection's contents via `deleteMany({})` is O(documents), writes a huge oplog trail, and fires every index maintenance + change stream event; `drop()` is preferred when nothing needs to be preserved. (Legacy `remove()` is deprecated/removed from drivers.)
 
 ### Q46: What is a cursor in MongoDB? How does batching work?
-* `find()` does not return documents directly — it returns a **cursor**, a handle over a server-side result set fetched in batches as you iterate.
+* `find()` does not return documents directly - it returns a **cursor**, a handle over a server-side result set fetched in batches as you iterate.
 * First batch (default 101 docs or up to 16MB) arrives with the initial reply; subsequent batches flow via `getMore` commands as the client exhausts each batch. `batchSize()` tunes this.
 * Server-side cursors have a lifetime: idle cursors are reaped after ~10 minutes (`cursorTimeoutMillis`) unless `noCursorTimeout` is set; closing early via `.close()` frees resources.
 * Consequences worth mentioning: modifying a collection mid-iteration has undefined inclusion semantics; huge sorts must fit memory limits or be indexed.
 
-### Q47: countDocuments() vs estimatedDocumentCount() vs legacy count — compare.
+### Q47: countDocuments() vs estimatedDocumentCount() vs legacy count - compare.
 * `countDocuments(filter)` runs an aggregation `$match+$group` over the actual filter → accurate but scans matching entries (uses indexes well).
 * `estimatedDocumentCount()` reads collection metadata (WiredTiger statistics) → instant approximate count, ignores filters, no shard-filtering subtleties.
 * Legacy `count()` command mixes both behaviors with surprising accuracy/performance tradeoffs and is deprecated in drivers.
-* Rule: exact counts with predicates → countDocuments; dashboard totals on huge collections → estimatedDocumentCount; never build pagination off counts on hot paths — use cursor-based pagination instead.
+* Rule: exact counts with predicates → countDocuments; dashboard totals on huge collections → estimatedDocumentCount; never build pagination off counts on hot paths - use cursor-based pagination instead.
 
 ### Q48: What is a replica set at a high level and why use one?
 * A **replica set** is a group of mongod processes holding the same data: one Primary accepting writes, plus Secondaries replicating its oplog asynchronously.
 * **Purposes**: high availability (automatic failover election if primary dies), read scaling (secondaries can serve reads via read preference), disaster recovery through delayed hidden members, geographic distribution.
 * Typical production shape: 3 data-bearing nodes across failure domains; arbiters add votes without data (rarely recommended now).
-* Foundation question — expect follow-ups on elections, write concern majority, and rollback behavior.
+* Foundation question - expect follow-ups on elections, write concern majority, and rollback behavior.
 
 ### Q49: What is the difference between mongod, mongos, and the shell/drivers?
 * **mongod**: core database server daemon storing data and serving queries (replica set member or standalone).
-* **mongos**: stateless query router in sharded clusters — receives client operations, consults config servers about data placement, fans out to shards, merges results.
+* **mongos**: stateless query router in sharded clusters - receives client operations, consults config servers about data placement, fans out to shards, merges results.
 * **mongosh / drivers**: clients. The shell is a JS environment for admin/scripting; drivers (Node, Python, Java...) implement the wire protocol, connection pooling, retryable writes, and sessions applications actually use.
 * Architecture recall: app → driver → [mongos if sharded] → replica set members.
 
 ### Q50: What happens if you omit `_id`, and what causes a duplicate key error?
 * Omitting `_id`: the server auto-generates an ObjectId client-side (drivers do it first, so the id is known before insert round-trip). Embedded documents don't require `_id`.
-* The `_id` field carries a **unique index** by definition — inserting a second document with the same value fails with `E11000 duplicate key error`; the insert aborts (in ordered bulk writes, everything after it aborts too).
-* Custom _id values are encouraged when a natural unique key exists (email, SKU): saves a lookup index and makes APIs self-describing — but beware mutable natural keys and size limits (ObjectId keeps index compact).
+* The `_id` field carries a **unique index** by definition - inserting a second document with the same value fails with `E11000 duplicate key error`; the insert aborts (in ordered bulk writes, everything after it aborts too).
+* Custom _id values are encouraged when a natural unique key exists (email, SKU): saves a lookup index and makes APIs self-describing - but beware mutable natural keys and size limits (ObjectId keeps index compact).
 
 ---
 

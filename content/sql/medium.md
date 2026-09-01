@@ -203,7 +203,7 @@ CREATE INDEX ix_orders_total ON orders(total);
 ### Q45: How do you store and index JSON in relational databases?
 * Native types: PostgreSQL `json` (text-preserving) vs `jsonb` (parsed binary, indexable, deduplicated); MySQL `JSON` type with inline binary format; SQL Server NVARCHAR + `JSON_VALUE/OPENJSON` functions.
 * Indexing: GIN indexes over jsonb (`CREATE INDEX ON docs USING gin(payload jsonb_path_ops)`) accelerate containment queries (`payload @> '{"status":"active"}'`); expression indexes pin specific paths (`((payload->>'city'))`).
-* When appropriate: truly variable attributes, external-system payloads, config blobs. Anti-pattern: relational data hidden in JSON losing constraints/joins/stats — model stable relationships as columns/tables.
+* When appropriate: truly variable attributes, external-system payloads, config blobs. Anti-pattern: relational data hidden in JSON losing constraints/joins/stats - model stable relationships as columns/tables.
 * Interview follow-ups: partial updates (jsonb_set rewrite cost = whole document), statistics blindness leading to bad plans, and schema-validation via CHECK + JSON Schema.
 
 ### Q46: Explain the anatomy of a recursive CTE.
@@ -219,13 +219,13 @@ WITH RECURSIVE tree AS (
 SELECT * FROM tree;
 ```
 * Execution: anchor evaluates once producing a working set; the recursive member re-evaluates against the working set repeatedly until it returns zero rows; results accumulate.
-* Requirements: exactly one recursive reference; termination relies on data eventually yielding empty sets — infinite loops need depth guards/cycle detection.
+* Requirements: exactly one recursive reference; termination relies on data eventually yielding empty sets - infinite loops need depth guards/cycle detection.
 * Typical uses: org charts, bill-of-materials, graph reachability, category trees. (Depth/performance hazards covered separately at hard level.)
 
 ### Q47: What is read/write splitting with replicas, and what consistency traps arise?
-* Pattern: writes go to the primary; reads fan out to synchronous/asynchronous replicas — scaling read throughput cheaply and isolating analytics from OLTP.
-* Trap 1 — **replication lag**: write-then-immediate-read hits a stale replica ("I updated my email but it shows old"). Mitigations: sticky routing after writes (session reads primary briefly), read-your-writes tokens (LSN/GTID wait), causal consistency libraries.
-* Trap 2 — failover semantics: promoting a lagging replica can lose acknowledged transactions (RPO>0); semi-sync replication trades latency for safety.
+* Pattern: writes go to the primary; reads fan out to synchronous/asynchronous replicas - scaling read throughput cheaply and isolating analytics from OLTP.
+* Trap 1 - **replication lag**: write-then-immediate-read hits a stale replica ("I updated my email but it shows old"). Mitigations: sticky routing after writes (session reads primary briefly), read-your-writes tokens (LSN/GTID wait), causal consistency libraries.
+* Trap 2 - failover semantics: promoting a lagging replica can lose acknowledged transactions (RPO>0); semi-sync replication trades latency for safety.
 * Operational notes: connection routing layers (ProxySQL/pgbouncer-style), monitoring replica lag as an SLO, and keeping heavy reports on dedicated replicas to protect primary latency.
 
 ### Q48: What is the soft-delete pattern and how must unique constraints adapt?
@@ -237,14 +237,14 @@ SELECT * FROM tree;
 * Costs infect everything: every query needs `WHERE deleted_at IS NULL` (views/policies centralize this), unique checks, FK references to deleted rows, and analytics miscounts if filters slip. Some teams prefer status columns + audit trails instead.
 
 ### Q49: How do you delete/archive millions of rows safely?
-* One giant DELETE takes the longest lock, bloats WAL/replication lag, explodes index maintenance, and can starve OLTP — sometimes worse via MVCC dead tuples (Postgres bloat).
+* One giant DELETE takes the longest lock, bloats WAL/replication lag, explodes index maintenance, and can starve OLTP - sometimes worse via MVCC dead tuples (Postgres bloat).
 * Batching recipe: loop deleting `LIMIT/BATCH` rows (5–50k) selected by PK ranges, commit each batch, sleep/throttle between batches, monitor replica lag and lock waits, stop on threshold breach.
-* Alternatives: partition-drop (TRUNCATE/DROP oldest partitions instantly, zero row-level work — design tables partitioned by date from day one), `DELETE ... LIMIT` native support, CTAS keep-and-swap (copy survivors to new table, rename swap), or `pg_repack`-style online rebuild tools.
+* Alternatives: partition-drop (TRUNCATE/DROP oldest partitions instantly, zero row-level work - design tables partitioned by date from day one), `DELETE ... LIMIT` native support, CTAS keep-and-swap (copy survivors to new table, rename swap), or `pg_repack`-style online rebuild tools.
 * Always pair with vacuum/analyze scheduling afterwards and verify FK/cascade interactions before running in prod.
 
-### Q50: CHECK constraint vs lookup table vs ENUM — how do you choose?
+### Q50: CHECK constraint vs lookup table vs ENUM - how do you choose?
 * **CHECK**: zero-join validation, instant ALTER, ideal for stable math/domain rules (`price >= 0`, `status IN ('new','paid')` when the set rarely evolves). Weakness: adding values requires DDL on possibly huge tables (fast metadata-only in modern PG/SQL Server, still ops overhead).
-* **Lookup table**: values as data — add rows anytime, attach extra attributes (labels, sort order, i18n names), FK-enforced integrity; cost is join overhead and seeding discipline across environments.
+* **Lookup table**: values as data - add rows anytime, attach extra attributes (labels, sort order, i18n names), FK-enforced integrity; cost is join overhead and seeding discipline across environments.
 * **ENUM type** (PG/MySQL): compact storage + type safety, but painful value additions (ALTER TYPE), poor cross-db portability, and tooling quirks.
 * Rule of thumb: closed mathematical domains → CHECK; evolving business categories needing metadata → lookup table; tiny fixed UI-ish sets → enum acceptable. Consistency across environments matters more than the specific choice.
 

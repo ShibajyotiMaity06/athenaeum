@@ -371,53 +371,53 @@ Importing a Server Action into a Client Component exposes its backend endpoint t
 ---
 
 ### Q44: How do you coordinate ISR/revalidation across multiple self-hosted instances?
-* Problem: time-based ISR caches pages per-process; with N replicas behind a load balancer, instance A may serve stale content after instance B revalidated — on-demand `res.revalidate()` only mutates the receiving process's cache.
+* Problem: time-based ISR caches pages per-process; with N replicas behind a load balancer, instance A may serve stale content after instance B revalidated - on-demand `res.revalidate()` only mutates the receiving process's cache.
 * Solutions ladder:
   1. Sticky-free correctness: treat every instance equally by broadcasting revalidation events over Redis pub/sub / NATS; each pod flushes its in-memory cache entry.
   2. Centralize cache: shared LRU (Redis/Memcached) in front of instances for full-route HTML, with instances acting as render workers.
   3. Version-tagged purge at the CDN layer (Fastly/Varnish surrogate keys) so origin staleness matters less.
 * Kubernetes nuance: rolling deploys must drain old-generation caches or mix pre/post-deploy HTML fragments (hydration mismatch risk).
-* This question separates "used Vercel" from "operated Next.js" — expect follow-ups on cache keys, deploy markers, and graceful handoff windows.
+* This question separates "used Vercel" from "operated Next.js" - expect follow-ups on cache keys, deploy markers, and graceful handoff windows.
 
 ### Q45: How does streaming SSR interact with backpressure and aborted renders?
-* When a client disconnects mid-stream (navigation away, tab close), continuing to render wastes CPU and DB load: frameworks propagate abort signals into React — suspended promises receive rejection, rendering unwinds, `finally` cleanup runs.
+* When a client disconnects mid-stream (navigation away, tab close), continuing to render wastes CPU and DB load: frameworks propagate abort signals into React - suspended promises receive rejection, rendering unwinds, `finally` cleanup runs.
 * Server-to-client TCP backpressure means slow consumers stall `flush()`; well-behaved runtimes pause generating further shell chunks rather than buffering unbounded HTML in memory.
 * Slow subtree containment: wrap laggy data sources in Suspense so their delay streams late without blocking shell; set timeouts around fetches (AbortSignal) so a hung upstream becomes a streamed fallback + error boundary instead of a stuck response holding a worker.
-* Production symptom to cite: memory spikes correlating with many concurrent partial renders indicate missing timeouts/no abort propagation — fix at the data-fetch layer, not with generic PM2 restarts.
+* Production symptom to cite: memory spikes correlating with many concurrent partial renders indicate missing timeouts/no abort propagation - fix at the data-fetch layer, not with generic PM2 restarts.
 
 ### Q46: How do you prevent SSRF when your server fetches user-supplied URLs?
-* Threat: attacker supplies `https://internal-metadata.aws/iam/...` or `http://localhost:6379` — your Next server (inside trusted network) fetches it, leaking credentials or mutating internal services.
+* Threat: attacker supplies `https://internal-metadata.aws/iam/...` or `http://localhost:6379` - your Next server (inside trusted network) fetches it, leaking credentials or mutating internal services.
 * Defense-in-depth checklist:
-  1. Allowlist outbound hosts/schemes (https only); reject IPs outright — resolve DNS then verify resolved addresses against private ranges (10/8, 172.16/12, 192.168/16, 127/8, link-local, cloud metadata 169.254.169.254) to defeat DNS-rebinding.
+  1. Allowlist outbound hosts/schemes (https only); reject IPs outright - resolve DNS then verify resolved addresses against private ranges (10/8, 172.16/12, 192.168/16, 127/8, link-local, cloud metadata 169.254.169.254) to defeat DNS-rebinding.
   2. Disable redirects or re-validate each hop; cap response size and timeout (AbortSignal).
   3. Egress proxy/firewall for the app subnet; separate network policies for renderer vs data services.
-  4. Never echo raw fetched content into HTML (stored XSS vector) — sanitize or treat as opaque bytes.
-* Framework note: image optimizer had historical SSRF CVEs — keep `images.remotePatterns` strict and Next patched; auditors specifically probe `/api/fetch?url=` style proxies.
+  4. Never echo raw fetched content into HTML (stored XSS vector) - sanitize or treat as opaque bytes.
+* Framework note: image optimizer had historical SSRF CVEs - keep `images.remotePatterns` strict and Next patched; auditors specifically probe `/api/fetch?url=` style proxies.
 
 ### Q47: What dominates Edge Middleware cold starts and how do you optimize them?
 * Edge functions pay startup costs per isolate: module evaluation of your bundled middleware + framework glue, V8 isolate spin-up, and (on some platforms) regional cold placement.
-* Budget discipline: middleware bundles should stay tiny — import only what's needed for routing/auth decisions (JWT verification lib, cookie parsing); heavy SDKs (DB ORMs, large utils) balloon cold time since edge bundles include everything reachable.
+* Budget discipline: middleware bundles should stay tiny - import only what's needed for routing/auth decisions (JWT verification lib, cookie parsing); heavy SDKs (DB ORMs, large utils) balloon cold time since edge bundles include everything reachable.
 * Patterns: move heavy logic to Node runtime Route Handlers invoked conditionally; precompute verification keys (WebCrypto imported once at module top); avoid top-level awaits on slow resources; keep regexes precompiled and small.
 * Measure: platform traces show cold vs warm invocations; p99 latency SLOs usually force warm-traffic design (regional min instances where supported).
-* Contrast: Node runtime middleware trades slightly higher cold cost for full API access — choosing runtimes per segment is itself the senior answer.
+* Contrast: Node runtime middleware trades slightly higher cold cost for full API access - choosing runtimes per segment is itself the senior answer.
 
 ### Q48: How does the React Compiler integrate with Next.js and what changes for developers?
-* The compiler (React Forget lineage) statically analyzes components/hooks and auto-inserts memoization equivalent to disciplined useMemo/useCallback/memo — eliminating most manual memo boilerplate and its stale-dependency bugs.
-* Next adoption: enable via `experimental.reactCompiler: true` (plus babel-plugin-react-compiler or SWC-supported path); works alongside existing code — un-analyzable patterns bail out safely rather than mis-optimize.
-* Consequences: fewer renders by default; ESLint plugin flags code that breaks Rules of React (the compiler's assumptions) — adopting it effectively enforces stricter purity discipline codebase-wide.
-* Remaining manual work: structural wins (virtualization, code-splitting, moving work to server components) are untouched — the compiler optimizes within components, not architectures; profiling still required for real bottlenecks.
+* The compiler (React Forget lineage) statically analyzes components/hooks and auto-inserts memoization equivalent to disciplined useMemo/useCallback/memo - eliminating most manual memo boilerplate and its stale-dependency bugs.
+* Next adoption: enable via `experimental.reactCompiler: true` (plus babel-plugin-react-compiler or SWC-supported path); works alongside existing code - un-analyzable patterns bail out safely rather than mis-optimize.
+* Consequences: fewer renders by default; ESLint plugin flags code that breaks Rules of React (the compiler's assumptions) - adopting it effectively enforces stricter purity discipline codebase-wide.
+* Remaining manual work: structural wins (virtualization, code-splitting, moving work to server components) are untouched - the compiler optimizes within components, not architectures; profiling still required for real bottlenecks.
 
 ### Q49: How do you isolate per-request state in Next.js server code (module scope hazards)?
-* Node servers multiplex requests through shared module instances — anything stashed in module/global variables (SDK clients with request-bound config, memoized-per-user data, locale state) bleeds across users; classic bug class: tenant A sees tenant B's data after warm reuse.
+* Node servers multiplex requests through shared module instances - anything stashed in module/global variables (SDK clients with request-bound config, memoized-per-user data, locale state) bleeds across users; classic bug class: tenant A sees tenant B's data after warm reuse.
 * Safe patterns: derive request context inside the request path (pass explicitly); use `AsyncLocalStorage` to scope implicit context per request; React `cache()` for per-render dedupe; construct request-scoped clients instead of configuring singletons per user.
-* Known footguns: `getServerSideProps`-era examples caching promises in module maps; Zustand stores created at module level shared across requests (fix: per-request factory + context provider — the documented Next.js SSR pattern); global interceptors mutating headers per-request.
+* Known footguns: `getServerSideProps`-era examples caching promises in module maps; Zustand stores created at module level shared across requests (fix: per-request factory + context provider - the documented Next.js SSR pattern); global interceptors mutating headers per-request.
 * Audit technique: grep for top-level mutable singletons in server-only code paths; load-test two tenants concurrently and assert isolation.
 
 ### Q50: What are View Transitions in Next.js and what problems do they solve?
 * The View Transitions API lets the browser animate DOM morphs atomically (old snapshot fades/slides out, new animates in) without manual double-buffer hacks; Next exposes experimental support hooking App Router navigations (`experimental.viewTransition`) and React's `<ViewTransition>` primitives.
 * Wins: continuity cues reduce cognitive load (list→detail expansions, shared-element morphs), smoother perceived performance on slow navigations because the transition masks fetch latency, and CSS-only choreography (view-transition-name pairing) replacing fragile FLIP libraries.
 * Constraints: same-document transitions are cheap; cross-document needs MPA support; nested naming collisions cause group merges; reduced-motion media queries must gate effects for accessibility.
-* Senior framing: transitions are UX polish layered on correct data loading — never a substitute for streaming/Suspense; measure INP impact since animations compete with input responsiveness.
+* Senior framing: transitions are UX polish layered on correct data loading - never a substitute for streaming/Suspense; measure INP impact since animations compete with input responsiveness.
 
 ---
 

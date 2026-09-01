@@ -1,11 +1,20 @@
+function getCanonicalSiteUrl(): string {
+  const envUrl =
+    process.env.VITE_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
+    process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "");
+  if (!envUrl) return "https://www.devprep.online";
+  if (envUrl.includes("localhost") || envUrl.includes("127.0.0.1")) return envUrl;
+  if (envUrl === "https://devprep.online" || envUrl === "http://devprep.online") {
+    return "https://www.devprep.online";
+  }
+  return envUrl;
+}
+
 export const SITE = {
   name: "DevPrep",
   tagline: "Systematic Technical Interview Preparation",
   headline: "Stop preparing randomly. Prepare systematically.",
-  url:
-    process.env.VITE_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
-    process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
-    "https://www.devprep.online",
+  url: getCanonicalSiteUrl(),
   description:
     "3,600+ curated technical interview questions across React, JavaScript, Node.js, TypeScript, SQL, DBMS, OS, Docker, System Design & 20+ technologies. Organized Easy to Hard. ₹399 lifetime access.",
   shortDescription:

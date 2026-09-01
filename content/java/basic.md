@@ -25,7 +25,7 @@
 
 ### Q5: Explain the concept of Autoboxing and Unboxing.
 * **Autoboxing**: Automatic conversion of primitive types to their corresponding wrapper classes by the Java compiler (e.g., `int` to `Integer`).
-* **Unboxing**: The reverse process—automatic conversion of wrapper class instances back into primitive types (e.g., `Double` to `double`).
+* **Unboxing**: The reverse process - automatic conversion of wrapper class instances back into primitive types (e.g., `Double` to `double`).
 
 ### Q6: What is the difference between equals() and ==?
 * **`==` Operator**: Compares **memory addresses (references)** for objects to see if they point to the identical location. Compares primitive values directly.
@@ -208,11 +208,11 @@
 
 ### Q44: What are wrapper classes and why do they exist?
 * Each primitive has a corresponding immutable reference type: `Integer`, `Long`, `Boolean`, `Character`, etc.
-* **Why**: generics (`List<Integer>` — primitives not allowed), collections, reflection, and APIs requiring objects; they also provide utility constants/methods (`MAX_VALUE`, `parseInt`, `valueOf`).
+* **Why**: generics (`List<Integer>` - primitives not allowed), collections, reflection, and APIs requiring objects; they also provide utility constants/methods (`MAX_VALUE`, `parseInt`, `valueOf`).
 * Autoboxing converts primitive↔wrapper implicitly. Beware: `==` between wrappers compares references (works only for the cached range -128..127 for Integer); use `.equals()`.
-* Frequent boxing inside loops creates garbage and hurts performance — prefer primitives in hot paths.
+* Frequent boxing inside loops creates garbage and hurts performance - prefer primitives in hot paths.
 
-### Q45: Array vs ArrayList — what are the differences?
+### Q45: Array vs ArrayList - what are the differences?
 | Aspect | Array | ArrayList |
 | :--- | :--- | :--- |
 | Length | Fixed at creation | Dynamic growth (~1.5x) |
@@ -224,13 +224,13 @@
 * Use arrays for fixed-size, performance-critical numeric data; ArrayList for everyday dynamic lists.
 
 ### Q46: What is a static initializer block? Describe class initialization order.
-* `static { ... }` runs once when the class is initialized — ideal for initializing static fields that need logic (populating maps, loading config).
+* `static { ... }` runs once when the class is initialized - ideal for initializing static fields that need logic (populating maps, loading config).
 * **Order**: static fields + static blocks execute in *textual order* during class initialization (triggered by first `new`, static access, or reflection), then instance fields + instance initializer blocks in textual order, then constructor body.
 * Multiple static blocks are allowed and run top-to-bottom; exceptions thrown here surface as `ExceptionInInitializerError`.
 * Pitfall: initialization cycles between classes can observe default values of not-yet-initialized statics.
 
 ### Q47: Can two methods differ only by return type? What defines a method signature?
-* No. The **method signature** = method name + parameter list (types, count, order) only — return type, access modifier, and throws clause are NOT part of it.
+* No. The **method signature** = method name + parameter list (types, count, order) only - return type, access modifier, and throws clause are NOT part of it.
 * Declaring two methods differing solely by return type is a compile error ("method already defined").
 * Overloading requires genuinely different parameter lists; covariant return types apply only to *overriding*, where a subclass may narrow the return type.
 
@@ -248,7 +248,7 @@
 
 ### Q50: Why are Strings immutable in Java?
 * **Security**: file paths, class names, network params flow through Strings; immutability prevents post-validation tampering.
-* **String pool sharing**: safe interning relies on immutability — one instance serves many references without defensive copies.
+* **String pool sharing**: safe interning relies on immutability - one instance serves many references without defensive copies.
 * **Thread safety**: freely shareable across threads with no synchronization.
 * **Hashcode caching**: the hash is computed lazily then cached, making HashMap keys fast.
 * Implementation detail: `final` class (no mutable subclass), fields final; since Java 9 the backing store is a compact `byte[]` with a coder flag instead of UTF-16 char[].

@@ -9,13 +9,13 @@ Welcome to the High-Level Design (HLD) Core Concepts Guide. This codex covers 52
 ### Q1: What are the key components of High-Level Design (HLD)?
 
 **Answer:**
-High-Level Design (HLD) defines the overall macroscopic architecture of a software system—outlining the major service boundaries, communication protocols, data persistence layers, caching strategies, and infrastructure components before writing code.
+High-Level Design (HLD) defines the overall macroscopic architecture of a software system - outlining the major service boundaries, communication protocols, data persistence layers, caching strategies, and infrastructure components before writing code.
 *   **Key Components:** Client applications (Web/Mobile), API Gateways, Load Balancers, Application Microservices, Distributed Caches (Redis), Message Queues (Kafka), Primary/Replica Databases, and Object Storage (S3).
 *   **Real-World Example:** In an e-commerce platform, HLD models how the `User Service`, `Product Catalog Service`, and `Payment Gateway` interact via asynchronous message queues rather than defining specific class methods.
 
 ---
 
-### Q2: Monolith vs. Microservices — How do you decide which architecture to use?
+### Q2: Monolith vs. Microservices - How do you decide which architecture to use?
 
 **Answer:**
 *   **Monolithic Architecture:** A single unified codebase and database.
@@ -351,8 +351,8 @@ A **Reverse Proxy** sits in front of internal web servers and intercepts incomin
 ### Q40: What is the fundamental difference between HLD and LLD?
 
 **Answer:**
-*   **High-Level Design (HLD):** Architectural macro view—system context, microservices, databases, load balancers, caching layers, message streams, data flow, and capacity planning.
-*   **Low-Level Design (LLD):** Implementation micro view—class diagrams, object-oriented design patterns, method signatures, database table column schemas, and algorithm logic.
+*   **High-Level Design (HLD):** Architectural macro view - system context, microservices, databases, load balancers, caching layers, message streams, data flow, and capacity planning.
+*   **Low-Level Design (LLD):** Implementation micro view - class diagrams, object-oriented design patterns, method signatures, database table column schemas, and algorithm logic.
 
 ---
 

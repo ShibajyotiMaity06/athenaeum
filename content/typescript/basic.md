@@ -204,36 +204,36 @@
 ---
 
 ### Q44: How does TypeScript's type inference work, and when should you annotate anyway?
-* Inference flows from initializers (`let x = 5` → number), return statements, contextual positions (callbacks typed by their target signature), and structural matching — most annotations in idiomatic TS are redundant.
+* Inference flows from initializers (`let x = 5` → number), return statements, contextual positions (callbacks typed by their target signature), and structural matching - most annotations in idiomatic TS are redundant.
 * Widening: literal values widen to base types unless held by const/as const; parameters default to `any` only where noImplicitAny permits.
 * Annotate explicitly at: exported public API boundaries (contracts stable against internal refactors), function parameters (no contextual info), delayed-initialization mutable state, and anywhere inference produces a *wider or wronger* type than intended (e.g., empty array `[]` → any[]).
 * Rule of thumb popularized by style guides: annotate edges, let inference fill the middle.
 
 ### Q45: Why do `string` vs `String`, `number` vs `Number` differ?
-* Lowercase names are TS **primitive types** — what actual JS values are; capitalized ones reference **wrapper object interfaces** (boxing artifacts like `toFixed` living on `Number.prototype`).
+* Lowercase names are TS **primitive types** - what actual JS values are; capitalized ones reference **wrapper object interfaces** (boxing artifacts like `toFixed` living on `Number.prototype`).
 * Annotating `x: String` accepts primitives structurally but signals misunderstanding; returning `new String('a')` creates an object breaking `===` comparisons.
 * Linting rules (`@typescript-eslint/no-wrapper-object-types`) ban the capitalized forms except when generically referencing the interface (rare).
-* Correct mental model: methods on primitives resolve through prototype lookup at runtime; the type system just models that access — you never need wrapper-type annotations.
+* Correct mental model: methods on primitives resolve through prototype lookup at runtime; the type system just models that access - you never need wrapper-type annotations.
 
 ### Q46: What is `import type` and why does it matter?
-* `import type { User } from './types'` imports purely for type positions — erased completely at compile time, guaranteed zero runtime import.
+* `import type { User } from './types'` imports purely for type positions - erased completely at compile time, guaranteed zero runtime import.
 * Benefits: avoids accidentally pulling modules into bundles for side effects, breaks circular runtime dependencies that only need shapes, and communicates intent ("type-only dependency").
 * Related flags: `verbatimModuleSyntax` forces explicitness (type imports must say `type`), while older `importsNotUsedAsValues`/`isolatedModules` addressed the same ambiguity era-by-era.
 * Also applies to re-exports: `export type { Config }` keeps barrels side-effect-free.
 
 ### Q47: Optional property (`prop?: T`) vs prop allowed to be undefined (`prop: T | undefined`)?
-* With `exactOptionalPropertyTypes: false` (default), they behave nearly identically — `{a?: number}` means number | undefined | missing.
+* With `exactOptionalPropertyTypes: false` (default), they behave nearly identically - `{a?: number}` means number | undefined | missing.
 * With the flag enabled, semantics diverge sharply: `a?: number` forbids explicitly assigning `undefined` (property must be absent or number), while `a: number | undefined` requires presence but tolerates undefined values.
 * Practical impact: API boundary types modeling "field may be omitted" vs "field present but null-ish" become expressible precisely; JSON serialization code needs care (`JSON.stringify` drops undefined fields either way).
 * Interview framing shows awareness that "optional" historically bundled two concepts and modern configs split them.
 
 ### Q48: What do `target` and `lib` control in tsconfig?
-* `target`: downlevels emitted JavaScript syntax — ES5 transforms classes/arrow funcs destructuring into ES5 equivalents; ES2017+ passes async/await through natively; ESNext emits latest. Affects output size/performance and which syntax needs polyfills.
-* `lib`: which ambient type declarations exist — `["ES2022", "DOM"]` grants `Object.hasOwn`, `Array.at`, DOM globals; omitting a lib makes newer builtins type-error even if runtime supports them.
+* `target`: downlevels emitted JavaScript syntax - ES5 transforms classes/arrow funcs destructuring into ES5 equivalents; ES2017+ passes async/await through natively; ESNext emits latest. Affects output size/performance and which syntax needs polyfills.
+* `lib`: which ambient type declarations exist - `["ES2022", "DOM"]` grants `Object.hasOwn`, `Array.at`, DOM globals; omitting a lib makes newer builtins type-error even if runtime supports them.
 * They're orthogonal: run new syntax in old browsers via target+polyfills, or describe modern globals without emitting anything (declaration-only projects set high targets).
 * Common bug story: using `Array.prototype.flat` without adding `es2019` to lib → mysterious "Property 'flat' does not exist".
 
-### Q49: How do you annotate function types — alias, inline, or interface?
+### Q49: How do you annotate function types - alias, inline, or interface?
 ```ts
 type Handler = (req: Request) => Promise<Response>;      // type alias (most common)
 interface Handler2 { (req: Request): Promise<Response>; } // callable interface (can merge/overload)
@@ -244,10 +244,10 @@ function route(path: string, cb: (req: Request) => Promise<Response>) {} // inli
 * Related syntax: optional/rest/default params mirror value syntax (`(a?: T, ...rest: U[]) => V`); `this: X` first-param annotates call context.
 
 ### Q50: How do you type callback parameters correctly?
-* Contextual typing usually fills them: `[1,2,3].map(n => n * 2)` — n inferred number because map's signature declares it; writing `(n: number)` manually is noise.
+* Contextual typing usually fills them: `[1,2,3].map(n => n * 2)` - n inferred number because map's signature declares it; writing `(n: number)` manually is noise.
 * Annotate when: storing the callback before passing (no context yet), exposing public APIs (consumers' DX), or accepting intentionally loose inputs (`(err: unknown)`).
 * Return types: prefer letting async fns infer, but fix public ones (`Promise<Result>`) so implementation drift fails loudly rather than rippling through consumers.
-* Watch contravariance: a callback typed `(e: Event) => void` may be passed where `(e: MouseEvent) => void` is expected (params bivariant in method positions, checked strictly elsewhere under strictFunctionTypes) — subtle source of unsafe handlers.
+* Watch contravariance: a callback typed `(e: Event) => void` may be passed where `(e: MouseEvent) => void` is expected (params bivariant in method positions, checked strictly elsewhere under strictFunctionTypes) - subtle source of unsafe handlers.
 
 ---
 

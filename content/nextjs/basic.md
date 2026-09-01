@@ -408,36 +408,36 @@ export default function handler(req, res) {
   }
 }
 ```
-* App Router (`route.ts`): export named functions per verb — `GET`, `POST`, `PATCH`, `DELETE` — Next wires them automatically; unsupported methods automatically get proper 405 responses.
+* App Router (`route.ts`): export named functions per verb - `GET`, `POST`, `PATCH`, `DELETE` - Next wires them automatically; unsupported methods automatically get proper 405 responses.
 * Both styles should validate input, return typed JSON, and avoid leaking stack traces.
 
 ### Q46: What is `next.config.js`? Name commonly used configuration options.
 * The build/runtime control center at project root, exporting an object consumed by the CLI.
 * Frequent options: `reactStrictMode`, `images.remotePatterns/domains`, `rewrites/redirects/headers`, `env`, `basePath` + `assetPrefix` (sub-path hosting/CDN), `output: 'standalone' | 'export'`, `experimental` flags (PPR, Turbopack), `eslint`/`typescript` build-time behavior, webpack/turbopack extensions.
-* It's JavaScript — you can branch config by `process.env.NODE_ENV`; keep it deterministic because builds run it at compile time.
+* It's JavaScript - you can branch config by `process.env.NODE_ENV`; keep it deterministic because builds run it at compile time.
 
 ### Q47: How does Next.js support TypeScript?
 * First-class: `.ts/.tsx` supported natively; `create-next-app --typescript` scaffolds `tsconfig.json` automatically (running dev/build auto-installs deps and generates missing config).
 * Next generates special types: `next-env.d.ts` referencing Next's ambient types; typed route helpers via `NextPage<Props>`, `GetStaticProps`, `GetServerSideProps`, and App Router equivalents (`PageProps` patterns).
-* Type-checking runs during `next build` by default (configurable via `typescript.ignoreBuildErrors` — discouraged).
+* Type-checking runs during `next build` by default (configurable via `typescript.ignoreBuildErrors` - discouraged).
 * Strict-mode-friendly templates plus typed API handlers (`NextApiRequest/Response`) give end-to-end safety without extra bundler plugins (SWC strips types).
 
-### Q48: When would you use a custom Express/Node server with Next.js — and why usually not?
+### Q48: When would you use a custom Express/Node server with Next.js - and why usually not?
 * Legit reasons: legacy server integrations (existing middleware ecosystems), exotic URL schemes before rewrites existed, server-sent events with tight socket control, or libraries needing direct access to Node's HTTP server lifecycle.
 * Costs: you own process management, lose some zero-config optimizations, complicate deployments (must run your server instead of `next start`), and opt out of certain platform features (some Vercel analytics/routing behaviors assume standard entry).
 * Modern replacements that removed most needs: `rewrites/redirects/headers` config, Middleware, Route Handlers, and `instrumentation.ts`. Default answer: stay on the standard server unless a hard requirement forces otherwise.
 
 ### Q49: What do basePath and assetPrefix configure?
-* `basePath: '/docs'` mounts the entire app under a subpath — all routes, links, and router APIs become prefix-aware automatically (`/docs/blog` served for `/blog`). Useful for multi-app hosting behind one domain or GitHub Pages-style paths.
-* `assetPrefix` points static assets (JS/CSS chunks) at a CDN origin while HTML keeps serving from the app origin — offloads bandwidth and improves cache hits globally.
+* `basePath: '/docs'` mounts the entire app under a subpath - all routes, links, and router APIs become prefix-aware automatically (`/docs/blog` served for `/blog`). Useful for multi-app hosting behind one domain or GitHub Pages-style paths.
+* `assetPrefix` points static assets (JS/CSS chunks) at a CDN origin while HTML keeps serving from the app origin - offloads bandwidth and improves cache hits globally.
 * They combine: assets can live on `https://cdn.example.com/docs/_next/*` while the app serves under `/docs`.
 * Gotchas: hardcoded absolute URLs break under basePath (use `next/link` and relative asset imports); images config needs the path reflected too.
 
 ### Q50: Which browsers does Next.js target and how are polyfills handled?
 * Next ships sane defaults: modern evergreen browsers (Chrome/Firefox/Safari/Edge current versions); the browserslist field in package.json overrides targets for SWC transpilation.
-* Core JS polyfills are injected automatically for older Safari/IE-era gaps historically (fetch, URL, IntersectionObserver stubs etc.) — modern majors dropped IE support entirely, shrinking polyfill weight.
+* Core JS polyfills are injected automatically for older Safari/IE-era gaps historically (fetch, URL, IntersectionObserver stubs etc.) - modern majors dropped IE support entirely, shrinking polyfill weight.
 * Library-level polyfills (e.g., core-js imports) remain your responsibility for exotic APIs; `next/script` strategy controls when heavy third-party scripts load.
-* Practical interview point: SWC replaces Babel for transpile+minify; if you add a `.babelrc` you silently opt OUT of SWC's faster pipeline (and lose some transforms) — usually a mistake unless migrating legacy build chains.
+* Practical interview point: SWC replaces Babel for transpile+minify; if you add a `.babelrc` you silently opt OUT of SWC's faster pipeline (and lose some transforms) - usually a mistake unless migrating legacy build chains.
 
 ---
 

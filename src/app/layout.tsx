@@ -43,11 +43,14 @@ export const metadata: Metadata = {
   authors: [{ name: SITE.name, url: SITE.url }],
   creator: SITE.name,
   publisher: SITE.name,
+  alternates: {
+    canonical: SITE.url
+  },
   openGraph: {
     type: "website",
     siteName: SITE.name,
     locale: "en_US",
-    url: "/",
+    url: SITE.url,
     title: `${SITE.name} — ${SITE.headline}`,
     description: SITE.description
   },

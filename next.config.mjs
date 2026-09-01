@@ -6,6 +6,17 @@ const nextConfig = {
   async redirects() {
     return [
       {
+        source: "/:path*",
+        has: [
+          {
+            type: "host",
+            value: "devprep.online"
+          }
+        ],
+        destination: "https://www.devprep.online/:path*",
+        permanent: true
+      },
+      {
         source: "/library",
         destination: "/#technologies",
         permanent: true

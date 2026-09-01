@@ -150,7 +150,7 @@ export default function SiteFooter() {
 
         {/* Bottom copyright */}
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-mono text-[var(--text-muted)]">
-          <p>© 2026 DevPrep (devprep.online) · All rights reserved.</p>
+          <p>© 2026 DevPrep (www.devprep.online) · All rights reserved.</p>
           <div className="flex items-center gap-4 text-[11px]">
             <Link href="/terms" className="hover:underline">Terms</Link>
             <span>·</span>

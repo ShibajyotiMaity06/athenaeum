@@ -92,50 +92,50 @@ When a state update is triggered (e.g., calling `setCount`), React does not calc
 ---
 
 ### Q5: Walk through Fiber's beginWork/completeWork phases and effect-list construction.
-* **beginWork** (downward pass): for each fiber React checks bailout conditions (props unchanged + no forced update/context dirt) — bailing returns the cached alternate subtree instantly. Otherwise it invokes the component function, reconciles returned elements against current children (`reconcileChildFibers`), tagging work: Placement/Update/Deletion, and clones fibers into the workInProgress tree preserving `alternate` links.
-* **completeWork** (upward pass): finalizes host fibers — diffs old/new props into an update payload queue, computes `childLanes`/`subtreeFlags` bitmask rollups so ancestors know whether subtrees contain pending work (enables early exits), and stitches **firstEffect/nextEffect linked lists** collecting mutation/layout effects instead of traversing again later.
+* **beginWork** (downward pass): for each fiber React checks bailout conditions (props unchanged + no forced update/context dirt) - bailing returns the cached alternate subtree instantly. Otherwise it invokes the component function, reconciles returned elements against current children (`reconcileChildFibers`), tagging work: Placement/Update/Deletion, and clones fibers into the workInProgress tree preserving `alternate` links.
+* **completeWork** (upward pass): finalizes host fibers - diffs old/new props into an update payload queue, computes `childLanes`/`subtreeFlags` bitmask rollups so ancestors know whether subtrees contain pending work (enables early exits), and stitches **firstEffect/nextEffect linked lists** collecting mutation/layout effects instead of traversing again later.
 * Deletions attach to `deletions` array processed in commit; text/host updates bundle into minimal DOM ops.
 * Interview depth signal: explain how subtreeFlags lets the commit phase skip entire clean subtrees, and how alternates get reused (double buffering) across renders.
 
 ### Q6: Detail the commit phase's three sub-phases and what may run in each.
-* **Mutation phase** (synchronous, uninterruptible): applies host mutations — insertions before/after anchors, updates, deletions (deleting a node also detaches its listeners and runs ref detach). Root/container pointer flips happen here (`finishedWork` becomes `current`).
-* **Layout phase**: runs `useLayoutEffect` create/destroy + class componentDidMount/Update synchronously **before paint**, plus ref attachments. Components may read layout (`getBoundingClientRect`) and set styles without flicker — blocking paint is the tradeoff; long layout effects directly delay LCP.
-* **Passive phase**: `useEffect`s scheduled asynchronously (post-paint) via scheduler callbacks — flushed in effect-list order, interruptible-ish batching; flushed early if a passive-dependent render arrives.
+* **Mutation phase** (synchronous, uninterruptible): applies host mutations - insertions before/after anchors, updates, deletions (deleting a node also detaches its listeners and runs ref detach). Root/container pointer flips happen here (`finishedWork` becomes `current`).
+* **Layout phase**: runs `useLayoutEffect` create/destroy + class componentDidMount/Update synchronously **before paint**, plus ref attachments. Components may read layout (`getBoundingClientRect`) and set styles without flicker - blocking paint is the tradeoff; long layout effects directly delay LCP.
+* **Passive phase**: `useEffect`s scheduled asynchronously (post-paint) via scheduler callbacks - flushed in effect-list order, interruptible-ish batching; flushed early if a passive-dependent render arrives.
 * Ordering guarantees interviewers probe: all destroys before creates within a commit; layout always precedes passive; cleanup-before-setup per fiber.
 
 ### Q7: Explain the Scheduler's task loop and priority levels.
 * React ships its own scheduler (not OS timers) built on **MessageChannel** postMessage macrotasks: work loops process fiber units checking `shouldYield()` (frame deadline ~5ms slices) yielding to browser input/paint between slices.
-* Priority ladder: Immediate (sync flush), UserBlocking (input interactions ~250ms timeout), Normal (~5s), Low (~10s, deferred), Idle (never-expiring cleanup) — each entry carries expiration; starvation prevented via timeout escalation to higher priority.
+* Priority ladder: Immediate (sync flush), UserBlocking (input interactions ~250ms timeout), Normal (~5s), Low (~10s, deferred), Idle (never-expiring cleanup) - each entry carries expiration; starvation prevented via timeout escalation to higher priority.
 * Scheduling entries go through a min-heap keyed by due time/priority; synchronous lane work bypasses scheduling entirely (flushSync semantics).
-* Yield mechanics: after each work loop iteration it posts another message allowing paint/input interleaving — the mechanism underlying startTransition keeping typing responsive during big list re-renders.
+* Yield mechanics: after each work loop iteration it posts another message allowing paint/input interleaving - the mechanism underlying startTransition keeping typing responsive during big list re-renders.
 
 ### Q8: Deep dive on the Lane model: how do bitmasks represent priorities?
 * Post-17 React replaced monolithic expirationTime numbers with **31-bit lanes**: each bit = an independent parallel priority track (SyncLane, InputContinuousLane, DefaultLane, TransitionLanes range, RetryLanes, IdleLane...).
-* Updates carry lanes; roots accumulate `pendingLanes`; the scheduler picks highest-priority (lowest-bit-position = most urgent) non-empty lane group for the next render — enabling **concurrent processing of mixed priorities**: urgent input lane renders while transition lane work pauses/resumes.
-* Lane merging lets related updates batch (all TransitionLanes share ranges); `includesSomeLane` checks gate bailouts — a subtree re-renders only if its dependencies' lanes intersect root's pending set.
+* Updates carry lanes; roots accumulate `pendingLanes`; the scheduler picks highest-priority (lowest-bit-position = most urgent) non-empty lane group for the next render - enabling **concurrent processing of mixed priorities**: urgent input lane renders while transition lane work pauses/resumes.
+* Lane merging lets related updates batch (all TransitionLanes share ranges); `includesSomeLane` checks gate bailouts - a subtree re-renders only if its dependencies' lanes intersect root's pending set.
 * Tearing protection ties in: render snapshots which lanes are active; external-store reads coordinate via useSyncExternalStore's subscription versioning rather than lane hacks.
 
 ### Q9: What exact contract does `useSyncExternalStore` enforce, and how does it prevent tearing?
-* Signature `(subscribe, getSnapshot, getServerSnapshot)` — React polls `getSnapshot()` during render and after subscription events; **the snapshot must be referentially stable between actual changes** (returning fresh objects triggers infinite loops).
-* Subscribe registers a listener invoked on store changes → React schedules re-read; between concurrent render start and commit, React re-checks snapshot consistency, discarding/restarting renders whose snapshot mutated mid-flight — eliminating tearing (mixed old/new reads across components in one commit).
+* Signature `(subscribe, getSnapshot, getServerSnapshot)` - React polls `getSnapshot()` during render and after subscription events; **the snapshot must be referentially stable between actual changes** (returning fresh objects triggers infinite loops).
+* Subscribe registers a listener invoked on store changes → React schedules re-read; between concurrent render start and commit, React re-checks snapshot consistency, discarding/restarting renders whose snapshot mutated mid-flight - eliminating tearing (mixed old/new reads across components in one commit).
 * Server snapshot enables hydration parity (server-rendered value shown until client store confirms), dodging hydration mismatches for time-varying externals.
-* This hook is THE sanctioned bridge for Zustand/Redux/Jotai on React 18 — hand-rolled useEffect+setState stores can't guarantee tear-free reads.
+* This hook is THE sanctioned bridge for Zustand/Redux/Jotai on React 18 - hand-rolled useEffect+setState stores can't guarantee tear-free reads.
 
 ### Q10: What is the Offscreen/Activity API and which problems does it solve?
-* `<Activity mode="hidden">` (successor of Offscreen proposal) keeps subtrees mounted-but-hidden: state, DOM (display:none-ish), scroll positions preserved while hidden — instant restore on show versus unmount/remount data-loss.
+* `<Activity mode="hidden">` (successor of Offscreen proposal) keeps subtrees mounted-but-hidden: state, DOM (display:none-ish), scroll positions preserved while hidden - instant restore on show versus unmount/remount data-loss.
 * Use cases: tab switching preserving form/drafts, pre-rendering likely-next routes offscreen, virtualization-friendly kept-alive panels, hiding video players without teardown cost.
-* Effects semantics differ while hidden (passive effects unmount, layout preserved) — components must tolerate suspended-effect lifecycles; visibilitychange-like awareness required for analytics/timers.
-* Pairs conceptually with selective hydration and transitions: combined, navigation feels instant because both data (cache) and UI state (hidden trees) survive. Status: experimental — expect API-shape questions, not production war stories.
+* Effects semantics differ while hidden (passive effects unmount, layout preserved) - components must tolerate suspended-effect lifecycles; visibilitychange-like awareness required for analytics/timers.
+* Pairs conceptually with selective hydration and transitions: combined, navigation feels instant because both data (cache) and UI state (hidden trees) survive. Status: experimental - expect API-shape questions, not production war stories.
 
 ### Q11: Explain Suspense internals: thrown promises, boundary coordination, retries.
-* A suspending component throws (via renderer integration, e.g., resource.read()) a **thenable**; the nearest Suspense boundary catches it, shows fallback, and attaches resolution callbacks — on resolve, React schedules a re-render of that boundary's subtree only.
-* Nested boundaries: inner suspends don't unmount outer content; sibling boundaries stream independently — the composability primitive behind streaming SSR and route-level loading states.
-* Already-in-cache promises resolve synchronously on retry (no flash); transitions coordinate differently — `startTransition` keeps showing OLD UI until the new tree fully resolves (fallback suppression), unlike immediate fallback display.
+* A suspending component throws (via renderer integration, e.g., resource.read()) a **thenable**; the nearest Suspense boundary catches it, shows fallback, and attaches resolution callbacks - on resolve, React schedules a re-render of that boundary's subtree only.
+* Nested boundaries: inner suspends don't unmount outer content; sibling boundaries stream independently - the composability primitive behind streaming SSR and route-level loading states.
+* Already-in-cache promises resolve synchronously on retry (no flash); transitions coordinate differently - `startTransition` keeps showing OLD UI until the new tree fully resolves (fallback suppression), unlike immediate fallback display.
 * Gotchas probed: throwing during render violates purity expectations yet is sanctioned ONLY through suspense resources; promise identity matters (new promise per read breaks caching); error boundaries still catch genuine rejections.
 
 ### Q12: How does `renderToPipeableStream` structure streaming SSR output?
 * Emits the shell (everything outside Suspense) immediately as HTML + inline bootstrap script chunks; suspended subtrees flush later as `<template>`-hidden chunks with `$RC(...)` scripts that client-side-swap content into place and trigger selective hydration of that boundary.
-* Order guarantees: parents before children within a boundary; boundaries flush in completion order (fast data → early HTML) — out-of-order streaming solves head-of-line blocking that plagued renderToString waterfalls.
+* Order guarantees: parents before children within a boundary; boundaries flush in completion order (fast data → early HTML) - out-of-order streaming solves head-of-line blocking that plagued renderToString waterfalls.
 * Backpressure aware: pipe() honors TCP pressure pausing generation; abort(signal) unwinds hung subtrees emitting error placeholders/fallbacks instead of hanging sockets.
 * Hardening knobs: `nonce` propagation for CSP-compliant bootstrap scripts, onError distinguishing expected suspensions from crashes, onShellReady vs onAllReady choosing progressive send versus all-at-once crawlers/emails.
 
@@ -144,82 +144,82 @@ When a state update is triggered (e.g., calling `setCount`), React does not calc
 ### Q13: How do passive effect flush timings interact with paint, and when do they run early?
 * Passive effects normally flush **after paint** (scheduler Normal-priority task post-rAF), keeping commits responsive; React schedules the flush via its scheduler and may process several roots' pending effects together.
 * Early flush triggers: another render begins whose work depends on clean passive state (React flushes pending uncommitted passive destroys/creates first), `flushSync` boundaries, and unmount sequences requiring cleanup-before-detach.
-* Consequences interviewers probe: effects reading DOM measurements race with browser paint (layout effects exist precisely for pre-paint reads); long passive chains delay *next frame's* work even though paint already showed — perceived jank lives here, not always in render phase.
+* Consequences interviewers probe: effects reading DOM measurements race with browser paint (layout effects exist precisely for pre-paint reads); long passive chains delay *next frame's* work even though paint already showed - perceived jank lives here, not always in render phase.
 * Debug technique: Performance panel correlating rAF → paint → React passive-flush tasks; misordered assumptions about "effects run after user sees" break with sync flushing.
 
 ### Q14: How does the exhaustive-deps lint rule actually derive dependencies?
-* Static analysis walks function scope capturing every reactive binding referenced inside the effect body (props/state/other hooks' returns), plus transitive closures through locally-defined functions used within — then diffs against the literal dep array.
+* Static analysis walks function scope capturing every reactive binding referenced inside the effect body (props/state/other hooks' returns), plus transitive closures through locally-defined functions used within - then diffs against the literal dep array.
 * Known blind spots requiring discipline: refs intentionally excluded (current mutations are fine), objects used partially (lint suggests the object; narrowing to fields needs extraction), dynamically-computed keys, and functions recreated each render pulling whole-object dependencies (fix via useCallback or moving definitions into effects).
 * Suppression (`// eslint-disable-line`) is a design smell signaling either impure effects or missing abstractions (extract a custom hook owning the concern with correct internal deps).
-* Senior framing: the rule encodes React's consistency contract — an effect reruns iff anything it *reads* changed; hand-maintained arrays drift into stale-closure bugs silently.
+* Senior framing: the rule encodes React's consistency contract - an effect reruns iff anything it *reads* changed; hand-maintained arrays drift into stale-closure bugs silently.
 
 ### Q15: What is useEffectEvent (stabilize-in-progress) and which stale-closure class does it kill?
-* Problem pattern: effects needing *latest* values without re-subscribing — websocket handler wanting fresh token/count but effect deps [] for connection longevity. Workarounds (refs mirroring, useCallback with sprawling deps) leak implementation noise.
-* `useEffectEvent(fn)`: returns a stable function identity reading latest render's closure at call time; callable ONLY from effects (documented constraint preserving purity rules — not for JSX/event handlers).
-* Semantics: the event function executes with current props/state while the enclosing effect keeps its original dependency footprint — separating "when to run" (deps) from "what data to use" (always-fresh).
-* Status nuance: experimental/RFC-stage naming history (useEvent proposal); expect concept questions over exact API spelling — the ref-mirror workaround equivalence is the real test.
+* Problem pattern: effects needing *latest* values without re-subscribing - websocket handler wanting fresh token/count but effect deps [] for connection longevity. Workarounds (refs mirroring, useCallback with sprawling deps) leak implementation noise.
+* `useEffectEvent(fn)`: returns a stable function identity reading latest render's closure at call time; callable ONLY from effects (documented constraint preserving purity rules - not for JSX/event handlers).
+* Semantics: the event function executes with current props/state while the enclosing effect keeps its original dependency footprint - separating "when to run" (deps) from "what data to use" (always-fresh).
+* Status nuance: experimental/RFC-stage naming history (useEvent proposal); expect concept questions over exact API spelling - the ref-mirror workaround equivalence is the real test.
 
 ### Q16: Detail the synthetic event system: root delegation and priority tagging.
-* Since 17, listeners attach once at the **root container** (not document) — events captured natively bubble/capture to root where React reconstructs SyntheticEvent instances walking the fiber path (capture/target/bubble simulation using fiber tree, not DOM traversal).
-* Priority inference: discrete events (click/keydown) → SyncLane scheduling for their setState; continuous events (pointermove/scroll/drag) → lower lanes enabling interruption — same handler code, different concurrency treatment by event type.
+* Since 17, listeners attach once at the **root container** (not document) - events captured natively bubble/capture to root where React reconstructs SyntheticEvent instances walking the fiber path (capture/target/bubble simulation using fiber tree, not DOM traversal).
+* Priority inference: discrete events (click/keydown) → SyncLane scheduling for their setState; continuous events (pointermove/scroll/drag) → lower lanes enabling interruption - same handler code, different concurrency treatment by event type.
 * Implications: stopPropagation affects React-path only after native reaches root (native handlers attached outside React see everything first); mixing jQuery/document listeners requires awareness of root boundary; portals participate correctly because propagation follows the React tree.
-* Pooling removal (17): SyntheticEvent no longer recycled — e.persist obsolete; async access safe now (older interviews expect the pooling story historically).
+* Pooling removal (17): SyntheticEvent no longer recycled - e.persist obsolete; async access safe now (older interviews expect the pooling story historically).
 
 ### Q17: Which bailouts exist during reconciliation and what defeats them?
 * Fiber-level bailouts: memoized element equality (same reference + no forced update) short-circuits beginWork returning cached subtree; `memo()` wraps this compare with custom comparator option; PureComponent/classCompare analogues.
-* Context exception: even fully-bailed-out subtrees re-render when a consumed context above changes UNLESS the component also memos against context via useContext placement tricks — classic surprise ("memo didn't save me").
+* Context exception: even fully-bailed-out subtrees re-render when a consumed context above changes UNLESS the component also memos against context via useContext placement tricks - classic surprise ("memo didn't save me").
 * Forced updates (store subscriptions calling setState) bypass equality; key changes force remount (identity reset, not bailout).
-* State bailout: reducer/updater returning identical reference (`return state`) skips re-render entirely — free optimization lever in reducers/selectors (immutability discipline pays directly here).
+* State bailout: reducer/updater returning identical reference (`return state`) skips re-render entirely - free optimization lever in reducers/selectors (immutability discipline pays directly here).
 
 ### Q18: Walk through a concrete tearing example and the modern mitigations stack.
-* Scenario: concurrent transition render starts; component A reads store v1; user-typed update lands mid-render bumping store to v2; component B (same tree) reads v2 → committed UI mixes v1/v2 (e.g., total ≠ sum of displayed rows) — impossible under sync legacy rendering.
+* Scenario: concurrent transition render starts; component A reads store v1; user-typed update lands mid-render bumping store to v2; component B (same tree) reads v2 → committed UI mixes v1/v2 (e.g., total ≠ sum of displayed rows) - impossible under sync legacy rendering.
 * Mitigations: external stores route reads through `useSyncExternalStore`, whose snapshot-consistency check forces render restart on mid-flight mutation; stores batch notifications post-commit; transitions defer applying external updates until render completes.
 * Legacy escape hatches and why they're insufficient: mutable singleton reads in render (tearing-prone), getDerivedStateFromProps hacks, forcing sync lanes everywhere (kills responsiveness benefits).
 * Store-author checklist: versioned snapshots, subscribe-during-render safety, deferred notify (microtask/post-message), and never mutating snapshot objects in place.
 
 ### Q19: What mechanics power useOptimistic and its rollback guarantees?
-* Signature `useOptimistic(state, reducerFn)` — optimistic reducer computes projected state applied IMMEDIATELY on action dispatch while the real transition (server call wrapped in startTransition) remains pending.
-* Pending tracking: React knows the optimistic update's associated async action; on resolution, real state replaces projection; on rejection/error boundary catch, projection auto-reverts to authoritative previous state — rollback isn't manual diffing, it's pending-layer discard.
-* Rules: reducer must be pure (no side effects like toasts — those go in the action flow); optimistic value shape usually mirrors final shape (e.g., message appended optimistically with temp id swapped on confirm).
-* Composition: pairs with useFormStatus/useActionState for form pipelines — send button disabled via pending flag while list already shows the sent item.
+* Signature `useOptimistic(state, reducerFn)` - optimistic reducer computes projected state applied IMMEDIATELY on action dispatch while the real transition (server call wrapped in startTransition) remains pending.
+* Pending tracking: React knows the optimistic update's associated async action; on resolution, real state replaces projection; on rejection/error boundary catch, projection auto-reverts to authoritative previous state - rollback isn't manual diffing, it's pending-layer discard.
+* Rules: reducer must be pure (no side effects like toasts - those go in the action flow); optimistic value shape usually mirrors final shape (e.g., message appended optimistically with temp id swapped on confirm).
+* Composition: pairs with useFormStatus/useActionState for form pipelines - send button disabled via pending flag while list already shows the sent item.
 
 ### Q20: Explain Actions/useActionState end-to-end including progressive enhancement.
-* `<form action={actionFn}>`: actionFn receives FormData; on server (RSC frameworks) it's an endpoint reference serialized safely; on client it's just an async fn — same authoring model both sides.
-* `useActionState(fn, initialState)` wraps: returns `[state, formAction, isPending]` where fn(prevState, formData) => newState — error messages/validation results flow back as state, replacing onSubmit+setState ceremony.
-* Progressive enhancement: forms work BEFORE hydration/JS load when actions are server functions (browser posts natively; framework replays result) — the killer differentiator vs onClick-submit SPAs.
+* `<form action={actionFn}>`: actionFn receives FormData; on server (RSC frameworks) it's an endpoint reference serialized safely; on client it's just an async fn - same authoring model both sides.
+* `useActionState(fn, initialState)` wraps: returns `[state, formAction, isPending]` where fn(prevState, formData) => newState - error messages/validation results flow back as state, replacing onSubmit+setState ceremony.
+* Progressive enhancement: forms work BEFORE hydration/JS load when actions are server functions (browser posts natively; framework replays result) - the killer differentiator vs onClick-submit SPAs.
 * Internals worth naming: hidden field `$ACTION_ID_*` encoding, replay-on-navigation semantics, and how pending integrates with transitions for non-blocking submissions.
 
 ---
 
 ### Q21: How does Context propagation actually traverse fibers, and why is it fast-ish?
 * Provider marks itself with context dependency; consumers register on the context object (`_currentValue` read during beginWork). Traversal: during render React walks the tree; consumers read the nearest provider's value via depth-first stack discipline (push/pop on enter/exit providers).
-* Propagation on change: React finds all fibers depending on that context via `dependencies` linked lists (first-class dependencies tracking since 18) — marking them dirty from provider downward WITHOUT full-tree invalidation; bailed-out memoized children still re-render if they consume the changed context (the known memo exception).
+* Propagation on change: React finds all fibers depending on that context via `dependencies` linked lists (first-class dependencies tracking since 18) - marking them dirty from provider downward WITHOUT full-tree invalidation; bailed-out memoized children still re-render if they consume the changed context (the known memo exception).
 * Cost profile: reads are O(depth-to-nearest-provider); writes trigger consumer-set walks proportional to subscriber count, not tree size.
 * Optimization corollaries: split contexts by change frequency; keep providers low in tree; value identity stability (memoize provider value!) prevents spurious consumer dirtiness.
 
 ### Q22: When is deliberate remounting via `key` the right tool?
-* Changing `key` discards instance state entirely — sanctioned resets: form reset on record switch (`<Form key={userId}>`), wizard step re-initialization, clearing internal caches when external identity changes.
+* Changing `key` discards instance state entirely - sanctioned resets: form reset on record switch (`<Form key={userId}>`), wizard step re-initialization, clearing internal caches when external identity changes.
 * Superior to effect-based "reset everything" choreography (dozens of setState-on-propChange rules); declarative, atomic, race-free.
-* Costs: full subtree reconciliation + lost scroll/focus/DOM state; child lifecycles rerun (fetch effects refire — often exactly desired).
-* Anti-patterns: keys to paper over derived-state sync bugs (fix derivation instead); randomized keys causing remount storms each render. Interview framing: "state lives at identity boundaries — move identity deliberately."
+* Costs: full subtree reconciliation + lost scroll/focus/DOM state; child lifecycles rerun (fetch effects refire - often exactly desired).
+* Anti-patterns: keys to paper over derived-state sync bugs (fix derivation instead); randomized keys causing remount storms each render. Interview framing: "state lives at identity boundaries - move identity deliberately."
 
 ### Q23: How should INP-driven optimization shape component design?
-* INP penalizes slow interaction handlers INCLUDING resulting renders — long synchronous handler work blocks next paint; heavy transition renders delay visual response.
+* INP penalizes slow interaction handlers INCLUDING resulting renders - long synchronous handler work blocks next paint; heavy transition renders delay visual response.
 * Tactics ladder: shrink handler work (defer non-critical via startTransition so input lane wins); virtualize giant lists feeding interactions; memoize hot subtrees so interaction renders touch few fibers; avoid layout thrash in handlers (batch reads then writes).
-* Measurement: web-vitals attribution builds pinpoint interaction target+phase (input delay / processing / presentation) mapping to handler vs render cost — React 18 concurrent features specifically engineered to compress presentation phase.
-* Framework interplay: automatic batching reduces redundant presentation passes; transitions convert "typing lag while filtering 10k rows" into interruptible background work — cite the mechanism, not just the API.
+* Measurement: web-vitals attribution builds pinpoint interaction target+phase (input delay / processing / presentation) mapping to handler vs render cost - React 18 concurrent features specifically engineered to compress presentation phase.
+* Framework interplay: automatic batching reduces redundant presentation passes; transitions convert "typing lag while filtering 10k rows" into interruptible background work - cite the mechanism, not just the API.
 
 ### Q24: Contrast legacy roots vs concurrent roots at the API/render level.
-* Legacy `ReactDOM.render`: synchronous, recursive, uninterruptible renders; updates processed FIFO; features like transitions/useSyncExternalStore contract degrade or warn — concurrent safety assumptions (replayable renders) unsupported.
+* Legacy `ReactDOM.render`: synchronous, recursive, uninterruptible renders; updates processed FIFO; features like transitions/useSyncExternalStore contract degrade or warn - concurrent safety assumptions (replayable renders) unsupported.
 * Concurrent `createRoot`: interruptible render phase, lanes/scheduler active, StrictMode double-invokes, automatic batching everywhere, selective hydration possible.
-* Migration mechanics: mostly drop-in, BUT code violating purity (render-phase mutations, singleton date/random usage) surfaces as double-render anomalies — remediation precedes feature adoption.
-* Interview angle: explain WHY replayable renders demand purity (discarded renders must be side-effect-free) — connecting concurrency math to everyday rules-of-hooks discipline.
+* Migration mechanics: mostly drop-in, BUT code violating purity (render-phase mutations, singleton date/random usage) surfaces as double-render anomalies - remediation precedes feature adoption.
+* Interview angle: explain WHY replayable renders demand purity (discarded renders must be side-effect-free) - connecting concurrency math to everyday rules-of-hooks discipline.
 
 ### Q25: What does double-buffered fiber tree mean operationally (current/workInProgress)?
 * Two persistent root structures alternate: `current` (committed, what DOM reflects) and `workInProgress` (being built). Each fiber holds `alternate` pointing at its twin; render mutates only WIP copies enabling safe abandonment (discard WIP, current untouched).
-* Completion flips: commit makes WIP the new current via pointer swap (`root.current = finishedWork`), old current becomes next render's WIP base — allocations amortized, diffing always has both sides.
+* Completion flips: commit makes WIP the new current via pointer swap (`root.current = finishedWork`), old current becomes next render's WIP base - allocations amortized, diffing always has both sides.
 * Deletion handling: removed children get effect-tagged on the CURRENT side (they exist only there) ensuring commit can detach them.
-* Reconciliation reads current.child vs newly created elements writing into WIP — explaining how interrupted renders resume mid-tree without corrupting the displayed UI.
+* Reconciliation reads current.child vs newly created elements writing into WIP - explaining how interrupted renders resume mid-tree without corrupting the displayed UI.
 
 ### Q26: How do you debug hydration mismatch errors systematically?
 * Reproduce deterministically: pin locale/timezone (Date/locale formatting top culprit), disable extensions injecting DOM, compare server HTML vs client first-render in isolation.
@@ -235,71 +235,71 @@ When a state update is triggered (e.g., calling `setCount`), React does not calc
 
 ### Q28: Enumerate what Error Boundaries cannot catch and the mitigation for each.
 * Event handlers → try/catch locally or global handlers (window.onerror/unhandledrejection telemetry); async callbacks/promises → catch at source, surface via state; SSR/server rendering → framework-level error pages; errors thrown IN the boundary itself → nested boundary; errors during suspense-lazy load handled by boundary? partially (lazy failures yes, network-level handled by Suspense/error hybrid patterns).
-* Rationale: boundaries are RENDER-phase recovery for declarative tree faults — imperative flows own their failure handling.
+* Rationale: boundaries are RENDER-phase recovery for declarative tree faults - imperative flows own their failure handling.
 * Production architecture: top-level boundary logs + shows recoverable UI; domain boundaries isolate risky widgets (charts/maps) so one failure doesn't blank the app; retry affordance via boundary key bump forcing remount.
 * Integration: error monitoring SDKs hook componentDidCatch/logError boundaries correlating component stack traces (React stacks in devtools protocol).
 
 ### Q29: What programmatic profiling does the Profiler API provide?
-* `<Profiler id="Dashboard" onRender={cb}>` fires cb(id, phase('mount'|'update'|'nested-update'), actualDuration, baseDuration, startTime, commitTime, interactions) — feed to analytics for field-level render cost sampling (throttle! onRender fires per commit per subtree).
+* `<Profiler id="Dashboard" onRender={cb}>` fires cb(id, phase('mount'|'update'|'nested-update'), actualDuration, baseDuration, startTime, commitTime, interactions) - feed to analytics for field-level render cost sampling (throttle! onRender fires per commit per subtree).
 * actualDuration vs baseDuration diagnosis: actual≫base means wasted renders from upstream instability (memo/prop-identity fixes); base high alone means genuinely expensive subtree (structural fixes/virtualization).
-* Combined with React DevTools Profiler flamegraphs for local deep dives (commit selector, why-did-render), and web-vitals for outcome metrics — closing loop between subjective jank and fiber-level numbers.
-* Caveats: Profiler adds overhead (dev/staging-first), interactions API deprecated-ish, nested profilers attribute durations hierarchically — understand double counting before alerting off raw numbers.
+* Combined with React DevTools Profiler flamegraphs for local deep dives (commit selector, why-did-render), and web-vitals for outcome metrics - closing loop between subjective jank and fiber-level numbers.
+* Caveats: Profiler adds overhead (dev/staging-first), interactions API deprecated-ish, nested profilers attribute durations hierarchically - understand double counting before alerting off raw numbers.
 
 ---
 
 ### Q30: How do RSCs differ from SSR at the wire level, and what can't Server Components do?
-* SSR: server renders CURRENT tree to HTML; client downloads/hydrates ALL involved component JS — interactivity model unchanged, just first-paint acceleration.
-* RSC: server executes components producing a serialized element stream (Flight protocol — JSON-ish rows referencing module chunks and client slots); those components NEVER ship JS; boundaries marked 'use client' become hydration islands receiving serialized props.
+* SSR: server renders CURRENT tree to HTML; client downloads/hydrates ALL involved component JS - interactivity model unchanged, just first-paint acceleration.
+* RSC: server executes components producing a serialized element stream (Flight protocol - JSON-ish rows referencing module chunks and client slots); those components NEVER ship JS; boundaries marked 'use client' become hydration islands receiving serialized props.
 * Server-only powers: direct DB/file access, secrets, huge deps staying server-side (markdown parsers, syntax highlighters). Forbidden: hooks state/effects, browser APIs, event handlers (must delegate into client children), passing non-serializable props (functions/classes except action references).
 * Mental model line for interviews: "SSR ships your app earlier; RSC shrinks what 'your app' even is."
 
 ### Q31: Detail Flight protocol serialization mechanics worth knowing.
-* Stream of rows: `id:payload` lines — payload types include module references ($L/$F lazy chunks), client references ($$typeof: Symbol.for('react.client.reference') mapping to import paths), holes filled by later rows enabling out-of-order arrival, Promises serialized as pending references resolving via subsequent chunks.
-* Client runtime reconstructs elements lazily — JSX-like structures without executing server code; shared object graphs deduped by row ids (large payloads reference rather than repeat).
-* Security property: server closures/functions cannot serialize — only registered Actions cross as encrypted-capable IDs, which is why handlers must live in client components or action files.
+* Stream of rows: `id:payload` lines - payload types include module references ($L/$F lazy chunks), client references ($$typeof: Symbol.for('react.client.reference') mapping to import paths), holes filled by later rows enabling out-of-order arrival, Promises serialized as pending references resolving via subsequent chunks.
+* Client runtime reconstructs elements lazily - JSX-like structures without executing server code; shared object graphs deduped by row ids (large payloads reference rather than repeat).
+* Security property: server closures/functions cannot serialize - only registered Actions cross as encrypted-capable IDs, which is why handlers must live in client components or action files.
 * Debug literacy: network tab showing .rsc/.txt flight streams; malformed serialization errors ("Functions cannot be passed directly to Client Components") map directly to boundary violations.
 
 ### Q32: What does the React Compiler change about memoization economics?
-* Compile-time analysis inserts automatic memo equivalents (component-level caching + fine-grained value deps) targeting correctness-preserving skips WITHOUT manual useMemo/useCallback noise — output approximates perfectly-disciplined hand-memoization.
-* Preconditions: Rules of React adherence (purity, stable hook order) — compiler assumes and ESLint plugin verifies; violating code bails out per-function safely rather than misoptimizing.
+* Compile-time analysis inserts automatic memo equivalents (component-level caching + fine-grained value deps) targeting correctness-preserving skips WITHOUT manual useMemo/useCallback noise - output approximates perfectly-disciplined hand-memoization.
+* Preconditions: Rules of React adherence (purity, stable hook order) - compiler assumes and ESLint plugin verifies; violating code bails out per-function safely rather than misoptimizing.
 * Economics shift: premature-memo reviews lose relevance; remaining manual work = structural (virtualization, splitting, moving to server), dependency hygiene (stable external store snapshots), and profiling-verified hotspots the compiler can't fix (bad data shapes).
-* Adoption realities: incremental opt-in per directory, build-time only (no runtime dep), interop with existing memo annotations harmless — expect strategy questions over syntax trivia.
+* Adoption realities: incremental opt-in per directory, build-time only (no runtime dep), interop with existing memo annotations harmless - expect strategy questions over syntax trivia.
 
 ### Q33: Which scheduler-visible behaviors distinguish discrete vs continuous input handling?
-* Discrete events (click, keydown, submit): highest urgency — their updates run sync-ish lanes, flushing before next event; guarantees immediate feedback contracts (checkbox toggles feel atomic).
-* Continuous (pointermove, scroll, wheel): throttled to lower lanes, interruptible — handlers may fire faster than frames but renders coalesce; enables smooth 120Hz pointer tracking without render storms.
-* Within handlers, startTransition downgrades contained updates regardless of event class; conversely flushSync upgrades — priority is per-update not per-event ultimately.
+* Discrete events (click, keydown, submit): highest urgency - their updates run sync-ish lanes, flushing before next event; guarantees immediate feedback contracts (checkbox toggles feel atomic).
+* Continuous (pointermove, scroll, wheel): throttled to lower lanes, interruptible - handlers may fire faster than frames but renders coalesce; enables smooth 120Hz pointer tracking without render storms.
+* Within handlers, startTransition downgrades contained updates regardless of event class; conversely flushSync upgrades - priority is per-update not per-event ultimately.
 * Practical consequence: expensive scroll-driven UI should read scroll via rAF-aligned passive listeners feeding deferred values rather than setState-per-event legacy patterns.
 
 ### Q34: How do you architect retry/recovery UX with boundaries and query layers?
 * Layered recovery: query-layer retries (exponential backoff w/ jitter) absorb transient failures invisibly; boundary-level retry buttons handle exhausted retries; global boundary catches catastrophic render faults with reload affordance.
 * Error taxonomy drives UX: 4xx validation errors surface inline near causes; 5xx/upstream get section-level fallbacks with retry; auth expiry redirects to re-auth flow preserving return URL.
-* State preservation on retry: boundary key-bump remount loses local state — prefer query-refetch-triggering boundaries (error state as data) for recoverable cases; reserve remount for corrupt-render scenarios.
+* State preservation on retry: boundary key-bump remount loses local state - prefer query-refetch-triggering boundaries (error state as data) for recoverable cases; reserve remount for corrupt-render scenarios.
 * Observability loop: boundary logs tagged with component stacks + release versions feeding triage dashboards; SLO on recoverable-error rate gating deploys.
 
 ### Q35: What makes virtualized lists hard at senior depth?
-* Variable heights: measure-after-mount passes cause jump corrections; solutions — estimated sizes + measured cache (virtuoso), uniform-height grids, or size-aware data models (chat apps storing message heights post-render then anchoring).
-* Scroll anchoring math: maintaining visual position when prepending above viewport (chat history) requires offset compensation against scrollTop deltas within same frame — race-prone; browsers' overflow-anchor helps simple flows only.
+* Variable heights: measure-after-mount passes cause jump corrections; solutions - estimated sizes + measured cache (virtuoso), uniform-height grids, or size-aware data models (chat apps storing message heights post-render then anchoring).
+* Scroll anchoring math: maintaining visual position when prepending above viewport (chat history) requires offset compensation against scrollTop deltas within same frame - race-prone; browsers' overflow-anchor helps simple flows only.
 * Sticky headers/groups intersecting window edges; bidirectional infinite streams; horizontal/virtual-grid variants multiply anchor math.
-* A11y/UX: screen-reader access to offscreen content (aria-live announcements of loaded ranges, or hybrid render-all-for-AT modes), keyboard navigation across virtual gaps, find-in-page limitations — acknowledging tradeoffs honestly scores above tool-name-dropping.
+* A11y/UX: screen-reader access to offscreen content (aria-live announcements of loaded ranges, or hybrid render-all-for-AT modes), keyboard navigation across virtual gaps, find-in-page limitations - acknowledging tradeoffs honestly scores above tool-name-dropping.
 
 ### Q36: How do you eliminate layout thrash in animation-heavy React UIs?
 * Thrash = interleaved read/write of layout properties forcing sync layouts per frame: batch phase separation (read all getBoundingClientRect in rAF, then write transforms), FLIP technique (record First, apply Last structurally, Invert via transform, Play transition) for list reorders/modals.
-* Compositor-only properties: animate transform/opacity exclusively; animating width/top triggers layout/paint per frame — translate3d/will-change hints (sparingly) promote layers.
-* React integration: measure in useLayoutEffect pre-paint; drive frame updates via rAF loop writing to refs/DOM directly bypassing setState-per-frame (React state for endpoints, not tween ticks); springs libraries (framer-motion/react-spring) already batch this internally — know they exist and why.
+* Compositor-only properties: animate transform/opacity exclusively; animating width/top triggers layout/paint per frame - translate3d/will-change hints (sparingly) promote layers.
+* React integration: measure in useLayoutEffect pre-paint; drive frame updates via rAF loop writing to refs/DOM directly bypassing setState-per-frame (React state for endpoints, not tween ticks); springs libraries (framer-motion/react-spring) already batch this internally - know they exist and why.
 * Diagnostics: Performance panel Layout Shift/Paint flashing; long-frame attribution pointing at forced reflow stacks.
 
 ### Q37: What are the failure modes of hand-rolled stores vs useSyncExternalStore adoption?
 * Hand-rolled useEffect-subscribe-setState: tear-prone (reads outside React's consistency machinery), subscription timing races (missing updates between render and subscribe), memory leaks on missed unsubscribes, and broken server snapshot semantics breaking hydration.
-* useSyncExternalStore fixes the contract but demands store-side invariants: immutable snapshots, stable getSnapshot references, notify-after-commit batching — stores violating these manifest as infinite render loops (new snapshot identity every getSnapshot call).
+* useSyncExternalStore fixes the contract but demands store-side invariants: immutable snapshots, stable getSnapshot references, notify-after-commit batching - stores violating these manifest as infinite render loops (new snapshot identity every getSnapshot call).
 * Redux/Zustand/Jotai internalize compliance; custom micro-stores must replicate: version counters, selector memoization, subscriber Set iteration-copy safety (mutation during notification).
 * Interview gold: describing the infinite-loop autopsy (getSnapshot returning fresh arrays → React detects change every check → re-render storm) proves operational scar tissue.
 
 ### Q38: How does StrictMode interact with concurrent features in production debugging?
-* StrictMode is dev-only: double rendering/effect-invocations simulate future concurrency hazards (replayable renders) — production runs single-pass, so dev-reproduced bugs (impure renders, missing cleanup) are prophylactic signals, not prod behavior.
-* Conversely some prod-only behaviors lack dev analogues: scheduler interruptions mid-commit-adjacent work, real user timing races, deployed bundle differences — hence staging with production builds matters.
+* StrictMode is dev-only: double rendering/effect-invocations simulate future concurrency hazards (replayable renders) - production runs single-pass, so dev-reproduced bugs (impure renders, missing cleanup) are prophylactic signals, not prod behavior.
+* Conversely some prod-only behaviors lack dev analogues: scheduler interruptions mid-commit-adjacent work, real user timing races, deployed bundle differences - hence staging with production builds matters.
 * Debug workflow: reproduce in StrictMode dev (cleanup/purity fix), then validate performance characteristics in prod-build staging (concurrency timing differs under double-invoke overhead absence).
-* Team policy angle: enforce StrictMode globally; treat "it breaks under StrictMode" as bug report category, not configuration debate — codifies purity culture mechanically.
+* Team policy angle: enforce StrictMode globally; treat "it breaks under StrictMode" as bug report category, not configuration debate - codifies purity culture mechanically.
 
 ### Q39: What upgrade strategies de-risk major React version migrations?
 * Inventory first: codemod dry-runs (eslint-plugin-react-hooks exhaustive pass, deprecated-lifecycle scans), third-party compat matrix (router/forms/state libs often lag majors), e2e smoke suites covering interactive cores.
@@ -308,24 +308,24 @@ When a state update is triggered (e.g., calling `setCount`), React does not calc
 * Rollout mechanics: staged percentage rollout with INP/error-rate SLO watch, instant rollback plan (previous bundle pinned), post-migration cleanup PR isolating codemod noise from logical changes.
 
 ### Q40: Where do signals/fin-grained-reactivity proposals intersect React's model?
-* Fine-grained systems (Solid/Svelte/Vue/Qwik signals, TC39 proposal) subscribe reads directly to DOM writes — updates skip VDOM diff entirely, O(1) per-value propagation vs React's re-run-component-and-diff model.
+* Fine-grained systems (Solid/Svelte/Vue/Qwik signals, TC39 proposal) subscribe reads directly to DOM writes - updates skip VDOM diff entirely, O(1) per-value propagation vs React's re-run-component-and-diff model.
 * React's stance: compiler auto-memoization narrows the practical gap for common cases while preserving unidirectional mental model; libraries (Preact Signals, Legend-State) bridge signals INTO React via useSyncExternalStore-compatible bindings demonstrating hybrid architectures.
 * Tradeoff discourse worth articulating: signal graphs optimize update precision but reintroduce implicit-dependency graphs React deliberately traded away for predictability/concurrent-interruption compatibility.
-* Interview framing: know WHY React bets on compile-time instead of runtime reactivity graphs — architectural philosophy question, not framework war.
+* Interview framing: know WHY React bets on compile-time instead of runtime reactivity graphs - architectural philosophy question, not framework war.
 
 ---
 
 ### Q41: How do you design state machines alignment between XState-style models and React rendering?
 * Division: machine owns transition legality/guards/context; React subscribes snapshots via useMachine actor hook rendering pure projections of state.value/context.
-* Anti-pattern: reimplementing transition tables in reducers with boolean flags ("isSubmitting && !isCancelled...") — state explosion; machines enumerate finite states making impossible-states unrepresentable (loading-error-success triads collapse to single .value).
+* Anti-pattern: reimplementing transition tables in reducers with boolean flags ("isSubmitting && !isCancelled...") - state explosion; machines enumerate finite states making impossible-states unrepresentable (loading-error-success triads collapse to single .value).
 * Integration seams: services/invoke actors for async (fetch promises as spawned actors with done/error events); optimistic UI maps to optimistic context updates with rollback transitions on error events.
-* Testing superpower: model-based test generation walking transition paths — interviewers respect articulating why exhaustive-state coverage becomes tractable versus hand-written reducer cases.
+* Testing superpower: model-based test generation walking transition paths - interviewers respect articulating why exhaustive-state coverage becomes tractable versus hand-written reducer cases.
 
 ### Q42: How would you instrument telemetry into a store layer without polluting domain logic?
-* Wrapper seam: decorate set/get at store creation (middleware position) emitting events {action, durationMs, diffSize} to OTel/analytics adapters — domain slices stay pure; instrumentation swappable/removable per environment.
+* Wrapper seam: decorate set/get at store creation (middleware position) emitting events {action, durationMs, diffSize} to OTel/analytics adapters - domain slices stay pure; instrumentation swappable/removable per environment.
 * Sampling strategy: full capture dev, head-sampled prod keyed by route/user-cohorts; cardinality control (action names whitelisted) preventing metric explosion.
 * Diff payloads: shallow-changed-keys lists rather than full states (PII risk! scrubbing pipeline mandatory before export).
-* Correlation value: store-action spans nested inside interaction traces connect "click → dispatch → render commit" timelines — the observability story distinguishing mature front-end platforms.
+* Correlation value: store-action spans nested inside interaction traces connect "click → dispatch → render commit" timelines - the observability story distinguishing mature front-end platforms.
 
 ### Q43: What's your framework for deciding "does this belong in a client store at all?"
 * Decision tree: Is it derived from server data? → query cache. Encoded in URL? → router. True session/UI ephemera (modals, selections)? → local component or small store slice. Shared across distant trees + high-frequency? → external store with selectors. Cross-tab/device persistent? → storage-backed store or backend entity.
@@ -334,38 +334,38 @@ When a state update is triggered (e.g., calling `setCount`), React does not calc
 * Senior signal: advocating deletion/migration paths off misplaced state, not just placement rules for new state.
 
 ### Q44: How do you handle long-lived WebSocket/realtime feeds feeding React UI correctly?
-* Connection ownership above React lifecycle (module/singleton manager) vs per-component connections (simple, leak-prone) — choose by scope; expose via event-target/store bridge consumed through useSyncExternalStore selectors.
+* Connection ownership above React lifecycle (module/singleton manager) vs per-component connections (simple, leak-prone) - choose by scope; expose via event-target/store bridge consumed through useSyncExternalStore selectors.
 * Backpressure/throttling UI updates: coalesce bursts via rAF-aligned flushes or transition-batched store writes preventing render storms during ticker floods; drop-stale semantics (latest-price wins) vs append logs differ architecturally.
 * Resilience: heartbeat/ping timeouts, exponential reconnect with jitter, offline queueing for outbound messages, sequence-gap detection triggering snapshot resync instead of replay storms.
-* Consistency: versioned events enabling optimistic reconciliation; presence systems needing TTL garbage collection server-side lest ghost users linger — depth signals here separate demo-ware from production realtime.
+* Consistency: versioned events enabling optimistic reconciliation; presence systems needing TTL garbage collection server-side lest ghost users linger - depth signals here separate demo-ware from production realtime.
 
 ### Q45: Describe memory-conscious patterns for data-heavy dashboards.
 * Window everything scrollable (tables/charts feed virtualized data slices, chart downsampling algorithms LTTB preserving shape at pixel resolution).
 * Cache ceilings: query caches with gcTime limits, ring buffers for streaming series (fixed-capacity deques), WeakMap caches keyed by entities so row eviction frees derivatives.
 * Release heavy resources: chart instances destroyed on tab hide (Activity/offscreen awareness), WebGL contexts capped (context-limit exhaustion!), workers terminated on route exit.
-* Measure: heap snapshots before/after 30-minute soak, detached-node counters, performance.memory trends (Chrome) alerting regressions — bring numbers; dashboards are leak amplifiers by nature (long sessions).
+* Measure: heap snapshots before/after 30-minute soak, detached-node counters, performance.memory trends (Chrome) alerting regressions - bring numbers; dashboards are leak amplifiers by nature (long sessions).
 
 ### Q46: What does SSR streaming mean for SEO/crawlers and meta management?
 * Crawlers executing JS handle streamed HTML increasingly well, but ordering matters: critical content/meta in shell flushes first ensuring discovery even if crawlers cut streams early; title/meta must serialize within initial shell (framework metadata APIs resolve before flush).
-* Suspense-wrapped below-fold content: fallbacks visible to naive crawlers — mitigation: prioritize data fetching for SEO-critical regions outside suspense (blocking shell data), structured-data JSON-LD emitted statically in shell.
-* Status codes: streaming commits 200 before errors surface in later chunks — soft-404 problem; mitigate via pre-resolved route-level data for status-determining fetches or header-flush gating strategies.
-* Social scrapers (no-JS): require complete meta in raw HTML — verify with scraper emulators, not just browser tests.
+* Suspense-wrapped below-fold content: fallbacks visible to naive crawlers - mitigation: prioritize data fetching for SEO-critical regions outside suspense (blocking shell data), structured-data JSON-LD emitted statically in shell.
+* Status codes: streaming commits 200 before errors surface in later chunks - soft-404 problem; mitigate via pre-resolved route-level data for status-determining fetches or header-flush gating strategies.
+* Social scrapers (no-JS): require complete meta in raw HTML - verify with scraper emulators, not just browser tests.
 
 ### Q47: How do you reason about render purity violations that only appear under concurrency?
-* Symptom classes: duplicated side effects (analytics double-fire), inconsistent derived values mid-stream, "works locally breaks under load" heisenbugs — concurrent renders replay/discard work, exposing hidden writes.
+* Symptom classes: duplicated side effects (analytics double-fire), inconsistent derived values mid-stream, "works locally breaks under load" heisenbugs - concurrent renders replay/discard work, exposing hidden writes.
 * Audit checklist for impurity: mutations of module/props/state during render, Date.now/Math.random()/uuid in render bodies, cache-writes during render (memoize-by-mutation), external-system reads without snapshot stability (non-versioned stores).
 * Refactors: move effects to handlers/effects; precompute outside render keyed immutably; snapshot-stable reads via useSyncExternalStore; idempotent analytics with event dedupe ids surviving replays.
 * Detection tooling: StrictMode double-invoke as impurity canary, compiler's ESLint rules flagging suspicious patterns, custom lint banning forbidden identifiers in component scopes.
 
 ### Q48: What belongs in an answer about coordinating animations with React state transitions?
-* Declarative endpoints, imperative tweens: React state defines start/end poses; animation engines (framer-motion, spring libs) interpolate imperatively outside render loop — setState-per-frame anti-pattern avoided.
-* Exit animations require delayed unmount: AnimatePresence-style bookkeeping keeping exiting children mounted until onComplete then removing — implement manually via exiting-set state when library absent.
+* Declarative endpoints, imperative tweens: React state defines start/end poses; animation engines (framer-motion, spring libs) interpolate imperatively outside render loop - setState-per-frame anti-pattern avoided.
+* Exit animations require delayed unmount: AnimatePresence-style bookkeeping keeping exiting children mounted until onComplete then removing - implement manually via exiting-set state when library absent.
 * Interrupted-transition correctness: springs retarget mid-flight (physical models shine vs fixed-duration easing which snaps); layout animations (shared element morphs) need stable keys + measurement coordination.
-* Performance contract: animate compositor properties only; respect reduced-motion preferences via media-query gates; test under CPU throttling — dropped-frame budgets define perceived quality.
+* Performance contract: animate compositor properties only; respect reduced-motion preferences via media-query gates; test under CPU throttling - dropped-frame budgets define perceived quality.
 
 ### Q49: How do you build a resilient error/telemetry story combining boundaries, queries, and globals?
 * Capture layers: window.onerror/unhandledrejection (stray async), boundary componentDidCatch with component stacks, query onError hooks (network domain), global interceptor tagging releases/build SHAs.
-* Enrichment: user/session context, breadcrumb trails (route changes, store actions, network spans), feature flags active — enough to reproduce without asking users.
+* Enrichment: user/session context, breadcrumb trails (route changes, store actions, network spans), feature flags active - enough to reproduce without asking users.
 * Deduplication/grouping: fingerprint by component-stack+message normalized (strip ids), release-gated regression alerts; sample noisy low-severity groups.
 * Recovery loops: auto-reload prompts on repeated chunk-load failures (deploy skew detection), circuit-breaker hiding chronically failing widgets, feedback widgets on boundary screens converting crashes into actionable reports.
 
@@ -373,7 +373,7 @@ When a state update is triggered (e.g., calling `setCount`), React does not calc
 * One sentence spine: **UI = f(state), executed on an interruptible scheduler that guarantees consistency via immutable commits.**
 * Derivations worth narrating: purity requirement exists because renders replay (concurrency); keys exist because identity drives reuse; refs exist because some state shouldn't trigger f; Suspense exists because async belongs in the tree; RSC exists because f can run anywhere serialization allows.
 * Tradeoff literacy: React chose runtime flexibility + compile-time optimization (compiler era) over fine-grained reactivity graphs; every API debate (signals, forget, server components) resolves against the same consistency-and-composability principles.
-* Closing posture: opinions grounded in mechanisms (lanes, fibers, flight) rather than tool loyalty — the differentiator interviewers probe across all preceding questions.
+* Closing posture: opinions grounded in mechanisms (lanes, fibers, flight) rather than tool loyalty - the differentiator interviewers probe across all preceding questions.
 
 ---
 

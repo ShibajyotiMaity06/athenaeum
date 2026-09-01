@@ -200,7 +200,7 @@
 ---
 
 ### Q44: How does the `assertNever` pattern enforce exhaustiveness?
-* For a discriminated union handled in a switch, a final `default: return assertNever(value)` case compiles only when every member was handled above — adding a new variant then breaks compilation here first, pointing exactly where updates are needed.
+* For a discriminated union handled in a switch, a final `default: return assertNever(value)` case compiles only when every member was handled above - adding a new variant then breaks compilation here first, pointing exactly where updates are needed.
 ```ts
 function assertNever(x: never): never { throw new Error('Unhandled: ' + JSON.stringify(x)); }
 type Shape = Circle | Square | Triangle;
@@ -220,31 +220,31 @@ switch (shape.kind) {
 function getProp<T, K extends keyof T>(obj: T, key: K): T[K] {
   return obj[key];
 }
-getProp({ age: 42 }, 'age');   // returns number — exact key tracked
+getProp({ age: 42 }, 'age');   // returns number - exact key tracked
 ```
 * Without the constraint, keys degrade to `string` and returns to `any`; with it, typos fail compilation and results stay precise via indexed access.
-* Composes upward: `setProp<T, K extends keyof T>(o: T, k: K, v: T[K])`, mapped utilities (`{ [P in K]: T[P] }`), and event maps (`on<E extends keyof Events>(e: E, cb: (p: Events[E]) => void)`) — the backbone of type-safe dictionaries, ORMs and emitter APIs.
+* Composes upward: `setProp<T, K extends keyof T>(o: T, k: K, v: T[K])`, mapped utilities (`{ [P in K]: T[P] }`), and event maps (`on<E extends keyof Events>(e: E, cb: (p: Events[E]) => void)`) - the backbone of type-safe dictionaries, ORMs and emitter APIs.
 
 ### Q46: What are user-defined type guards and what contract must they obey?
-* Functions asserting a predicate: `function isError(e: unknown): e is Error { return e instanceof Error; }` — inside guarded branches the parameter narrows accordingly.
-* The boolean-returning body is unchecked: TS trusts your runtime test matches the declared narrowing — lying here plants landmines (narrowed-but-wrong types downstream).
+* Functions asserting a predicate: `function isError(e: unknown): e is Error { return e instanceof Error; }` - inside guarded branches the parameter narrows accordingly.
+* The boolean-returning body is unchecked: TS trusts your runtime test matches the declared narrowing - lying here plants landmines (narrowed-but-wrong types downstream).
 * Prefer deriving from real checks (in/instanceof/discriminants); for complex validation combine with schema libraries (zod parse results typed directly, avoiding hand-written guards entirely).
-* Sibling feature: assertion signatures `function assertIsUser(v: unknown): asserts v is User` — throws instead of returning false, useful for validate-or-throw flows.
+* Sibling feature: assertion signatures `function assertIsUser(v: unknown): asserts v is User` - throws instead of returning false, useful for validate-or-throw flows.
 
 ### Q47: How do utility types compose in practice?
 * Layered transformations read like pipelines: `Readonly<Partial<Point>>` (all-optional immutable draft), `Required<Pick<User,'email'|'name'>>`, `Record<Permission, Omit<Role,'id'>>`.
-* Composition beats bespoke mapped types when intent is declarative — reviewers instantly see Partial→Required flow versus decoding nested conditionals.
+* Composition beats bespoke mapped types when intent is declarative - reviewers instantly see Partial→Required flow versus decoding nested conditionals.
 * Know the interplay gotchas: `Partial<Readonly<T>>` order matters visually but distributes identically; `Omit` built on Pick/Exclude loses index signatures (documented limitation); `NonNullable<A|B>` prunes unions before mapping.
-* Senior signal: recognizing when a three-line composed type replaces a twenty-line hand-rolled conditional — plus when complexity demands a named intermediate type for error messages.
+* Senior signal: recognizing when a three-line composed type replaces a twenty-line hand-rolled conditional - plus when complexity demands a named intermediate type for error messages.
 
 ### Q48: What are labeled and variadic tuple types?
-* Labels document positions without changing structure: `type Range = [start: number, end: number]` — pure DX improvement in hover tooltips/signatures.
-* Rest elements model prefixes/suffixes: `type Args = [name: string, ...opts: Option[]]` — variadic tuples.
+* Labels document positions without changing structure: `type Range = [start: number, end: number]` - pure DX improvement in hover tooltips/signatures.
+* Rest elements model prefixes/suffixes: `type Args = [name: string, ...opts: Option[]]` - variadic tuples.
 * Generic tuple manipulation unlocks typed helpers: concatenation `[...T, ...U]`, `Head<T> = T extends [infer F, ...any[]] ? F : never`, typed `curry`/`zip` implementations preserving exact arities and element types through spreads.
 * Combined with `as const` data, enables typed routing tables/config matrices where literal arrays become precise tuple contracts.
 
 ### Q49: What are TypeScript decorators (fundamentals)?
-* Special syntax `@expr` attaching behavior to classes/methods/accessors/properties/parameters — evaluated as functions receiving metadata about the decorated target.
+* Special syntax `@expr` attaching behavior to classes/methods/accessors/properties/parameters - evaluated as functions receiving metadata about the decorated target.
 * Legacy experimental (`experimentalDecorators` + emitDecoratorMetadata): the NestJS/Angular/TypeORM ecosystem standard; relies on design-time type metadata emission for DI containers.
 * Stage-3 standard decorators (TS 5 default): different signatures, `context` object (kind, name, static/private flags, addInitializer), composable wrappers returning replacement functions; no reflect-metadata requirement.
 * Mental model: decorators = higher-order functions at class-definition time enabling cross-cutting concerns (@log, @cached, @route registration, validation binding) without touching business logic.
@@ -252,7 +252,7 @@ getProp({ age: 42 }, 'age');   // returns number — exact key tracked
 ### Q50: What does `verbatimModuleSyntax` change, and why adopt it?
 * Forces import/export statements to survive emission *exactly as written*: `import type` required for type-only imports; plain imports of types remain as runtime imports (potentially importing modules solely for side effects).
 * Replaces the confusing trio (`importsNotUsedAsValues`, `isolatedModules` partial behaviors, `preserveValueImports`) with one predictable rule aligned with bundlers/esbuild/swc single-file transpilers that cannot know whether an import is a type.
-* Migration effects: existing ambiguous imports start erroring — mechanical fixes (`import type` additions), often surfacing genuine accidental side-effect imports (bundle-size wins).
+* Migration effects: existing ambiguous imports start erroring - mechanical fixes (`import type` additions), often surfacing genuine accidental side-effect imports (bundle-size wins).
 * Adopt alongside `isolatedModules: true` for transpiler-compatible correctness; pair with lint rules auto-fixing specifiers during codemods.
 
 ---

@@ -13,7 +13,7 @@
 * Boot inspects classpath, beans, properties at startup; `@EnableAutoConfiguration` loads conditionally-defined configurations (`@ConditionalOnClass`, `@ConditionalOnMissingBean`).
 * Debug with `--debug` flag printing the CONDITIONS EVALUATION REPORT (matched/not-matched).
 * Exclude via `@SpringBootApplication(exclude=DataSourceAutoConfiguration.class)` or property.
-Your bean ALWAYS wins over auto-config (`@ConditionalOnMissingBean` backs off) — the key extension principle.
+Your bean ALWAYS wins over auto-config (`@ConditionalOnMissingBean` backs off) - the key extension principle.
 
 ---
 
@@ -26,16 +26,16 @@ Your bean ALWAYS wins over auto-config (`@ConditionalOnMissingBean` backs off) �
 
 ### Q4: Walk through @SpringBootApplication annotations.
 Composite of three:
-1. `@Configuration` — class is a bean-definition source.
-2. `@ComponentScan` — pick up `@Component/@Service/@Repository/@Controller` under package (root scan covers sub-packages — why main class sits at root).
-3. `@EnableAutoConfiguration` — activates conditional config machinery.
+1. `@Configuration` - class is a bean-definition source.
+2. `@ComponentScan` - pick up `@Component/@Service/@Repository/@Controller` under package (root scan covers sub-packages - why main class sits at root).
+3. `@EnableAutoConfiguration` - activates conditional config machinery.
 
 ---
 
 ### Q5: What is the IoC container / ApplicationContext?
 * Inversion of Control: the framework creates and wires objects (beans) instead of classes instantiating their own dependencies.
-* ApplicationContext is the advanced container — lifecycle callbacks, events, i18n, resource loading on top of bean factory.
-* Beans defined via stereotype annotations, `@Bean` methods, or imports; retrieved by type mostly — coding to interfaces becomes natural.
+* ApplicationContext is the advanced container - lifecycle callbacks, events, i18n, resource loading on top of bean factory.
+* Beans defined via stereotype annotations, `@Bean` methods, or imports; retrieved by type mostly - coding to interfaces becomes natural.
 
 ---
 
@@ -48,7 +48,7 @@ Interview line: "constructor injection makes illegal states unrepresentable."
 ---
 
 ### Q7: What scopes can beans have?
-* singleton (default — one per container), prototype (new each request), request/session/application/websocket (web contexts).
+* singleton (default - one per container), prototype (new each request), request/session/application/websocket (web contexts).
 * Gotchas: injecting prototype into singleton needs `@Lookup`, ObjectProvider, or scoped proxy; stateful singletons are concurrency hazards.
 Know `@RequestScope` for per-request data carriers like tenant context holders.
 
@@ -73,19 +73,19 @@ Know `@RequestScope` for per-request data carriers like tenant context holders.
 spring.datasource.url=jdbc:postgresql://...
 spring.jpa.hibernate.ddl-auto=validate
 ```
-* Starter data-jpa + driver; define entity + `interface BookRepo extends JpaRepository<Book,Long>` — CRUD implemented at runtime.
+* Starter data-jpa + driver; define entity + `interface BookRepo extends JpaRepository<Book,Long>` - CRUD implemented at runtime.
 * `ddl-auto=validate` in prod (Flyway owns schema); derived queries (`findByAuthorName`) from method names.
 
 ### Q11: What is an Entity and what rules govern it?
 * `@Entity` class mapped to table via JPA; requires @Id; default no-arg constructor.
 * `@Table(name=...)`, `@Column` mappings; identity generation `GenerationType.IDENTITY/SEQUENCE` (SEQUENCE + pooled optimizer better for batching).
-* Entities managed by persistence context — detached copies behave differently than managed ones (a classic confusion).
+* Entities managed by persistence context - detached copies behave differently than managed ones (a classic confusion).
 
 ---
 
 ### Q12: Explain repositories: CrudRepository vs JpaRepository vs derived queries.
 * JpaRepository extends Crud/PagingAndSorting adding flush/persistence ops & batching.
-* Derived queries: `List<Book> findByTitleContainingIgnoreCase(String q);` — parsed into JPQL.
+* Derived queries: `List<Book> findByTitleContainingIgnoreCase(String q);` - parsed into JPQL.
 * Custom JPQL via `@Query`; pagination params Pageable returning Page<T>.
 
 ---
@@ -100,7 +100,7 @@ Knowing resolvers/advice hooks explains most "why isn't my exception mapped" mys
 ---
 
 ### Q14: What are @Controller vs @RestController vs @Service?
-* @Controller returns view names; @ResponseBody on methods returns JSON instead — @RestController composes both.
+* @Controller returns view names; @ResponseBody on methods returns JSON instead - @RestController composes both.
 * @Service marks business layer (semantic only, same as @Component technically).
 * Layering discipline: controller→service→repository; controllers never touch repositories directly in disciplined codebases.
 
@@ -120,20 +120,20 @@ Failures throw MethodArgumentNotValidException → handled globally via advice r
 ### Q16: What is the role of application events (@EventListener)?
 * In-process pub/sub: publisher emits POJO event via ApplicationEventPublisher; listeners react asynchronously (`@Async`) or synchronously.
 * Uses: decouple side effects (email after registration) from core flow.
-Caveat: same-transaction by default — pair with `@TransactionalEventListener(phase=AFTER_COMMIT)` for post-commit semantics.
+Caveat: same-transaction by default - pair with `@TransactionalEventListener(phase=AFTER_COMMIT)` for post-commit semantics.
 
 ---
 
 ### Q17: How do you schedule tasks?
 * `@EnableScheduling` + `@Scheduled(cron="0 0 * * * *", fixedDelay=...)`.
-* Single-threaded scheduler default — long tasks delay others; configure pool size or use Quartz/shedlock for clusters.
+* Single-threaded scheduler default - long tasks delay others; configure pool size or use Quartz/shedlock for clusters.
 Cluster note: @Scheduled runs on EVERY node → shedlock/JDBC lock needed for once-per-cluster semantics.
 
 ---
 
 ### Q18: What does @Transactional do and where can it go?
-* Declares transactional boundary around method/class; default rollback on RuntimeException/Error only — checked exceptions need rollbackFor.
-* Placement rule: services layer (not controllers/repositories); self-invocation bypasses proxy — a top-3 interview trap.
+* Declares transactional boundary around method/class; default rollback on RuntimeException/Error only - checked exceptions need rollbackFor.
+* Placement rule: services layer (not controllers/repositories); self-invocation bypasses proxy - a top-3 interview trap.
 
 ---
 
@@ -150,7 +150,7 @@ http.authorizeHttpRequests(a -> a.requestMatchers("/api/**").authenticated())
 
 ### Q20: What is DevTools and what does it change in dev?
 * Auto-restart on classpath changes (faster than cold boot), live template/cache defaults disabled, H2 console enabled.
-* Disabled automatically in packaged jars — dev-only safety net.
+* Disabled automatically in packaged jars - dev-only safety net.
 LiveReload integration pairs with static resources for instant browser refresh.
 
 ---

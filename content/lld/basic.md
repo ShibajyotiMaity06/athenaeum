@@ -9,7 +9,7 @@ Welcome to the Low-Level Design (LLD) Foundations Guide. This codex provides 50 
 ### Q1: What is the purpose of Low-Level Design (LLD)?
 
 **Answer:**
-Low-Level Design (LLD) transforms abstract high-level architectural requirements into concrete, implementable software blueprints—specifying class structures, object relationships, design patterns, method signatures, and state transitions before writing production code.
+Low-Level Design (LLD) transforms abstract high-level architectural requirements into concrete, implementable software blueprints - specifying class structures, object relationships, design patterns, method signatures, and state transitions before writing production code.
 *   **Why it matters:** It eliminates architectural ambiguity, prevents costly refactors, and ensures the codebase remains modular, unit-testable, and scalable.
 *   **Real-World Example:** In designing a **Parking Lot System**, LLD defines the exact inheritance hierarchy between `Vehicle` $\to$ (`Car`, `Motorcycle`, `Truck`), the strategy pattern for `FeeCalculationStrategy`, and the thread-safe synchronization on `ParkingSpot.occupy()`.
 

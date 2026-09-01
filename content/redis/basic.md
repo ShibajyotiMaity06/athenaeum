@@ -10,22 +10,22 @@
 ---
 
 ### Q2: What data types does Redis provide?
-* STRING (counters, tokens), LIST (queues via LPUSH/BRPOP), SET (unique members, set ops), HASH (objects), ZSET (sorted sets — leaderboards/ranges).
+* STRING (counters, tokens), LIST (queues via LPUSH/BRPOP), SET (unique members, set ops), HASH (objects), ZSET (sorted sets - leaderboards/ranges).
 * Plus specialized: Streams (event logs/consumer groups), Bitmaps (presence flags), HyperLogLog (cardinality estimates), Geospatial.
 Choosing the right type unlocks atomic server-side operations instead of client-side read-modify-write.
 
 ---
 
 ### Q3: What is TTL / key expiration?
-* `EXPIRE key seconds` or SET with EX option; TTL auto-deletes keys — the backbone of caching semantics.
+* `EXPIRE key seconds` or SET with EX option; TTL auto-deletes keys - the backbone of caching semantics.
 * `TTL` returns remaining seconds (-1 no expiry, -2 missing); PERSIST removes expiry.
-* Expiration is lazy (checked on access) + active sampling cycle — expired-but-uncached keys may linger briefly in memory.
+* Expiration is lazy (checked on access) + active sampling cycle - expired-but-uncached keys may linger briefly in memory.
 
 ---
 
 ### Q4: What is the difference between RDB and AOF persistence?
-* RDB: point-in-time binary snapshots on interval — compact, fast restarts, risk of losing recent writes.
-* AOF: append-only log of every write — configurable fsync policy (always/everysec/no), better durability, larger files + rewrite compaction.
+* RDB: point-in-time binary snapshots on interval - compact, fast restarts, risk of losing recent writes.
+* AOF: append-only log of every write - configurable fsync policy (always/everysec/no), better durability, larger files + rewrite compaction.
 * Hybrid (aof-use-rdb-preamble default modern): fast load + durability. Choose per loss-tolerance budget.
 
 ---
@@ -33,7 +33,7 @@ Choosing the right type unlocks atomic server-side operations instead of client-
 ### Q5: What is a cache hit/miss and how do you compute ratio?
 * Hit = served from redis; miss = fell through to origin DB.
 * Ratio = hits/(hits+misses) via INFO stats keyspace metrics.
-* Low ratios signal wrong TTLs, poor key design, or genuinely uncachable data — investigate before scaling hardware.
+* Low ratios signal wrong TTLs, poor key design, or genuinely uncachable data - investigate before scaling hardware.
 
 ---
 
@@ -45,14 +45,14 @@ LFU suits skewed access patterns where recently-used ≠ frequently-used.
 ---
 
 ### Q7: How do you increment counters atomically?
-`INCR key` / `INCRBY key n` — atomic server-side, no read-modify-write race even across clients.
+`INCR key` / `INCRBY key n` - atomic server-side, no read-modify-write race even across clients.
 Floats: INCRBYFLOAT. Hash fields: HINCRBY.
 Foundation of rate limiters, view counters, id generators (with padding prefixes).
 
 ---
 
 ### Q8: What is the difference between KEYS and SCAN?
-* KEYS pattern blocks scanning entire keyspace — production killer on big datasets.
+* KEYS pattern blocks scanning entire keyspace - production killer on big datasets.
 * SCAN iterates cursor-based incrementally, returning batches; safe for production loops (may return duplicates; handle count variance).
 Rule: never ship KEYS; always SCAN.
 
@@ -74,16 +74,16 @@ HGET user:42 name
 ---
 
 ### Q11: What are Redis transactions (MULTI/EXEC)?
-* MULTI queues commands; EXEC executes all atomically (no interleaving) — but NO rollback on mid-failure (command errors skip, others run).
+* MULTI queues commands; EXEC executes all atomically (no interleaving) - but NO rollback on mid-failure (command errors skip, others run).
 * WATCH provides check-and-set optimism: abort EXEC if watched keys changed.
 For conditional logic needing rollback semantics → Lua scripts instead.
 
 ---
 
 ### Q12: What is pub/sub and its limitations?
-* PUBLISH/SUBSCRIBE fire-and-forget channels — no persistence, no delivery guarantees, disconnected subscribers miss messages.
+* PUBLISH/SUBSCRIBE fire-and-forget channels - no persistence, no delivery guarantees, disconnected subscribers miss messages.
 * Great for live notifications/cache invalidation fan-out; NOT for job queues.
-* Streams or lists replace it where durability matters — know the boundary.
+* Streams or lists replace it where durability matters - know the boundary.
 
 ---
 
@@ -97,7 +97,7 @@ For conditional logic needing rollback semantics → Lua scripts instead.
 ### Q14: What is the difference between cache stampede protections: locks vs probabilistic early expiry?
 * Stampede: hot key expires → N concurrent misses hammer DB.
 * Lock approach: first miss acquires SETNX lock, rebuilds, releases; others short-wait/poll stale fallback.
-* XFetch-style probabilistic early refresh: expire earlier proportional to popularity — no lock coordination needed.
+* XFetch-style probabilistic early refresh: expire earlier proportional to popularity - no lock coordination needed.
 Combine both for hot keys under heavy load.
 
 ---

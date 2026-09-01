@@ -239,37 +239,37 @@
 ---
 
 ### Q44: Explain online/live resharding (MongoDB 5.0+). How does it differ from the old dump-and-reload approach?
-* Live resharding re-keys a collection's data across shards **while serving traffic** — no export/import window, no double-write application hacks.
+* Live resharding re-keys a collection's data across shards **while serving traffic** - no export/import window, no double-write application hacks.
 * Mechanics: coordinator clones data applying an oplog-catching loop (clone phase → oplog apply phase → strict consistency barrier), then swaps routing metadata atomically in config servers; clients see a momentary stall at most.
 * Constraints: new shard key must satisfy certain conditions (no unique index except _id-compatible ones), resharding consumes throughput budget (throttled), and max collection size guidance exists per version.
 * Pre-5.0 alternatives worth contrasting: manual copy with dual-writes, or the "refactor-for-shardability" pattern (compliant keys designed upfront). Interviewers probe why choosing an immutable-ish shard key upfront still beats relying on resharding.
 
 ### Q45: How does MongoDB's query planner race candidate plans? What is plan cache pollution?
 * For eligible queries the system generates multiple candidate plans (one per viable index) and races them in a trial period (up to ~101 results); the fastest becomes cached in the **plan cache** keyed by query shape.
-* Cache entries carry work/eviction counters — after enough executions a plan graduates to pinned-in-memory status; cache clears on index builds/drops, replanning triggers, or explicit flushes.
+* Cache entries carry work/eviction counters - after enough executions a plan graduates to pinned-in-memory status; cache clears on index builds/drops, replanning triggers, or explicit flushes.
 * Pollution scenarios: skewed data making the raced winner wrong for other parameter values (parameter-sniffing analog), frequent cache invalidation storms causing planning CPU spikes, SBE/classic engine differences changing winners.
 * Mitigations: index filters pinning choices, strategic `hint()`, keeping shapes normalized (avoid OR-explosions), monitoring `serverStatus.metrics.queryExecutor.scanned/scannedObjects` ratios.
 
 ### Q46: What are WiredTiger read/write tickets and how do they govern concurrency?
-* WiredTiger gates concurrent work with a fixed pool of **read tickets** and **write tickets** (defaults scaled to cores, e.g., 128 each historically) — a semaphore model preventing context-switch thrash beyond optimal parallelism.
-* Operations acquire tickets before executing; exhaustion queues requests, surfacing as rising `queuedLatency` and throughput ceiling even with idle CPU — the classic symptom is latency growth without CPU saturation.
+* WiredTiger gates concurrent work with a fixed pool of **read tickets** and **write tickets** (defaults scaled to cores, e.g., 128 each historically) - a semaphore model preventing context-switch thrash beyond optimal parallelism.
+* Operations acquire tickets before executing; exhaustion queues requests, surfacing as rising `queuedLatency` and throughput ceiling even with idle CPU - the classic symptom is latency growth without CPU saturation.
 * Long-running operations (big scans, huge aggregations) holding tickets starve OLTP traffic; `maxInternalConnections`... more precisely ticket tuning (`wiredTigerConcurrentReadTransactions`) is occasionally used, but the real fix is bounding operation cost (indexes, limits, allowDiskUse tradeoffs).
 * Diagnostic chain: `serverStatus.wiredTiger.concurrentTransactions` → currentTicket utilization → correlate slow-op profiler entries.
 
 ### Q47: Describe the structure of oplog entries and why they must be idempotently applicable.
 * Each oplog entry is a BSON doc: `ts` (timestamp, also the ordering key), `op` (i=insert/u=update/c=command/d=delete/n=noop), `ns` (namespace), `o` (the payload), `o2` (update selector), plus `wall` clock and statement metadata.
-* Updates store **delta deltas** (`$v:2` diff format: i/u/d sub-documents for set/unset paths) rather than whole post-images — secondaries apply transformations, so entries must produce identical results regardless of prior local state (idempotency enables safe re-application after crashes/resume).
+* Updates store **delta deltas** (`$v:2` diff format: i/u/d sub-documents for set/unset paths) rather than whole post-images - secondaries apply transformations, so entries must produce identical results regardless of prior local state (idempotency enables safe re-application after crashes/resume).
 * Noops preserve oplog continuity across periods without writes (heartbeat effect for secondary chaining and oplog-window advancement).
 * Consequences: idempotency forbids non-deterministic update expressions in replicated contexts ($where-style randomness constrained), and delta application explains some replication lag patterns for wide updates.
 
 ### Q48: What are change stream pre-images and post-images? How do you enable and cost them?
 * By default change events carry the **post-change delta**; enabling `changeStreamPreAndPostImages` on a collection (and the client watch option `fullDocumentBeforeChange`/`fullDocument: 'whenAvailable'`) delivers full before/after snapshots in events.
 * Uses: audit trails, cache invalidation needing old values, syncing search indexes that require deletes-with-content, downstream systems computing diffs.
-* Cost mechanics: images stored in dedicated `config.system.preimages` collection governed by `expireAfterSeconds` — they inflate storage, add write amplification (extra capture on each modification), and increase oplog/replication load; unbounded retention is a classic outage story.
+* Cost mechanics: images stored in dedicated `config.system.preimages` collection governed by `expireAfterSeconds` - they inflate storage, add write amplification (extra capture on each modification), and increase oplog/replication load; unbounded retention is a classic outage story.
 * Design guidance: enable surgically per-collection, cap retention aggressively, prefer post-image-only where possible, and validate downstream consumers tolerate image-unavailable cases.
 
 ### Q49: What are hedged reads? When do they help and when do they hurt?
-* With `readPreference=nearest` + hedge enabled, MongoDB sends the same read to two members (primary-favored/secondary sets configurable): the slower reply is discarded — masking transient latency outliers on replicas with laggy disks or GC pauses.
+* With `readPreference=nearest` + hedge enabled, MongoDB sends the same read to two members (primary-favored/secondary sets configurable): the slower reply is discarded - masking transient latency outliers on replicas with laggy disks or GC pauses.
 * Benefit profile: tail-latency (p99) reduction for read-heavy services tolerant of slightly higher cluster load; especially valuable across availability zones with jittery links.
 * Costs: doubled internal work for hedged requests, potential extra cache pressure, and misleading observability (underlying slowness hidden until both paths degrade).
 * Requirements/guardrails: requires sharded clusters (mongos-level feature), works per-operation via read concern/preference config; disable for strongly consistent reads where duplicate execution semantics matter.
@@ -278,7 +278,7 @@
 * SBE (introduced progressively 4.4→6.0+) replaces the tree-walking DocumentSource pipeline interpreter for eligible queries with a volcano-style **slot machine executor**: operators exchange tuples in slots (columnar-ish vectors), compiled expression trees evaluate per-slot with far fewer virtual calls and materializations.
 * Wins: group/lookup/project-heavy aggregations see large speedups; expressions compile once; memory accounting tighter; explain output switches to `explainVersion: 2` with SLOT_BASED stages visible.
 * Eligibility rules decide SBE vs classic engine per query (certain stages/operators fall back); DBAdmins tune via `internalQueryFrameworkControl` (forceClassic/trySbeRestricted/trySbeFull).
-* Interview angle: know that `explain` reports which engine ran, and that SBE + block processing complements (not replaces) good indexing — COLLSCAN under SBE is faster but still a scan.
+* Interview angle: know that `explain` reports which engine ran, and that SBE + block processing complements (not replaces) good indexing - COLLSCAN under SBE is faster but still a scan.
 
 ---
 

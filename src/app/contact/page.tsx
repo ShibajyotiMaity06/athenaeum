@@ -74,7 +74,7 @@ export default function ContactPage() {
               Entity &amp; Administrative Details
             </h2>
             <div className="grid gap-2 text-[var(--text-muted)] font-mono text-xs">
-              <p><strong className="text-[var(--text-primary)]">Brand Name:</strong> DevPrep (<code>devprep.online</code>)</p>
+              <p><strong className="text-[var(--text-primary)]">Brand Name:</strong> DevPrep (<code>www.devprep.online</code>)</p>
               <p><strong className="text-[var(--text-primary)]">Nature of Business:</strong> Educational Technology (EdTech) &amp; Digital Interview Preparation Software</p>
               <p><strong className="text-[var(--text-primary)]">Operating Address:</strong> Kolkata, West Bengal, India — PIN: 700001</p>
               <p><strong className="text-[var(--text-primary)]">Payment Gateway:</strong> Razorpay Software Private Limited (PCI-DSS Level 1 Certified)</p>

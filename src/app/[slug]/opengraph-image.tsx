@@ -187,7 +187,7 @@ export default async function Image({ params }: { params: Promise<{ slug: string
               fontFamily: "monospace"
             }}
           >
-            devprep.online
+            www.devprep.online
           </div>
         </div>
       </div>

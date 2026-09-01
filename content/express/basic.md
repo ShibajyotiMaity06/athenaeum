@@ -200,9 +200,9 @@
 ---
 
 ### Q44: What is `res.locals` used for?
-* An object scoped to the request-response cycle — a scratchpad for middleware to pass data downstream (template rendering variables, resolved user, request metadata) without touching `app.locals` (global) or attaching to `req`.
+* An object scoped to the request-response cycle - a scratchpad for middleware to pass data downstream (template rendering variables, resolved user, request metadata) without touching `app.locals` (global) or attaching to `req`.
 * Typical flow: `authMiddleware` sets `res.locals.user = decoded`; later handlers/templates read it. Render engines merge `res.locals` automatically into view contexts.
-* Lifetime: recreated per request; never persists across requests — safe for per-request secrets unlike `app.locals`.
+* Lifetime: recreated per request; never persists across requests - safe for per-request secrets unlike `app.locals`.
 * Convention note: prefer `req` for *input* context and `res.locals` for *output/render* context; teams pick one and lint it.
 
 ### Q45: What does `router.route()` chaining give you?
@@ -218,14 +218,14 @@ router.route('/users/:id')
 * Interview angle: mention it pairs with validation chains (validate once per resource) reducing duplicated middleware arrays.
 
 ### Q46: Which `req` properties describe the client connection?
-* `req.ip` — client address honoring `trust proxy`; `req.ips` — full forwarded chain when trust proxy is set.
-* `req.hostname` / `req.protocol` — host and http/https (X-Forwarded-Host/Proto respected under trust proxy); `req.secure` shorthand.
-* `req.xhr` — legacy jQuery-era AJAX flag (mostly historical); `req.originalUrl` vs `req.url` — full path vs router-relative remainder (critical inside mounted routers).
+* `req.ip` - client address honoring `trust proxy`; `req.ips` - full forwarded chain when trust proxy is set.
+* `req.hostname` / `req.protocol` - host and http/https (X-Forwarded-Host/Proto respected under trust proxy); `req.secure` shorthand.
+* `req.xhr` - legacy jQuery-era AJAX flag (mostly historical); `req.originalUrl` vs `req.url` - full path vs router-relative remainder (critical inside mounted routers).
 * Basic-level expectation: know that behind load balancers raw socket IP is the proxy's, motivating the proxy settings covered at hard level.
 
 ### Q47: What route path patterns does Express support?
 * Static paths (`/health`), named params (`/users/:id` → `req.params.id`), optional segments (`/:lang?`), zero-or-more (`/files/*` classic; v5 syntax differs!), regex constraints inline (`/:id(\\d+)`) or via param callbacks.
-* Express 4 uses path-to-regexp v0.x semantics — `*` is a catch-all; **Express 5** adopts path-to-regexp v8 where `*` must be named (`/*splat`) and some regex syntax moved to explicit middlewares — migration questions are increasingly common.
+* Express 4 uses path-to-regexp v0.x semantics - `*` is a catch-all; **Express 5** adopts path-to-regexp v8 where `*` must be named (`/*splat`) and some regex syntax moved to explicit middlewares - migration questions are increasingly common.
 * Matching is prefix-based for mounted routers: `app.use('/api', apiRouter)` strips `/api` from child matching.
 * Gotcha: query strings are NOT part of path matching.
 
@@ -250,7 +250,7 @@ app.get(/^(?!\/api).*/ , (req,res) => res.sendFile(path.join(__dirname,'dist','i
 * **3xx Redirection**: 301/302/307/308 above; 304 Not Modified (ETag/If-None-Match flows).
 * **4xx Client errors**: 400 malformed input, 401 unauthenticated vs 403 authenticated-but-forbidden, 404 missing route/resource, 409 conflict (duplicate), 422 semantic validation failure, 429 rate-limited (+ Retry-After).
 * **5xx Server errors**: 500 unhandled, 502 bad gateway (upstream), 503 unavailable (maintenance/shedding + Retry-After), 504 gateway timeout.
-* Precision here signals API maturity — e.g., choosing 409 over 400 for idempotency conflicts.
+* Precision here signals API maturity - e.g., choosing 409 over 400 for idempotency conflicts.
 
 ---
 

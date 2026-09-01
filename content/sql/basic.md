@@ -209,13 +209,13 @@
 * Although written SELECT-first, engines evaluate clauses logically as:
 `FROM/JOIN → WHERE → GROUP BY → HAVING → SELECT (aliases born here) → DISTINCT → ORDER BY → LIMIT/OFFSET`.
 * Consequences interviewers probe: **WHERE cannot see SELECT aliases** (they don't exist yet), but **ORDER BY can** (it runs after SELECT); HAVING sees grouped aggregates while WHERE filters raw rows pre-grouping.
-* Explains why filtering early in WHERE beats filtering in HAVING for performance, and why window functions (evaluated after GROUP BY/HAVING) can't appear in WHERE — only in outer queries or QUALIFY (engine-dependent).
+* Explains why filtering early in WHERE beats filtering in HAVING for performance, and why window functions (evaluated after GROUP BY/HAVING) can't appear in WHERE - only in outer queries or QUALIFY (engine-dependent).
 
 ### Q45: Compare COUNT(*), COUNT(column), and COUNT(DISTINCT column).
-* `COUNT(*)`: counts **rows**, including those with NULLs everywhere — fastest (engines optimize to smallest index/scan).
-* `COUNT(col)`: counts rows where `col IS NOT NULL` — silently changes semantics when the column is nullable.
-* `COUNT(DISTINCT col)`: counts unique non-null values; memory/sort heavy on big sets — approximate counters (HyperLogLog in warehouses) exist for scale.
-* Classic bug: expecting `COUNT(col)` = row count on nullable columns; also `COUNT(1)` vs `COUNT(*)` is a myth — identical performance in modern optimizers.
+* `COUNT(*)`: counts **rows**, including those with NULLs everywhere - fastest (engines optimize to smallest index/scan).
+* `COUNT(col)`: counts rows where `col IS NOT NULL` - silently changes semantics when the column is nullable.
+* `COUNT(DISTINCT col)`: counts unique non-null values; memory/sort heavy on big sets - approximate counters (HyperLogLog in warehouses) exist for scale.
+* Classic bug: expecting `COUNT(col)` = row count on nullable columns; also `COUNT(1)` vs `COUNT(*)` is a myth - identical performance in modern optimizers.
 
 ### Q46: Which string functions appear most often in interviews?
 * Case/format: `UPPER`, `LOWER`, `INITCAP`, `TRIM/LTRIM/RTRIM`.
@@ -224,24 +224,24 @@
 * Interview traps: 1-based vs 0-based substring indexes across engines; trailing spaces in CHAR comparisons; collation affecting case-insensitive equality.
 
 ### Q47: How do LIMIT/OFFSET work and why is deep pagination slow?
-* `LIMIT n OFFSET m` skips m rows then returns n — engines must still *produce* the first m sorted rows, so cost grows linearly with page depth (page 10,000 scans ~100k rows).
-* Better pattern — **keyset (cursor) pagination**: remember last seen sort key and filter `WHERE (created_at, id) < (:last_ts, :last_id) ORDER BY created_at DESC, id DESC LIMIT n`; each page costs the same regardless of depth, using the matching composite index.
+* `LIMIT n OFFSET m` skips m rows then returns n - engines must still *produce* the first m sorted rows, so cost grows linearly with page depth (page 10,000 scans ~100k rows).
+* Better pattern - **keyset (cursor) pagination**: remember last seen sort key and filter `WHERE (created_at, id) < (:last_ts, :last_id) ORDER BY created_at DESC, id DESC LIMIT n`; each page costs the same regardless of depth, using the matching composite index.
 * Trade-offs: keyset can't jump to arbitrary pages and needs a deterministic tie-breaker column (id) to stay stable amid inserts.
 
 ### Q48: What are temporary tables and when are they useful?
 * Session/connection-scoped tables (`CREATE TEMP TABLE`, or `#temp` in SQL Server) living in tempdb-like storage, auto-dropped at session end.
 * Use cases: staging intermediate multi-step results inside procedures/reports, breaking giant queries into debuggable passes, batching ETL workloads.
-* Versus CTEs: CTEs are named query scopes (possibly inlined), temp tables are physical with stats/indexes — engines may choose differently; complex reuse or indexed staging favors temp tables.
+* Versus CTEs: CTEs are named query scopes (possibly inlined), temp tables are physical with stats/indexes - engines may choose differently; complex reuse or indexed staging favors temp tables.
 * Watch-outs: tempdb contention under heavy temp usage, forgetting indexes on large temp sets, and temp-table caching behaviors differing across engines.
 
 ### Q49: How do auto-increment primary keys work across databases?
 * MySQL: `AUTO_INCREMENT` column attribute; PostgreSQL: `SERIAL` (legacy) or `GENERATED ALWAYS AS IDENTITY` (SQL-standard, preferred); SQL Server: `IDENTITY(1,1)`; Oracle: sequence-based identity.
-* Sequences are non-transactional — rolled-back inserts leave **gaps** (by design, for concurrency); applications must not assume contiguity.
+* Sequences are non-transactional - rolled-back inserts leave **gaps** (by design, for concurrency); applications must not assume contiguity.
 * Concurrent-insert behavior: monotonic keys serialize at the index's rightmost leaf (hot-spot discussion appears again at hard level re: UUIDs).
-* Getting the new id back: `RETURNING id` (PG), `LAST_INSERT_ID()` (MySQL), `SCOPE_IDENTITY()`/OUTPUT (SQL Server) — never rely on MAX(id).
+* Getting the new id back: `RETURNING id` (PG), `LAST_INSERT_ID()` (MySQL), `SCOPE_IDENTITY()`/OUTPUT (SQL Server) - never rely on MAX(id).
 
 ### Q50: Why does ORDER BY 1 work, and why avoid positional/alias pitfalls?
-* `ORDER BY 1` sorts by the first output column — legal shorthand, but breaks silently when the SELECT list is reordered during maintenance.
+* `ORDER BY 1` sorts by the first output column - legal shorthand, but breaks silently when the SELECT list is reordered during maintenance.
 * Ordering by SELECT alias works because ORDER BY runs after SELECT; ordering by an aliased aggregate expression is fine, but referencing a *column not in the SELECT list* alongside DISTINCT fails (DISTINCT collapses rows first).
 * Best practice: order by real column names/expressions in production code; reserve positional ordering for ad-hoc analysis. Deterministic sorting additionally requires a unique tie-breaker column.
 

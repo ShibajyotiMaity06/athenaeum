@@ -4,7 +4,7 @@
 
 ### Q1: Explain bean lifecycle hooks you can use.
 * Instantiation → populate properties → Aware interfaces (BeanNameAware...) → BeanPostProcessor.before → @PostConstruct/InitializingBean.afterPropertiesSet/initMethod → ready → @PreDestroy on shutdown.
-* BeanPostProcessor power: proxies (transactions, async, caching) wrap here — explains annotation self-invocation failures.
+* BeanPostProcessor power: proxies (transactions, async, caching) wrap here - explains annotation self-invocation failures.
 Ordering knowledge separates debugging heroes from sufferers.
 
 ---
@@ -19,8 +19,8 @@ Fixes: split beans, self-injection via ObjectProvider, or AspectJ weaving for ex
 ### Q3: Explain propagation behaviors with real scenarios.
 Key ones:
 * REQUIRED (default): join or create.
-* REQUIRES_NEW: suspend outer, fresh tx — audit log must survive outer rollback.
-* NESTED: savepoint inside outer — partial rollback possible.
+* REQUIRES_NEW: suspend outer, fresh tx - audit log must survive outer rollback.
+* NESTED: savepoint inside outer - partial rollback possible.
 * NOT_SUPPORTED/MANDATORY/NEVER: suspension/assertions for special flows.
 Scenario drill: batch processing where per-row failure shouldn't sink whole batch → REQUIRES_NEW per row + collect errors.
 
@@ -34,7 +34,7 @@ Practical guidance: raise level only for the critical section; pair with retries
 ---
 
 ### Q5: How do JPA persistence contexts interact with transactions in services?
-* One EntityManager per transaction via shared proxy; entities loaded become managed — changes auto-flushed at commit (dirty checking).
+* One EntityManager per transaction via shared proxy; entities loaded become managed - changes auto-flushed at commit (dirty checking).
 * Read-only hint (`@Transactional(readOnly=true)`) enables flush-mode manual/Hibernate optimizations + replica routing hints.
 * Detached entity pitfalls: modifying after context close silently lost; merging copies state into new managed instance.
 
@@ -60,7 +60,7 @@ Anti-fixes to call out: hibernate.enable_lazy_load_no_trans=true, OSIV re-enable
 ### Q8: Compare DTO vs entity exposure at API boundaries.
 Exposing entities leaks internals (lazy bombs, fields you didn't intend, coupling schema↔API), blocks independent evolution.
 DTO pattern: records mapping via MapStruct/manual; validation annotations on DTOs; mappers unit-tested.
-Nuance: simple internal CRUD may pragmatically expose entities with careful @JsonIgnore — know when you're taking the shortcut.
+Nuance: simple internal CRUD may pragmatically expose entities with careful @JsonIgnore - know when you're taking the shortcut.
 
 ---
 
@@ -78,7 +78,7 @@ repo.findAll(spec, pageable);
 ```
 * Type-safe predicate composition reusable across endpoints; pairs with pagination seamlessly.
 Meta-model (`@StaticMetamodel`) avoids string column typos.
-Interview probe: how to prevent empty-predicate full-table scans — require at least one criterion.
+Interview probe: how to prevent empty-predicate full-table scans - require at least one criterion.
 
 ---
 
@@ -97,7 +97,7 @@ Testcontainers running migrations against real engine catches dialect bugs pre-p
 ---
 
 ### Q13: How do you test slices? (@DataJpaTest/@WebMvcTest/@SpringBootTest)
-* @WebMvcTest loads MVC slice + mocked services via @MockBean — fast controller contract tests.
+* @WebMvcTest loads MVC slice + mocked services via @MockBean - fast controller contract tests.
 * @DataJpaTest swaps datasource to embedded unless overridden + rolls back per test; Testcontainers override for dialect fidelity.
 * @SpringBootTest full context for integration; cache contexts across tests (context caching keys!) to keep suite fast.
 
@@ -130,7 +130,7 @@ Custom claim → role prefix conventions documented to avoid silent authority mi
 ### Q17: What is method security and how do you express rules?
 * `@EnableMethodSecurity` enabling `@PreAuthorize("hasRole('ADMIN') or #id == principal.id")` SpEL.
 * Return-value filtering `@PostFilter` (careful performance) / `@PostAuthorize`.
-Object identity checks belong in query predicates too (defense in depth) — annotation alone doesn't filter collections efficiently.
+Object identity checks belong in query predicates too (defense in depth) - annotation alone doesn't filter collections efficiently.
 
 ---
 
@@ -162,7 +162,7 @@ Consistency rule: ONE envelope everywhere; contract tests pin it.
 ---
 
 ### Q22: What is ProblemDetail and why adopt it?
-* RFC 9457 standardized error JSON: type/title/status/detail/instance + extensions — clients parse generically; docs align.
+* RFC 9457 standardized error JSON: type/title/status/detail/instance + extensions - clients parse generically; docs align.
 * Spring auto-applies for known exceptions when `spring.mvc.problemdetails.enabled=true`.
 Extensions carry field validation arrays; correlation id injected via advice for support flows.
 
@@ -171,7 +171,7 @@ Extensions carry field validation arrays; correlation id injected via advice for
 ### Q23: How do you handle pagination + sorting safely in controllers?
 * Accept Pageable resolved from query params (`page,size,sort`); clamp size max via `spring.data.web.pageable.max-page-size`.
 * Sort allowlisting preventing injection into dynamic sort columns (property reference errors or SQL issues in native queries).
-Response: Page<T> serialized — beware unstable PageImpl JSON across versions; map to stable DTO envelope.
+Response: Page<T> serialized - beware unstable PageImpl JSON across versions; map to stable DTO envelope.
 
 ---
 
@@ -195,15 +195,15 @@ public Book get(Long id)
 ### Q26: How do you implement scheduled jobs correctly in a cluster?
 Problem: every instance fires.
 Solutions ladder:
-* ShedLock library — JDBC/redis lock rows ensuring single execution with lock-at-most-for safety.
-* Quartz clustered JDBC jobstore — full misfire/recovery semantics.
+* ShedLock library - JDBC/redis lock rows ensuring single execution with lock-at-most-for safety.
+* Quartz clustered JDBC jobstore - full misfire/recovery semantics.
 * External schedulers (k8s CronJob calling an endpoint) moving concern out of app entirely.
 Choose by recovery requirements, not habit.
 
 ---
 
 ### Q27: What is the difference between @MockBean and plain Mockito in Boot tests?
-* @MockBean replaces/replaces-in-context bean so AUTOWIRED collaborators receive the mock — required because manual mocks don't reach the container wiring.
+* @MockBean replaces/replaces-in-context bean so AUTOWIRED collaborators receive the mock - required because manual mocks don't reach the container wiring.
 * Cost: context cache key changes → new context spin-up (slow suites); prefer constructor-injection unit tests without spring where possible.
 Boot 3.4 splits @MockitoBean/@MockitoBean naming evolution worth mentioning as modernization note.
 
@@ -220,7 +220,7 @@ Cleans up the "works on H2 fails on PG" class of bugs permanently.
 ---
 
 ### Q29: What is context caching in @SpringBootTest and how do you keep suites fast?
-* Contexts cached by configuration signature (annotations/properties/classes) — identical keys reuse context.
+* Contexts cached by configuration signature (annotations/properties/classes) - identical keys reuse context.
 * Speed killers: random property injections differing, @DirtiesContext overuse, profile mismatches.
 Audit via `spring.test.context.cache=...` statistics; consolidate test configs deliberately.
 
@@ -237,12 +237,12 @@ Pairs with readiness probe flip + k8s preStop sleep; verify by kill-under-load d
 ### Q31: How do you consume external REST services resiliently?
 * RestClient/WebClient + Resilience4j annotations (`@CircuitBreaker(name="pricing", fallbackMethod=...)`, RateLimiter, Retry with exponential backoff+jitter, TimeLimiter).
 * Timeouts set at THREE layers: connect, response, and overall SLA; per-downstream pools preventing cross-vendor exhaustion.
-* Fallback semantics documented (cached value? default? hard fail) — silent fallbacks hide incidents.
+* Fallback semantics documented (cached value? default? hard fail) - silent fallbacks hide incidents.
 
 ---
 
 ### Q32: What is Spring Kafka's consumer concurrency/rebalance story?
-* `ConcurrentKafkaListenerContainerFactory` concurrency = partitions parallelism ceiling; rebalances pause consumers — handle via `ConsumerRebalanceListener` committing offsets appropriately.
+* `ConcurrentKafkaListenerContainerFactory` concurrency = partitions parallelism ceiling; rebalances pause consumers - handle via `ConsumerRebalanceListener` committing offsets appropriately.
 * Delivery: default at-least-once (offsets after processing); manual ack modes for precise control; idempotent consumers by event-id.
 * Error handling: DefaultErrorHandler with backoff then DeadLetterPublishingRecoverer to DLT topic.
 
@@ -250,22 +250,22 @@ Pairs with readiness probe flip + k8s preStop sleep; verify by kill-under-load d
 
 ### Q33: How do you implement outbox pattern with Spring + JPA + Kafka?
 * Business txn writes aggregate + Outbox row atomically.
-* Publisher polls unsent rows (or Debezium CDC reads WAL) publishing to Kafka then marks sent — dual-write inconsistency eliminated.
+* Publisher polls unsent rows (or Debezium CDC reads WAL) publishing to Kafka then marks sent - dual-write inconsistency eliminated.
 * Ordering per aggregate key partition; cleanup job prunes published rows; monitoring lag between insert→publish as SLO.
 
 ---
 
 ### Q34: What is Spring Session and when do you need it?
-* Replaces container HttpSession with external store (Redis/JDBC) via filter — enables multi-instance stateless-ish scaling, session expiry customization, header/token mode for APIs.
+* Replaces container HttpSession with external store (Redis/JDBC) via filter - enables multi-instance stateless-ish scaling, session expiry customization, header/token mode for APIs.
 * `@EnableRedisHttpSession` minimal setup; index config for session lookups by principal.
 Alternative honesty: JWT-only architectures may not need sessions at all.
 
 ---
 
 ### Q35: What is the difference between filters, interceptors, and AOP aspects?
-* Filters: servlet-level, before DispatcherServlet — raw request/response, auth/encoding.
-* Interceptors (HandlerInterceptor): around handler execution — pre/post/completion, access to handler metadata (audit, timing).
-* Aspects: bean-method level — business-layer cross-cutting (metrics on service methods).
+* Filters: servlet-level, before DispatcherServlet - raw request/response, auth/encoding.
+* Interceptors (HandlerInterceptor): around handler execution - pre/post/completion, access to handler metadata (audit, timing).
+* Aspects: bean-method level - business-layer cross-cutting (metrics on service methods).
 Choose by LAYER; auth in interceptor while needing filter-order guarantees is classic confusion.
 
 ---
@@ -282,13 +282,13 @@ Session/connection hygiene under pooling is THE pitfall across all three.
 ### Q37: What is Spring Data Redis usage beyond caching?
 * RedisTemplate ops (value/hash/set/zset) for rate limiters, distributed locks (via Redisson/Lettuce lock extensions), leaderboard zsets, pub/sub listeners via MessageListenerAdapter.
 * Serialization strategy explicit (Jackson2JsonRedisSerializer) avoiding JDK serialization pitfalls.
-Atomic operations via execute(RedisScript) Lua — INCR+EXPIRE race-free.
+Atomic operations via execute(RedisScript) Lua - INCR+EXPIRE race-free.
 
 ---
 
 ### Q38: How do you implement API versioning strategies in Spring?
 Options:
-* URI (/v1/) — simplest, cache-friendly.
+* URI (/v1/) - simplest, cache-friendly.
 * Header/Accept media-type params (`application/vnd.app.v2+json`) via content negotiation config.
 * Query param (discouraged).
 Implementation: versioned controllers packages sharing services; deprecation headers on old versions; contract tests pinning both.
@@ -297,14 +297,14 @@ Implementation: versioned controllers packages sharing services; deprecation hea
 
 ### Q39: What is the startup performance toolbox for Boot apps?
 * Lazy init flag (`spring.main.lazy-initialization=true`) trade-off: faster boot, deferred failures.
-* CDS/AOT (GraalVM native images or Boot 3 AOT processing) cutting start to tens of ms — closed-world constraints apply (reflection config).
+* CDS/AOT (GraalVM native images or Boot 3 AOT processing) cutting start to tens of ms - closed-world constraints apply (reflection config).
 * Reduce classpath scanning (trim auto-configs), JVM flags (-XX:TieredStopAtLevel=1 in dev).
 Serverless/cron contexts benefit most.
 
 ---
 
 ### Q40: What is GraalVM native image support in Boot 3 and its constraints?
-* `mvn -Pnative package` produces standalone binary — instant startup, tiny footprint.
+* `mvn -Pnative package` produces standalone binary - instant startup, tiny footprint.
 * Constraints: reflection/JNI/dynamic proxies need reachability metadata (hints), dynamic classloading banned, some libs incompatible; build time/memory heavy.
 Fit: serverless scale-to-zero, CLI tools. Not automatic wins for long-running high-throughput services (JIT parity debates).
 
@@ -316,7 +316,7 @@ Downloads: streaming via Resource/ResourceRegion honoring Range; signed URL offl
 
 ### Q42: What is the difference between @RequestParam, @PathVariable, @RequestHeader and matrix variables?
 * PathVariable from URI template segments; RequestParam query params (defaults/required); headers via @RequestHeader.
-* Matrix variables (`;k=v` inside segments) require removeSemicolonContent config — niche but asked.
+* Matrix variables (`;k=v` inside segments) require removeSemicolonContent config - niche but asked.
 Record-style @ModelAttribute binding aggregates many params with validation.
 
 ---
@@ -336,7 +336,7 @@ Contract governance: openapi-diff CI gate like any serious team runs.
 ---
 
 ### Q45: How do you handle async request processing (DeferredResult/CompletableFuture)?
-* Controller returning CompletableFuture/DeferredResult frees servlet thread; container completes when future resolves — timeouts configurable via interceptor.
+* Controller returning CompletableFuture/DeferredResult frees servlet thread; container completes when future resolves - timeouts configurable via interceptor.
 * Reactive return types (Mono/Flux) route through WebMvc's reactive bridge similarly.
 Use case: long downstream calls where holding servlet threads starves capacity.
 
@@ -345,13 +345,13 @@ Use case: long downstream calls where holding servlet threads starves capacity.
 ### Q46: What is the difference between spring-boot-devtools restart vs full restart vs live reload?
 * Devtools restarts only application context with restarted classloader (fast); static resources served live w/o context restart; LiveReload pushes browser refresh.
 * Production jars exclude devtools automatically.
-JRebel comparison optional flavor — devtools covers most inner-loop needs free.
+JRebel comparison optional flavor - devtools covers most inner-loop needs free.
 
 ---
 
 ### Q47: What are the common Boot migration pains 2→3?
 * javax.*→jakarta.* namespace sweep across dependencies; Spring Security lambda-only DSL enforced; Hibernate 5→6 SQL/dialect behavior changes (criteria changes, ID generator defaults); properties renamed (spring.redis→spring.data.redis).
-Tooling: OpenRewrite recipes automating most mechanical churn — mention it and sound senior.
+Tooling: OpenRewrite recipes automating most mechanical churn - mention it and sound senior.
 
 ---
 

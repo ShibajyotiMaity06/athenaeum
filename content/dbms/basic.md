@@ -232,7 +232,7 @@
 
 ### Q45: What is a composite key? How does it differ from a simple key?
 * A **simple key** consists of exactly one column (e.g., `emp_id`).
-* A **composite key** is a key made up of two or more columns that *together* uniquely identify a row — individually none of them is unique. Example: `(student_id, course_id)` uniquely identifies an enrollment row.
+* A **composite key** is a key made up of two or more columns that *together* uniquely identify a row - individually none of them is unique. Example: `(student_id, course_id)` uniquely identifies an enrollment row.
 * Composite keys are common in junction/bridge tables implementing many-to-many relationships.
 * Trade-offs: indexes on wide composite keys are larger and slower; column order in the index matters for filter/sort usage.
 
@@ -247,7 +247,7 @@
 ### Q47: What is denormalization? When would you deliberately use it?
 * **Denormalization** reintroduces controlled redundancy (duplicated columns, precomputed aggregates) after normalization, to reduce expensive joins at read time.
 * **Use cases**: reporting dashboards, read-heavy APIs, caching aggregate counters (`order_count`, `total_amount` on customer), analytics marts.
-* **Costs**: extra storage, and write amplification — every write must now update multiple copies, typically via triggers, application logic, or CDC sync.
+* **Costs**: extra storage, and write amplification - every write must now update multiple copies, typically via triggers, application logic, or CDC sync.
 * **Rule of thumb**: normalize first for correctness; denormalize selectively where measured read latency demands it, and document who owns keeping copies consistent.
 
 ### Q48: What are auto-increment / identity / sequence columns?

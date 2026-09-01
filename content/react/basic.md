@@ -238,13 +238,13 @@
 ### Q44: Why is using the array index as a `key` problematic?
 * Keys must identify an item *across renders*; index keys tie identity to position instead of data.
 * Breaks when items are **reordered, inserted, or removed**: React reuses the wrong component instances, so internal state (inputs, checkboxes, animations) attaches to the wrong rows; uncontrolled input values visibly jump between items.
-* Performance claim ("index is faster") is misleading — correct keys let React skip unchanged subtrees entirely; index keys often force deeper re-renders.
+* Performance claim ("index is faster") is misleading - correct keys let React skip unchanged subtrees entirely; index keys often force deeper re-renders.
 * Acceptable only when the list is static (never reordered/filtered) and items hold no local state or refs. Default rule: use a stable unique ID from the data.
 
 ### Q45: How do you provide default values for props?
-* Destructuring defaults (preferred): `function Btn({ size = 'md', disabled = false })` — colocated, lint-friendly, works with any hook-based component.
-* Legacy `Component.defaultProps` — deprecated for function components (works only in class components going forward).
-* Falsy gotcha: `size = 'md'` applies when prop is `undefined` but **not** when explicitly passed `null` — handle null deliberately (`??` operator where appropriate).
+* Destructuring defaults (preferred): `function Btn({ size = 'md', disabled = false })` - colocated, lint-friendly, works with any hook-based component.
+* Legacy `Component.defaultProps` - deprecated for function components (works only in class components going forward).
+* Falsy gotcha: `size = 'md'` applies when prop is `undefined` but **not** when explicitly passed `null` - handle null deliberately (`??` operator where appropriate).
 * For object/function defaults, prefer stable module-level constants over inline literals to preserve referential stability across renders.
 
 ### Q46: How do you handle multiple form inputs with a single state object?
@@ -256,32 +256,32 @@ const onChange = (e) => {
 };
 <input name="email" value={form.email} onChange={onChange} />
 ```
-* The `name` attribute doubles as the state key, letting one handler serve many inputs — fewer closures, less duplication.
+* The `name` attribute doubles as the state key, letting one handler serve many inputs - fewer closures, less duplication.
 * Always spread the previous state (never replace the whole object); nested structures need nested spreads or immer.
 * Alternative: keep inputs uncontrolled and read via FormData on submit when per-keystroke re-renders are unnecessary.
 
 ### Q47: What is the difference between `useEffect(fn)` with no deps vs `useEffect(fn, [])`?
-* **No dependency array**: runs after *every* render — useful for syncing with constantly changing external values, but easy source of infinite loops if it sets state unconditionally.
-* **Empty array `[]`**: conceptually "run once after mount" (and again after remount under StrictMode dev double-invoke). Closures capture the *first* render's props/state — stale-closure bugs appear when it reads fresh-looking values.
-* Correct mental model: the array declares *"re-run when these values change"*; empty means "depends on nothing," not "run once" — that framing explains why linters demand exhaustive deps.
+* **No dependency array**: runs after *every* render - useful for syncing with constantly changing external values, but easy source of infinite loops if it sets state unconditionally.
+* **Empty array `[]`**: conceptually "run once after mount" (and again after remount under StrictMode dev double-invoke). Closures capture the *first* render's props/state - stale-closure bugs appear when it reads fresh-looking values.
+* Correct mental model: the array declares *"re-run when these values change"*; empty means "depends on nothing," not "run once" - that framing explains why linters demand exhaustive deps.
 
 ### Q48: What exactly does StrictMode double-invoke in development?
 * Dev-only behaviors (stripped in production builds): double-rendering component function bodies, double-invoking state updater functions passed to setState, and mounting→unmounting→remounting effects (setup → cleanup → setup).
-* Purpose: surface impure render logic (mutations, side effects in render) and missing effect cleanup — code that survives StrictMode is safer under Concurrent features where renders may be discarded/replayed.
+* Purpose: surface impure render logic (mutations, side effects in render) and missing effect cleanup - code that survives StrictMode is safer under Concurrent features where renders may be discarded/replayed.
 * Common false alarms: duplicate API calls from effects without cleanup flags/AbortController; Math.random()/Date.now() in render causing hydration mismatches.
-* Never "fix" by removing StrictMode — fix the impurity.
+* Never "fix" by removing StrictMode - fix the impurity.
 
 ### Q49: Explain one-way (unidirectional) data flow in React.
-* Data travels **down** via props; children never modify what they receive — they request changes upward via callbacks (`onChange`, event handlers), and the owner updates state, which flows back down.
+* Data travels **down** via props; children never modify what they receive - they request changes upward via callbacks (`onChange`, event handlers), and the owner updates state, which flows back down.
 * Benefits: predictable traceability (any UI state has one owning component), easier debugging (follow the callback chain), enables time-travel debugging patterns and SSR consistency.
 * Contrast with two-way binding frameworks (Angular ngModel): React's controlled inputs simulate two-way binding by pairing `value` (down) with `onChange` (up) explicitly.
-* When siblings need shared data, lift it to the closest common parent — or adopt external stores when lifting causes excessive drilling.
+* When siblings need shared data, lift it to the closest common parent - or adopt external stores when lifting causes excessive drilling.
 
-### Q50: CRA vs Vite — how does tooling differ for React apps?
-* **Create React App (CRA)**: webpack-based, now deprecated/unmaintained — slow cold starts (full-bundle rebuilds), dev server degrades as apps grow.
-* **Vite**: native ESM dev server — browser requests modules on demand, transform-per-file caching via esbuild prebundling of node_modules; HMR near-instant regardless of app size; production build switches to Rollup.
+### Q50: CRA vs Vite - how does tooling differ for React apps?
+* **Create React App (CRA)**: webpack-based, now deprecated/unmaintained - slow cold starts (full-bundle rebuilds), dev server degrades as apps grow.
+* **Vite**: native ESM dev server - browser requests modules on demand, transform-per-file caching via esbuild prebundling of node_modules; HMR near-instant regardless of app size; production build switches to Rollup.
 * Migration notes: env vars change prefix (`REACT_APP_*` → `VITE_*`), JSX handled automatically, jest configs swap for vitest commonly.
-* Interview angle: understand *why* unbundled dev servers win (serve raw ESM, cache transforms) rather than naming tools — Next.js similarly replaced its stack with Turbopack/SWC.
+* Interview angle: understand *why* unbundled dev servers win (serve raw ESM, cache transforms) rather than naming tools - Next.js similarly replaced its stack with Turbopack/SWC.
 
 ---
 

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -22,6 +23,12 @@ import TrustedUsersBadge from "@/components/TrustedUsersBadge";
 import { getLibraryStats, listStacks } from "@/lib/content";
 import { ROLE_PILLARS, SITE, TECH_CATEGORIES } from "@/lib/site";
 import { getTrustedUserCount } from "@/lib/db";
+
+export const metadata: Metadata = {
+  alternates: {
+    canonical: SITE.url
+  }
+};
 
 const FAQS = [
   {

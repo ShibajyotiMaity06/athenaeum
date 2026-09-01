@@ -4,10 +4,10 @@
 
 ### Q1: What is the N+1 queries problem and how do select_related and prefetch_related fix it?
 * Looping over `books` and touching `book.author` fires one query per book (N+1).
-* **select_related** — SQL JOIN for FK/OneToOne: single query, `Book.objects.select_related("author")`.
-* **prefetch_related** — second query + in-Python join for M2M/reverse FK: `Books.prefetch_related("tags")`.
+* **select_related** - SQL JOIN for FK/OneToOne: single query, `Book.objects.select_related("author")`.
+* **prefetch_related** - second query + in-Python join for M2M/reverse FK: `Books.prefetch_related("tags")`.
 * Deep paths supported (`select_related("author__profile")`), Prefetch objects allow filtered prefetches.
-Detection: `django-debug-toolbar`, `nplusone`, or `assertNumQueries` in tests. Always name the detection tool — interviews love that.
+Detection: `django-debug-toolbar`, `nplusone`, or `assertNumQueries` in tests. Always name the detection tool - interviews love that.
 
 ---
 
@@ -15,8 +15,8 @@ Detection: `django-debug-toolbar`, `nplusone`, or `assertNumQueries` in tests. A
 * Chaining builds an abstract description; execution triggers on iteration, list(), bool(), len(), slicing with step, or pickle.
 * Consequences:
   * Building then never iterating = zero cost.
-  * `if queryset:` executes — surprising DB hit in conditionals; use `.exists()`.
-  * Caching: results memoize on the SAME QuerySet after first evaluation; reusing a half-consumed iterator can surprise — re-chain from manager for fresh intent.
+  * `if queryset:` executes - surprising DB hit in conditionals; use `.exists()`.
+  * Caching: results memoize on the SAME QuerySet after first evaluation; reusing a half-consumed iterator can surprise - re-chain from manager for fresh intent.
 
 ---
 
@@ -26,7 +26,7 @@ from django.db.models import F, Q
 Book.objects.update(views=F("views") + 1)          # atomic in SQL
 Book.objects.filter(Q(year=2024) | Q(isbn__isnull=True))
 ```
-* **F** references column values server-side — race-free increments without read-modify-write round trips.
+* **F** references column values server-side - race-free increments without read-modify-write round trips.
 * **Q** composes OR/NOT logic beyond implicit AND of kwargs; combinable with `&`/`|` and parentheses.
 Advanced note: F also enables comparisons between fields and optimistic concurrency via conditional update returning rowcount.
 
@@ -40,9 +40,9 @@ with transaction.atomic():
     book.stock -= 1; book.save()
 ```
 * `atomic()` wraps a block/decorator in BEGIN…COMMIT/ROLLBACK; nested atomics become savepoints.
-* `select_for_update()` locks rows until commit — pair INSIDE atomic, else no-op.
-* `transaction.on_commit(fn)` defers side effects (emails, cache busts) until data is durable — classic interview favorite.
-Autocommit default means EVERY statement commits alone unless wrapped — say it explicitly.
+* `select_for_update()` locks rows until commit - pair INSIDE atomic, else no-op.
+* `transaction.on_commit(fn)` defers side effects (emails, cache busts) until data is durable - classic interview favorite.
+Autocommit default means EVERY statement commits alone unless wrapped - say it explicitly.
 
 ---
 
@@ -56,9 +56,9 @@ If signals stay: keep them thin (enqueue task only), document loudly, register r
 
 ### Q6: How does Django authenticate users? What lives on request.user?
 * `AuthenticationMiddleware` attaches `request.user` (LazyUser resolving on first access) from session-stored `_auth_user_id` validated by hash.
-* Backends pluggable (`AUTHENTICATION_BACKENDS`) — email login, LDAP, OAuth mapping to User model.
+* Backends pluggable (`AUTHENTICATION_BACKENDS`) - email login, LDAP, OAuth mapping to User model.
 * Custom user model: `AUTH_USER_MODEL = "accounts.User"` set BEFORE first migration (AbstractUser extend or AbstractBaseUser+PermissionsMixin for full control).
-Swapping later is painful — interviewers probe this early-decision trap.
+Swapping later is painful - interviewers probe this early-decision trap.
 
 ---
 
@@ -80,19 +80,19 @@ Scaling note: db sessions under heavy traffic → cache-based Redis backend.
 ---
 
 ### Q9: What middleware ordering rules matter?
-Middleware runs top-down on request, bottom-up on response — order defines behavior:
+Middleware runs top-down on request, bottom-up on response - order defines behavior:
 * SecurityMiddleware early (redirects HTTPS, HSTS).
 * SessionMiddleware before AuthenticationMiddleware (auth depends on session).
 * GZip after content generation but before ETag-sensitive ones.
 * CsrfViewMiddleware must precede views needing tokens; LocalMemoryCache experiments last.
-Interview exercise: explain why swapping Session above/below CommonMiddleware breaks things subtly — show you've debugged ordering once.
+Interview exercise: explain why swapping Session above/below CommonMiddleware breaks things subtly - show you've debugged ordering once.
 
 ---
 
 ### Q10: What is context_processors and when would you write one?
 * Callables receiving `request` returning dicts merged into every template render context (`django.template.context_processors.request` gives `request`).
 * Custom example: `site_settings` processor exposing branding/config so templates avoid hardcoded values.
-Cost: runs per render — keep cheap, cache expensive lookups.
+Cost: runs per render - keep cheap, cache expensive lookups.
 Alternative for view-specific data: pass explicitly or use inclusion_tags; global processors are for genuinely global values only.
 
 ### Q11: How do aggregate and annotate differ? Give real examples.
@@ -102,15 +102,15 @@ Book.objects.aggregate(total=Count("id"), avg_price=Avg("price"))   # dict, whol
 Author.objects.annotate(book_count=Count("book"))                    # per-row virtual column
 ```
 * `annotate` adds computed value per object enabling `.filter(book_count__gt=5)` (HAVING).
-* Joins multiply rows before aggregation — `Count("book", distinct=True)` fixes inflated counts on multi-join annotates.
-Classic bug interview: annotated counts double after adding a second annotate over M2M — explain the JOIN explosion and the distinct fix.
+* Joins multiply rows before aggregation - `Count("book", distinct=True)` fixes inflated counts on multi-join annotates.
+Classic bug interview: annotated counts double after adding a second annotate over M2M - explain the JOIN explosion and the distinct fix.
 
 ---
 
 ### Q12: What are values(), values_list() and only()/defer() for?
-* `values("id","name")` / `values_list("id", flat=True)` — dict/tuple rows skipping model instantiation; huge wins for exports/JSON endpoints.
-* `only("id","name")` — load subset, defer rest until accessed (then lazy fetch per field); `defer()` inverse.
-* Danger: accessing deferred fields in loops silently N+1s — profile.
+* `values("id","name")` / `values_list("id", flat=True)` - dict/tuple rows skipping model instantiation; huge wins for exports/JSON endpoints.
+* `only("id","name")` - load subset, defer rest until accessed (then lazy fetch per field); `defer()` inverse.
+* Danger: accessing deferred fields in loops silently N+1s - profile.
 Rule: shape payloads at query time to match consumption; model objects are not free.
 
 ---
@@ -130,9 +130,9 @@ class Book(models.Model):
 ---
 
 ### Q14: Explain model inheritance strategies: abstract, multi-table, proxy.
-* **Abstract base**: common fields copied into children; no parent table — default choice for shared columns (timestamps mixin).
+* **Abstract base**: common fields copied into children; no parent table - default choice for shared columns (timestamps mixin).
 * **Multi-table**: real parent table + child OneToOne link; querying parents needs joins; polymorphism gets messy (`select_subclasses`).
-* **Proxy**: same table, different Python behavior/ordering/managers — zero schema impact.
+* **Proxy**: same table, different Python behavior/ordering/managers - zero schema impact.
 Decision sentence: "share fields → abstract; share behavior not schema → proxy; true is-a persistence → multi-table (rarely)."
 
 ---
@@ -162,7 +162,7 @@ Postgres extras: `of=("self",)` limiting lock to main table vs joined relations.
 * `is_valid()` triggers per-field pipeline (to_python → validators → clean_<field>), then object-level `clean()` for cross-field rules; failures collect into `form.errors`.
 * Read results via `cleaned_data`; raise ValidationError(message, code="x") mapping to UI messages.
 * ModelForms inherit model constraints; `save(commit=False)` allows pre-persist mutation (attaching request.user).
-Favorite probe: where does confirm-password live? → clean() — it needs two fields.
+Favorite probe: where does confirm-password live? → clean() - it needs two fields.
 
 ---
 
@@ -185,7 +185,7 @@ Layer rule: cache expensive COMPUTATIONS at lowest level first; full-page cachin
 ### Q20: Which CBV mixins do you actually use and what caution applies?
 Common set: LoginRequiredMixin, PermissionRequiredMixin, UserPassesTestMixin, SuccessMessageMixin, pagination via MultipleObjectMixin attrs.
 Custom example worth citing: JSON-form mixin returning structured errors for invalid forms on XHR.
-Caution: mixin MRO conflicts — two mixins overriding the same hook silently shadow each other; keep them orthogonal, document ordering requirements, prefer composing small behaviors over inheritance chains.
+Caution: mixin MRO conflicts - two mixins overriding the same hook silently shadow each other; keep them orthogonal, document ordering requirements, prefer composing small behaviors over inheritance chains.
 
 ---
 
@@ -204,14 +204,14 @@ Team practice: translation CI gate failing when new strings lack msgids; transla
 ### Q23: How do database connection settings scale in production?
 * `CONN_MAX_AGE` persistent connections reduce handshake churn; beyond one server, pgbouncer transaction pooling sits between app and Postgres.
 * Caveats: pgbouncer transaction mode breaks prepared statements/`select_for_update` assumptions unless configured; read/write splitting via routers (`class PrimaryReplicaRouter`) directing reads to replicas.
-* Multiple databases: `using()` on queries, atomic(using="replica") nuances — writes must route primary explicitly.
+* Multiple databases: `using()` on queries, atomic(using="replica") nuances - writes must route primary explicitly.
 
 ---
 
 ### Q24: What are database routers and when do you write one?
-* Router class answers db_for_read/model/migrations/allows_relation — enabling replica reads, per-app sharding, or legacy DB integration.
+* Router class answers db_for_read/model/migrations/allows_relation - enabling replica reads, per-app sharding, or legacy DB integration.
 * Rules to state: migrations need explicit allow_migrate targets; stale replica reads require stickiness strategy (recent-write window pinned to primary).
-Keep routing logic centralized & tested — silent misroutes corrupt business data.
+Keep routing logic centralized & tested - silent misroutes corrupt business data.
 
 ---
 
@@ -233,44 +233,44 @@ def forwards(apps, schema_editor):
     for b in Book.objects.filter(new_field__isnull=True).iterator():
         b.new_field = compute(b); b.save(update_fields=["new_field"])
 ```
-* RunPython with reverse code; use historical model (apps.get_model) NOT current import — schema matches that point in time.
+* RunPython with reverse code; use historical model (apps.get_model) NOT current import - schema matches that point in time.
 * Safety: iterator() avoids memory blowups; batch updates; guard idempotency; separate schema vs data migrations for reviewability.
 
 ---
 
 ### Q27: What is the apps registry and AppConfig.ready() used for?
-* Django populates an app registry during startup — models resolve here; importing models at module top-level of settings-era files causes AppRegistryNotReady.
+* Django populates an app registry during startup - models resolve here; importing models at module top-level of settings-era files causes AppRegistryNotReady.
 * ready() registers signals, custom checks, plugin hooks after all apps loaded.
 Understanding this lifecycle explains most circular-import mysteries interviewers pose.
 
 ---
 
 ### Q28: How does DRF authentication + permission layering work?
-* Authentication classes identify credentials (SessionAuthentication, TokenAuthentication, JWT via simplejwt) setting request.user — failures yield 401.
-* Permissions authorize (IsAuthenticated, custom object-level has_object_permission) — failures yield 403.
+* Authentication classes identify credentials (SessionAuthentication, TokenAuthentication, JWT via simplejwt) setting request.user - failures yield 401.
+* Permissions authorize (IsAuthenticated, custom object-level has_object_permission) - failures yield 403.
 * Order matters: authenticate → permission → throttle → serialization.
-Object-level checks must fetch scoped querysets too (defense in depth) — permission alone isn't enough if queryset leaks others' rows.
+Object-level checks must fetch scoped querysets too (defense in depth) - permission alone isn't enough if queryset leaks others' rows.
 
 ---
 
 ### Q29: What are DRF viewsets/routers buying you?
 * ViewSets bundle list/retrieve/create/update/destroy logic; DefaultRouter generates URLconf automatically with browsable API root.
 * Customization points: get_queryset() for user scoping, serializer_class switching by action, @action(detail=True) custom endpoints.
-Trade-off: implicitness — teams document action maps or prefer explicit APViews for complex endpoints.
+Trade-off: implicitness - teams document action maps or prefer explicit APViews for complex endpoints.
 
 ---
 
 ### Q30: How does DRF validation flow differ from forms?
 * Serializer fields validate like form fields; object-level validate(); ModelSerializer pulls unique validators from model (UniqueTogetherValidator auto).
-* Errors return field-keyed JSON enabling client-side mapping — is_valid(raise_exception=True) standardizes 400 payloads.
-Nested writes need explicit create/update overrides — a classic interview probe (writable nested serializers pitfalls).
+* Errors return field-keyed JSON enabling client-side mapping - is_valid(raise_exception=True) standardizes 400 payloads.
+Nested writes need explicit create/update overrides - a classic interview probe (writable nested serializers pitfalls).
 
 ---
 
 ### Q31: What throttling strategies exist in DRF?
 * AnonRateThrottle/UserRateThrottle/ScopedRateThrottle backed by cache (redis for clusters); rates like "60/min".
 * Scope per endpoint class attribute; burst vs sustained via multiple throttle classes.
-* Distributed correctness depends on shared cache — in-memory locmem silently breaks limits across workers (favorite gotcha).
+* Distributed correctness depends on shared cache - in-memory locmem silently breaks limits across workers (favorite gotcha).
 
 ---
 
@@ -282,7 +282,7 @@ Explaining this race + two mitigations is a staple senior Django question.
 ### Q33: What are custom model fields and when to write one?
 * Subclass Field implementing db_type/to_python/from_db_value; migrations autodetect changes.
 * Justified: exotic column types (Postgres ArrayField/JSONB), domain primitives (Money) reused broadly.
-Otherwise compose: plain columns + property wrappers — less machinery to maintain.
+Otherwise compose: plain columns + property wrappers - less machinery to maintain.
 
 ---
 
@@ -311,8 +311,8 @@ Narrating ordered diagnosis beats tool name-dropping.
 ---
 
 ### Q37: lazy vs immediate translation objects?
-* gettext_lazy returns proxy resolved at render — required at import time (model field verbose names).
-* gettext translates immediately with current locale — fine inside request handling.
+* gettext_lazy returns proxy resolved at render - required at import time (model field verbose names).
+* gettext translates immediately with current locale - fine inside request handling.
 Mixing wrongly yields English-only UIs under i18n; the bug interview is diagnosing exactly that.
 
 ---
@@ -329,13 +329,13 @@ Validate extension AND sniffed content-type; cap size pre-read; regenerate filen
 ---
 
 ### Q40: select_related on nullable relations & Prefetch scoping nuances?
-* Nullable FK select_related uses LEFT JOIN — single row even when absent (author=None), no extra query.
+* Nullable FK select_related uses LEFT JOIN - single row even when absent (author=None), no extra query.
 * prefetch_related always second query; `Prefetch("tags", queryset=Tag.objects.filter(active=True))` scopes collections.
-Nuance worth stating: very wide models can make big JOINs costlier than two queries — benchmark both directions.
+Nuance worth stating: very wide models can make big JOINs costlier than two queries - benchmark both directions.
 
 ### Q41: What is the difference between blank/null handling in ModelSerializer vs Form?
 * Forms treat empty string as missing for strings; DRF serializers distinguish None vs "" strictly per field definitions (allow_null vs allow_empty).
-* PATCH semantics: partial=True ignores absent fields entirely — required fields skipped without error.
+* PATCH semantics: partial=True ignores absent fields entirely - required fields skipped without error.
 Interview probe: how do you require a field on create but ignore on update? → extra_kwargs conditional or validate hooks checking instance presence.
 
 ---
@@ -343,19 +343,19 @@ Interview probe: how do you require a field on create but ignore on update? → 
 ### Q42: How do you implement soft deletes at the ORM level cleanly?
 * Manager default queryset filtering `deleted_at__isnull=True` + related_name managers override; hard-delete escape hatch via _base_manager.
 * Unique constraints interplay: partial unique index WHERE deleted_at IS NULL.
-* Pitfalls: related object cascades bypass soft logic; admin needs explicit visibility toggle; every raw FK join elsewhere must remember the predicate — document loudly.
+* Pitfalls: related object cascades bypass soft logic; admin needs explicit visibility toggle; every raw FK join elsewhere must remember the predicate - document loudly.
 
 ---
 
 ### Q43: What are database savepoints and nested atomic() semantics?
-* Inner atomic blocks create SAVEPOINTs; exception inside inner rolls back to savepoint while outer may continue/commit — enabling partial failure recovery patterns.
+* Inner atomic blocks create SAVEPOINTs; exception inside inner rolls back to savepoint while outer may continue/commit - enabling partial failure recovery patterns.
 * Exiting outer with pending inner exception still rolls everything.
-* Beware side effects inside atomic that must run post-commit — use transaction.on_commit.
+* Beware side effects inside atomic that must run post-commit - use transaction.on_commit.
 
 ---
 
 ### Q44: How does Django test client differ from real WSGI behavior?
-* Client bypasses sockets/middleware server layers? No—it runs full stack in-process EXCEPT static serving; but things like conditional GET header quirks and multi-part edge encodings differ subtly.
+* Client bypasses sockets/middleware server layers? No - it runs full stack in-process EXCEPT static serving; but things like conditional GET header quirks and multi-part edge encodings differ subtly.
 * Async views need async_client.
 * For gateway-level behaviors (timeouts, chunked encoding) test against live server (LiveServerTestCase / staging).
 Knowing the boundary prevents false confidence in green suites.
@@ -363,7 +363,7 @@ Knowing the boundary prevents false confidence in green suites.
 ---
 
 ### Q45: What is the difference between TestCase and TransactionTestCase?
-* TestCase wraps each test in rollback transaction — fast, but hides commit-time behaviors (on_commit callbacks don't fire unless captured).
+* TestCase wraps each test in rollback transaction - fast, but hides commit-time behaviors (on_commit callbacks don't fire unless captured).
 * TransactionTestCase truncates tables between tests (slower) allowing commits, threads, on_commit testing via `captureOnCommitCallbacks`.
 Choose per need; mixing ordering matters (TransactionTestCase after TestCases to avoid isolation leaks).
 
@@ -374,27 +374,27 @@ Choose per need; mixing ordering matters (TransactionTestCase after TestCases to
 with self.assertNumQueries(3):
     self.client.get(url)
 ```
-Guards against silent N+1 regressions in critical endpoints — CI fails when someone adds lazy access in a loop.
+Guards against silent N+1 regressions in critical endpoints - CI fails when someone adds lazy access in a loop.
 Pair with select_related fixes; keep budgets realistic (exact counts brittle → use max bounds helpers).
 
 ---
 
 ### Q47: What are signals' dispatch_uid and receiver weak references gotchas?
 * Duplicate receivers fire twice unless `dispatch_uid="unique"` set (common on module reloads).
-* Receivers stored weakly by default — lambdas/closures get garbage collected silently; use strong refs or named functions.
-Both bugs produce "sometimes works" symptoms — classic debugging war story material.
+* Receivers stored weakly by default - lambdas/closures get garbage collected silently; use strong refs or named functions.
+Both bugs produce "sometimes works" symptoms - classic debugging war story material.
 
 ---
 
 ### Q48: How do you structure settings for multiple environments cleanly?
 Patterns: single settings package with base/dev/prod modules importing * from base; env-driven values via django-environ; secrets never committed.
 12-factor alignment: config from environment; feature flags via env not code branches where possible.
-Avoid: boolean soup DEBUG flags scattered — one ENV variable drives coherent profiles.
+Avoid: boolean soup DEBUG flags scattered - one ENV variable drives coherent profiles.
 
 ---
 
 ### Q49: What is whitenoise and when is it enough?
-* Middleware serving compressed static files directly from app (hash-named via manifest) — removes CDN/nginx dependency for small-medium deployments.
+* Middleware serving compressed static files directly from app (hash-named via manifest) - removes CDN/nginx dependency for small-medium deployments.
 * Limits: no geographic edge, no media handling; large scale still wants CDN fronting.
 Perfect answer includes: hashed manifests + immutable cache headers + gzip/brotli precomputation.
 

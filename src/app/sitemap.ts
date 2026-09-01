@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { listStacks } from "@/lib/content";
+import { getInterviewStacks } from "@/lib/interview-data";
 import { LEVELS, ROLE_PILLARS, SITE } from "@/lib/site";
 
 export default function sitemap(): MetadataRoute.Sitemap {
@@ -8,7 +9,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   const staticRoutes: MetadataRoute.Sitemap = [
     {
-      url: `${baseUrl}/`,
+      url: `${baseUrl}`,
       lastModified: lastMod,
       changeFrequency: "weekly",
       priority: 1.0
@@ -18,36 +19,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: lastMod,
       changeFrequency: "weekly",
       priority: 0.95
-    },
-    {
-      url: `${baseUrl}/interview-prep/nodejs`,
-      lastModified: lastMod,
-      changeFrequency: "weekly",
-      priority: 0.9
-    },
-    {
-      url: `${baseUrl}/interview-prep/javascript`,
-      lastModified: lastMod,
-      changeFrequency: "weekly",
-      priority: 0.9
-    },
-    {
-      url: `${baseUrl}/interview-prep/react`,
-      lastModified: lastMod,
-      changeFrequency: "weekly",
-      priority: 0.9
-    },
-    {
-      url: `${baseUrl}/interview-prep/sql`,
-      lastModified: lastMod,
-      changeFrequency: "weekly",
-      priority: 0.9
-    },
-    {
-      url: `${baseUrl}/interview-prep/dbms`,
-      lastModified: lastMod,
-      changeFrequency: "weekly",
-      priority: 0.9
     },
     {
       url: `${baseUrl}/pricing`,
@@ -95,6 +66,15 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.9
   }));
 
+  // Interview Prep Codex Pages
+  const interviewStacks = getInterviewStacks();
+  const interviewRoutes: MetadataRoute.Sitemap = interviewStacks.map((stack) => ({
+    url: `${baseUrl}/interview-prep/${stack.slug}`,
+    lastModified: lastMod,
+    changeFrequency: "weekly",
+    priority: 0.9
+  }));
+
   // Technology Hub Pages & Level Pages
   const stacks = listStacks();
   const techHubRoutes: MetadataRoute.Sitemap = [];
@@ -118,5 +98,5 @@ export default function sitemap(): MetadataRoute.Sitemap {
     }
   }
 
-  return [...staticRoutes, ...roleRoutes, ...techHubRoutes, ...levelRoutes];
+  return [...staticRoutes, ...roleRoutes, ...interviewRoutes, ...techHubRoutes, ...levelRoutes];
 }

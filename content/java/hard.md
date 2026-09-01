@@ -225,46 +225,46 @@
 ---
 
 ### Q44: Deep dive into G1 GC: regions, remembered sets, SATB, and mixed collections.
-* **Heap layout**: thousands of equal-sized regions (Eden/Survivor/Old/Humongous roles assigned dynamically, not contiguous generations). Humongous objects (>half region size) get contiguous regions — a fragmentation hazard.
-* **Concurrent marking** uses **SATB (Snapshot-At-The-Beginning)**: at mark start G1 snapshots live-object graph; pre-write barriers log overwrites so overwritten-but-live-at-start references stay reachable — floating garbage results, cleaned next cycle.
+* **Heap layout**: thousands of equal-sized regions (Eden/Survivor/Old/Humongous roles assigned dynamically, not contiguous generations). Humongous objects (>half region size) get contiguous regions - a fragmentation hazard.
+* **Concurrent marking** uses **SATB (Snapshot-At-The-Beginning)**: at mark start G1 snapshots live-object graph; pre-write barriers log overwrites so overwritten-but-live-at-start references stay reachable - floating garbage results, cleaned next cycle.
 * **Remembered Sets + card tables** track cross-region pointers so a young collection only evacuates young regions without scanning the whole old gen (the "dirty cards" cost shows up as write barriers).
 * **Pause model**: young collections evacuate eden+survivors; **mixed collections** additionally reclaim old regions chosen by *pause-prediction* (-XX:MaxGCPauseMillis). Tuning levers: region size, InitiatingHeapOccupancyPercent, G1HeapRegionSize, String dedup.
 
 ### Q45: How does ZGC achieve sub-millisecond pauses? Explain colored pointers and load barriers.
 * ZGC performs all heavy work (marking, relocation, compaction) **concurrently** with application threads; STW phases only touch roots.
-* **Colored pointers**: 64-bit pointers embed Marked0/Marked1/Remapped/Finalizable bits in unused address bits — generation/state travels with the reference itself.
+* **Colored pointers**: 64-bit pointers embed Marked0/Marked1/Remapped/Finalizable bits in unused address bits - generation/state travels with the reference itself.
 * **Load barriers**: every reference read passes a tiny JIT-inserted check; if the pointer's color says "stale" (points into a relocated object's old location), the barrier heals it by reading the forwarding table and updating the reference in place.
 * Two alternating color epochs implement marking without a global stop. Consequences: pauses independent of heap size (multi-TB feasible), throughput tax of ~5-10% for barriers, generational ZGC (JDK 21+) adds separate young/old handling cutting overhead further.
 
 ### Q46: What are JVM safepoints? Explain Time-to-Safepoint (TTSP) problems.
-* A **safepoint** is an execution state where all Java threads are paused at known positions — stack frames/registers precisely mapped — so the VM (GC, deoptimization, revocation of biases, thread dumps, JIT code cache ops) can inspect/manipulate them safely.
+* A **safepoint** is an execution state where all Java threads are paused at known positions - stack frames/registers precisely mapped - so the VM (GC, deoptimization, revocation of biases, thread dumps, JIT code cache ops) can inspect/manipulate them safely.
 * Threads reach safepoints at method returns, loop back-branches (counted loops), and polled callsites (a page-based poll word that VM arms to force a fault-handled yield).
-* **TTSP problem**: total pause = time for the *slowest* thread to reach a poll point. Long-running counted loops without safepoint polls (e.g., giant array loops, BigInteger math) stall everyone — symptoms show as mysterious multi-hundred-ms latency spikes with empty GC logs.
+* **TTSP problem**: total pause = time for the *slowest* thread to reach a poll point. Long-running counted loops without safepoint polls (e.g., giant array loops, BigInteger math) stall everyone - symptoms show as mysterious multi-hundred-ms latency spikes with empty GC logs.
 * Diagnose with `-XX:+PrintSafepointStatistics`, JFR Safepoint events, `-XX:GuaranteedSafepointInterval`; fix via loop stripping, `LoopStripMiningIter` tuning, or restructuring hot counted loops.
 
 ### Q47: What triggers JIT deoptimization? How do profiling counters drive it?
-* C2 compiles *speculatively*: it bakes in assumptions from inline caches/profile data — receiver types are monomorphic/bimorphic, branches never taken, values never null, classes never reloaded.
+* C2 compiles *speculatively*: it bakes in assumptions from inline caches/profile data - receiver types are monomorphic/bimorphic, branches never taken, values never null, classes never reloaded.
 * Guards compile to cheap checks; on violation execution hits a **deopt point**, discards the compiled frame, materializes interpreter state (including previously-scalar-replaced objects), and continues interpreted. The compiled method is marked non-entrant/re-profiled.
 * Common triggers: new subclass loading (breaks monomorphic IC), unexpected branch taken, null where assumed absent, class redefinition (agent hotswap), biased-lock revocation.
 * Symptoms: perf cliff after warm phase; diagnose via `-XX:+PrintDeoptimizationDetails`, JFR "Deoptimization" events. Mitigation: stabilize hot call sites, avoid megamorphic dispatch, keep final/sealed hierarchies.
 
 ### Q48: Explain Class Data Sharing (CDS/AppCDS) and startup optimization.
-* **CDS**: JVM loads a precomputed, validated class-metadata image (shared archive) memory-mapped at boot instead of parsing class files — faster startup and lower footprint because metadata is shared across JVM processes on the host.
+* **CDS**: JVM loads a precomputed, validated class-metadata image (shared archive) memory-mapped at boot instead of parsing class files - faster startup and lower footprint because metadata is shared across JVM processes on the host.
 * **AppCDS**: extends archives to application classes; JDK 13+ allows dynamic archiving: run once with `-XX:ArchiveClassesAtExit`, reuse with `-XX:SharedArchiveFile`.
 * Works best with stable classpaths; verification happens at dump time, so archived classes skip runtime verify/link steps partially.
 * Complements layered startup strategies: AOT caches (GraalVM native images, CRaC snapshots) for extreme cases; typical Spring Boot gains are tens-of-percent TTM improvements with near-zero risk.
 
 ### Q49: What is CRaC (Coordinated Restore at Checkpoint)? How does it change JVM deployments?
-* CRaC (OpenJDK + Azul productionization) checkpoints a warmed-up JVM (JIT-compiled, pools primed, caches hot) to disk and **restores it fork-fast** — startup drops from tens of seconds to tens of milliseconds.
+* CRaC (OpenJDK + Azul productionization) checkpoints a warmed-up JVM (JIT-compiled, pools primed, caches hot) to disk and **restores it fork-fast** - startup drops from tens of seconds to tens of milliseconds.
 * Mechanics: freeze processes after coordinating resource quiescence; open sockets/files/channels must be closed or delegated to pluggable hooks (`jdk.crac` Resource API); restore remaps memory image and resumes.
 * Deployment fit: serverless cold starts, scale-to-zero microservices, CI test JVMs. Caveats: external state (random seeds, time, PII in memory) needs sanitization hooks; kernel/container compatibility requirements; secrets-in-image security posture must be handled.
 * Contrast with GraalVM native image: CRaC keeps full JIT dynamics (peak performance identical to normal run) but requires Linux + checkpoint-compatible native libs.
 
 ### Q50: How does Java Flight Recorder (JFR) work, and why is it production-safe?
 * JFR is an event-based telemetry framework built into HotSpot: JVM internals (allocations outside TLAB, safepoints, GC pauses, lock contention, I/O, compiler events) plus app-defined events stream into small in-memory ring buffers with configurable throttling/stack-trace sampling.
-* **Always-on design**: overhead ~sub-1% because events are lock-free, buffered per-thread, sampled statistically rather than instrumenting every operation — safe to leave enabled in production continuously.
+* **Always-on design**: overhead ~sub-1% because events are lock-free, buffered per-thread, sampled statistically rather than instrumenting every operation - safe to leave enabled in production continuously.
 * Retrieval: `-XX:StartFlightRecording`, jcmd `JFR.dump/start/stop`, JFR Event Streaming API (Java 14+) for push-based live consumption.
-* Ecosystem: Mission Control for analysis; async-profiler complements CPU/alloc flamegraphs. Custom events let teams correlate business transactions with JVM behavior — interviewers love hearing "continuous production diagnostics" framed as SRE practice.
+* Ecosystem: Mission Control for analysis; async-profiler complements CPU/alloc flamegraphs. Custom events let teams correlate business transactions with JVM behavior - interviewers love hearing "continuous production diagnostics" framed as SRE practice.
 
 ---
 

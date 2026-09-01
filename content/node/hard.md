@@ -226,8 +226,8 @@
 ---
 
 ### Q44: Which APIs secretly run on the libuv threadpool, and how does threadpool starvation manifest?
-* Threadpool consumers: most `fs` operations, `dns.lookup` (getaddrinfo!), async `crypto` (pbkdf2/scrypt/randomBytes), zlib compression, some `uv_fs_*` stat calls inside frameworks — default pool size 4 (`UV_THREADPOOL_SIZE` up to 1024).
-* Starvation signature: one heavy category (e.g., scrypt auth at 100ms×N concurrent logins) occupies all 4 slots; *unrelated* features stall — file reads hang, DNS resolutions freeze, latency spreads everywhere despite idle CPU.
+* Threadpool consumers: most `fs` operations, `dns.lookup` (getaddrinfo!), async `crypto` (pbkdf2/scrypt/randomBytes), zlib compression, some `uv_fs_*` stat calls inside frameworks - default pool size 4 (`UV_THREADPOOL_SIZE` up to 1024).
+* Starvation signature: one heavy category (e.g., scrypt auth at 100ms×N concurrent logins) occupies all 4 slots; *unrelated* features stall - file reads hang, DNS resolutions freeze, latency spreads everywhere despite idle CPU.
 * Diagnosis: correlate slow traces showing fs/dns/crypto waits together; measure pool saturation via perf_hooks/async_hooks instrumentation or eBPF syscall tracing; reproduce by flooding pbkdf2 in staging.
 * Mitigations ladder: tune UV_THREADPOOL_SIZE modestly (context-switch ceiling), move CPU-heavy crypto to worker_threads pools, replace dns.lookup with `dns.resolve*` (goes through c-ares on the loop, not the pool), cache DNS aggressively, batch/compress off the hot path.
 
@@ -235,36 +235,36 @@
 * Loader chains intercept module loading: `resolve(specifier, context, nextResolve)` decides URL/location; `load(url, context, nextLoad)` supplies source + format ('module', 'commonjs', 'json', 'wasm'...). Register via `--import register.js` calling `register('./hooks.mjs')` or CLI `--loader` (deprecated syntax).
 * Uses: TypeScript stripping without build steps (tsx/ts-node era), instrumenting code for coverage/profiling, virtual modules for testing mocks, import-map-like aliasing, SSR transform pipelines, policy enforcement (banning raw SQL string imports).
 * Semantics: hooks compose LIFO like middleware; must be synchronous-safe in resolve, may return short-circuited results; child workers need re-registration; formats feed V8's compilation directly.
-* Contrast with CJS monkey-patching (`Module._extensions` hacks) — ESM hooks are the sanctioned evolution, powering tools like tsx, ts-node/esm, and Next's debug tooling.
+* Contrast with CJS monkey-patching (`Module._extensions` hacks) - ESM hooks are the sanctioned evolution, powering tools like tsx, ts-node/esm, and Next's debug tooling.
 
 ### Q46: When would you use the sampling heap profiler instead of full heap snapshots in production?
-* Full snapshots (`heapdump`/v8.getHeapSnapshot) serialize every object — hundreds of MB pauses and memory spikes on large heaps; acceptable ad hoc, reckless continuously.
+* Full snapshots (`heapdump`/v8.getHeapSnapshot) serialize every object - hundreds of MB pauses and memory spikes on large heaps; acceptable ad hoc, reckless continuously.
 * **Sampling profiler** (`v8.SamplingHeapProfiler` / `--heap-prof`) statistically samples allocations (configurable interval) with ~low overhead, producing allocation-attributed flamegraphs: catches leak growth trends and chatty allocation hot spots live.
 * Strategy: always-on sampled allocation telemetry feeding time-series; on anomaly alerts, trigger targeted full snapshot on one canary instance for exact retaining-path forensics.
 * Complementary counters to export: heapUsed trend post-GC, external/array-buffer usage, RSS-vs-heap delta (native leak detector), major-GC frequency/duration.
-* Interview framing: triage funnel — cheap broad signal first, expensive precise capture second; never let diagnosis mechanisms become the outage.
+* Interview framing: triage funnel - cheap broad signal first, expensive precise capture second; never let diagnosis mechanisms become the outage.
 
 ### Q47: What does the Node.js permission model protect, and what are its limits?
-* `node --experimental-permission --allow-fs-read=/app --allow-fs-write=/tmp --allow-child-process --allow-worker` gates access to filesystem, spawning subprocesses, workers, and (newer) `process.binding`-adjacent surfaces — deny-by-default sandboxing at the runtime level.
+* `node --experimental-permission --allow-fs-read=/app --allow-fs-write=/tmp --allow-child-process --allow-worker` gates access to filesystem, spawning subprocesses, workers, and (newer) `process.binding`-adjacent surfaces - deny-by-default sandboxing at the runtime level.
 * Use cases: running untrusted plugin code, tightening CLI tools, defense-in-depth for SSRF-prone renderers (even a vuln can't read /etc/passwd).
-* Limits to state honestly: experimental flag surface evolving across versions; doesn't replace OS sandboxes (containers/seccomp/AppArmor) since V8 escapes/N-API addons bypass; env vars/network still need complementary controls (network restrictions landed progressively — verify version behavior).
+* Limits to state honestly: experimental flag surface evolving across versions; doesn't replace OS sandboxes (containers/seccomp/AppArmor) since V8 escapes/N-API addons bypass; env vars/network still need complementary controls (network restrictions landed progressively - verify version behavior).
 * Deployment pattern: combine runtime permissions + non-root user + read-only rootfs + seccomp profile + capability dropping; the model adds an inner fence, not the whole pen.
 
 ### Q48: What are Node compile cache and V8 startup snapshots doing for startup time?
-* **Compile cache**: Node ≥22 `module.enableCompileCache()` persists V8 code-cache (parsed/compiled bytecode) keyed by file contents — skipping parse/compile on subsequent runs; transparent, per-user cache dir, invalidated by mtime/hash.
-* **V8 startup snapshot**: serializes a pre-initialized isolate's heap (builtins, sometimes app context) into a blob mmapped at boot — instantiates context instead of constructing it; powers fast-launch CLIs and embedded scenarios (`--build-snapshot`).
+* **Compile cache**: Node ≥22 `module.enableCompileCache()` persists V8 code-cache (parsed/compiled bytecode) keyed by file contents - skipping parse/compile on subsequent runs; transparent, per-user cache dir, invalidated by mtime/hash.
+* **V8 startup snapshot**: serializes a pre-initialized isolate's heap (builtins, sometimes app context) into a blob mmapped at boot - instantiates context instead of constructing it; powers fast-launch CLIs and embedded scenarios (`--build-snapshot`).
 * Combined effect for serverless/CLI cold starts: tens-of-percent reductions typical; pairs with lazy `require` hygiene and deferred heavy SDK initialization.
 * Trade-offs: snapshot staleness risk (rebuild on deploy), cache-dir writability requirements in read-only containers (mount tmpfs or disable), marginal benefit once JIT warms anyway for long-lived processes.
 
 ### Q49: How do you design a worker-thread pool (piscina-style)? Where does serialization cost bite?
 * Architecture: fixed N workers (sized via availableParallelism heuristic), task queue with optional priorities/deadlines, round-robin-or-least-busy dispatch, result promises resolved via worker 'message' events correlating taskId→resolver map; support AbortSignal cancellation, max queue depth backpressure, and idle recycling.
-* Serialization reality: `postMessage` structured-clones arguments/results — large Buffers copy unless transferred (`transferList` zero-copies ArrayBuffers/TypedArrays); plain objects clone recursively (CPU + GC churn); SharedArrayBuffer avoids copying for shared-mutable workloads at coordination complexity cost.
+* Serialization reality: `postMessage` structured-clones arguments/results - large Buffers copy unless transferred (`transferList` zero-copies ArrayBuffers/TypedArrays); plain objects clone recursively (CPU + GC churn); SharedArrayBuffer avoids copying for shared-mutable workloads at coordination complexity cost.
 * Anti-patterns: shipping per-request tiny tasks (dispatch overhead dwarfs compute), returning megabyte JSON blobs from workers (clone tax exceeds compute), blocking workers on I/O better done on the loop.
-* Metrics that matter: queue wait time, task execution time, clone time attribution, worker restart counts — alert on wait≫compute signaling pool mis-sizing.
+* Metrics that matter: queue wait time, task execution time, clone time attribution, worker restart counts - alert on wait≫compute signaling pool mis-sizing.
 
 ### Q50: How does Node integrate with OpenSSL, and what does FIPS mode mean operationally?
-* Node statically links a pinned OpenSSL version per release line (security patches ride Node releases; check `process.versions.openssl`) — all TLS + most `crypto` primitives delegate to it.
-* FIPS: enabling `--fips` (or NODE_OPTIONS) restricts algorithms to FIPS 140-validated set — certain ciphers/key sizes disabled, non-compliant primitives throw; regulated environments (gov/health/fintech) mandate this posture.
+* Node statically links a pinned OpenSSL version per release line (security patches ride Node releases; check `process.versions.openssl`) - all TLS + most `crypto` primitives delegate to it.
+* FIPS: enabling `--fips` (or NODE_OPTIONS) restricts algorithms to FIPS 140-validated set - certain ciphers/key sizes disabled, non-compliant primitives throw; regulated environments (gov/health/fintech) mandate this posture.
 * Operational consequences: algorithm availability differs (legacy protocols break), performance characteristics shift, image builds must include validated module artifacts, and CI needs a FIPS-parity matrix because local dev rarely matches.
 * Adjacent hardening topics worth naming: TLS min-version pinning (`tls.DEFAULT_MIN_VERSION`), curve/cipher suite customization, cert rotation without restarts (SNICallback), and mTLS client-cert identity extraction for service meshes.
 
