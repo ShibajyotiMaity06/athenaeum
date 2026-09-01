@@ -7,6 +7,8 @@ import { getCurrentUser, hasInterviewAccess } from "@/lib/auth";
 import { SITE } from "@/lib/site";
 import InterviewQuestionList from "@/components/InterviewQuestionList";
 
+import JsonLd from "@/components/JsonLd";
+
 export const dynamic = "force-dynamic";
 
 interface Props {
@@ -21,12 +23,28 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { stack: stackSlug } = await params;
   const stack = getInterviewStack(stackSlug);
-  if (!stack) return { title: "Codex Not Found | DevPrep" };
+  if (!stack) return { title: "Interview Questions | DevPrep" };
+
+  const title = `${stack.name} Interview Questions and Answers | DevPrep`;
+  const description = `${stack.totalQuestions}+ curated ${stack.name} technical interview questions and answers across Easy, Medium, and Hard tiers with verified model solutions and documentation citations.`;
+  const url = `${SITE.url}/interview-prep/${stack.slug}`;
 
   return {
-    title: `${stack.name} Interview Questions & Solutions | DevPrep`,
-    description: `${stack.totalQuestions} curated real-world technical interview questions across Easy, Medium, and Hard tiers for ${stack.name}. Verified model solutions and documentation citations.`,
-    alternates: { canonical: `${SITE.url}/interview-prep/${stack.slug}` }
+    title,
+    description,
+    alternates: { canonical: url },
+    openGraph: {
+      title,
+      description,
+      url,
+      siteName: SITE.name,
+      type: "article"
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description
+    }
   };
 }
 
@@ -76,8 +94,48 @@ export default async function InterviewStackPage({ params }: Props) {
     }
   }
 
+  const breadcrumbsJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: SITE.url
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Interview Prep",
+        item: `${SITE.url}/interview-prep`
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: `${stack.name} Interview Questions`,
+        item: `${SITE.url}/interview-prep/${stack.slug}`
+      }
+    ]
+  };
+
+  const faqJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: stack.questions.slice(0, 5).map((q) => ({
+      "@type": "Question",
+      name: q.question,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: q.answer?.substring(0, 250) || `${stack.name} interview question model answer.`
+      }
+    }))
+  };
+
   return (
     <div className="mx-auto max-w-5xl px-4 sm:px-6 py-10 sm:py-14 space-y-10">
+      <JsonLd data={breadcrumbsJsonLd} />
+      <JsonLd data={faqJsonLd} />
       {/* ── Breadcrumb & Navigation ── */}
       <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs font-mono text-[var(--text-muted)]">
         <Link href="/" className="hover:text-[var(--accent)] transition-colors">

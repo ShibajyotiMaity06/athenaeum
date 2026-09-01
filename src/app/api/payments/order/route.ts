@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getCurrentUser, hasFullAccess } from "@/lib/auth";
+import { getCurrentUser, hasDsaAccess, hasFullAccess, hasInterviewAccess } from "@/lib/auth";
 import { recordOrder } from "@/lib/db";
 import { createRazorpayOrder, razorpayConfigured } from "@/lib/razorpay";
 import { calculatePromoPrice, PLANS, type CurrencyCode, type PricingPlan } from "@/lib/site";
@@ -19,19 +19,22 @@ export async function POST(req: NextRequest) {
   try {
     const body = (await req.json()) as { currency?: CurrencyCode; plan?: PricingPlan; promoCode?: string };
     if (body.currency === "INR" || body.currency === "USD") currency = body.currency;
-    if (body.plan === "interview" || body.plan === "full") plan = body.plan;
+    if (body.plan === "dsa" || body.plan === "interview" || body.plan === "full") plan = body.plan;
     if (body.promoCode) promoCode = body.promoCode;
   } catch {
     /* defaults stand */
   }
 
-  // If user already has full scholar access, no need to purchase again
-  if (hasFullAccess(user)) {
+  // Check if user already owns the specific requested plan
+  if (plan === "dsa" && hasDsaAccess(user)) {
+    return NextResponse.json({ ok: false, error: "Your DSA Problem Codex access is already active." }, { status: 409 });
+  }
+
+  if (plan === "full" && hasFullAccess(user)) {
     return NextResponse.json({ ok: false, error: "Your full scholar access is already active." }, { status: 409 });
   }
 
-  // If user already has interview access and tries to buy interview plan again
-  if (user.access?.granted && user.access.tier === "interview" && plan === "interview") {
+  if (plan === "interview" && hasInterviewAccess(user)) {
     return NextResponse.json({ ok: false, error: "Your Interview Prep key is already active." }, { status: 409 });
   }
 

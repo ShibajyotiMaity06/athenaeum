@@ -1,0 +1,14 @@
+
+
+
+
+1. LeetCode 435: Non-overlapping Intervals https://leetcode.com/problems/non-overlapping-intervals/ 
+2. LeetCode 452: Minimum Number of Arrows to Burst Balloons https://leetcode.com/problems/minimum-number-of-arrows-to-burst-balloons/ 
+3. LeetCode 646: Maximum Length of Pair Chain https://leetcode.com/problems/maximum-length-of-pair-chain/ 
+4. Codeforces 478D: Red-Green Towers https://codeforces.com/problemset/problem/478/D 
+5. CSES: Tasks and Deadlines https://cses.fi/problemset/task/1637 
+6. LeetCode 1029: Two City Scheduling https://leetcode.com/problems/two-city-scheduling/ 
+7. Codeforces 545C: Woodcutters https://codeforces.com/problemset/problem/545/C 
+8. LeetCode 621: Task Scheduler https://leetcode.com/problems/task-scheduler/ 
+9. CSES: Movie Festival https://cses.fi/problemset/task/1631 
+10. Codeforces 489C: Given Length and Sum of Digits https://codeforces.com/problemset/problem/489/C

@@ -51,7 +51,12 @@ export default function SiteFooter() {
               <span className="stamped-label mb-4 block">PLATFORM</span>
               <ul className="space-y-2.5 text-xs font-mono">
                 <li>
-                  <Link href="/interview-prep" className="hover:text-[var(--accent)] transition-colors text-[var(--accent)] font-bold">
+                  <Link href="/dsa" className="hover:text-[var(--accent)] transition-colors text-[var(--accent)] font-bold">
+                    DSA Problem Codex
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/interview-prep" className="hover:text-[var(--accent)] transition-colors">
                     Interview Prep Codex
                   </Link>
                 </li>

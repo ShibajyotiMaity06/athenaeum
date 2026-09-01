@@ -1,0 +1,10 @@
+1. LeetCode 167: Two Sum II - Input Array Is Sorted https://leetcode.com/problems/two-sum-ii-input-array-is-sorted/  
+2. LeetCode 15: 3Sum https://leetcode.com/problems/3sum/ 
+3. LeetCode 16: 3Sum Closest https://leetcode.com/problems/3sum-closest/ 
+4. CSES: Sum of Two Values https://cses.fi/problemset/task/1640 
+5. LeetCode 11: Container With Most Water https://leetcode.com/problems/container-with-most-water/ 
+6. Codeforces 381A: Sereja and Dima https://codeforces.com/problemset/problem/381/A
+7. LeetCode 713: Subarray Product Less Than K https://leetcode.com/problems/subarray-product-less-than-k/ 
+8. LeetCode 125: Valid Palindrome https://leetcode.com/problems/valid-palindrome/ 
+9. Codeforces 580C: Kefa and Park https://codeforces.com/problemset/problem/580/C
+10. LeetCode 283: Move Zeroes https://leetcode.com/problems/move-zeroes/ 

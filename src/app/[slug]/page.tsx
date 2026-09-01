@@ -77,8 +77,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     };
   }
 
-  const title = `${stack.name} Interview Questions — Easy, Medium & Hard | DevPrep`;
-  const description = `${stack.questionCount}+ ${stack.name} interview questions covering core concepts, practical patterns, edge cases, and internals organized Easy to Hard.`;
+  const title = `${stack.name} Interview Questions and Answers — Easy, Medium & Hard | DevPrep`;
+  const description = `${stack.questionCount}+ ${stack.name} technical interview questions and answers covering core concepts, practical patterns, edge cases, and runtime internals organized Easy to Hard.`;
   const ogImageUrl = `${SITE.url}/api/og?slug=${stack.hubSlug}`;
 
   return {
@@ -390,9 +390,26 @@ export default async function HubOrRolePage({ params }: PageProps) {
     }))
   };
 
+  const previewQuestions = Object.values(levelDocs)
+    .filter(Boolean)
+    .flatMap((d) => d?.theory?.slice(0, 3) || []);
+
+  const faqJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: previewQuestions.slice(0, 8).map((q) => ({
+      "@type": "Question",
+      name: q.title,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: q.plainTextPreview?.substring(0, 250) || `${stack.name} interview question model answer.`
+      }
+    }))
+  };
+
   return (
     <div className="mx-auto max-w-5xl px-4 sm:px-6 py-12">
-      <JsonLd data={[breadcrumbsJsonLd, courseJsonLd, itemListJsonLd]} />
+      <JsonLd data={[breadcrumbsJsonLd, courseJsonLd, itemListJsonLd, faqJsonLd]} />
 
       {/* Breadcrumb Navigation */}
       <nav aria-label="Breadcrumb" className="mb-8 flex items-center gap-2 text-xs font-mono text-[var(--text-muted)]">

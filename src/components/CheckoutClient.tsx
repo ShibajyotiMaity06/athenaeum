@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { CheckCircle2, Lock, ShieldCheck, Tag, X, Check, Sparkles, Layers, BookOpen } from "lucide-react";
+import { CheckCircle2, Lock, ShieldCheck, Tag, X, Check, Sparkles, Layers, BookOpen, Code2 } from "lucide-react";
 import { calculatePromoPrice, PLANS, SITE, type CurrencyCode, type PricingPlan, type AccessTier } from "@/lib/site";
 import { useVisitorCurrency } from "@/components/GeoPrice";
 
@@ -18,6 +18,9 @@ interface Props {
   userName: string;
   hasAccess: boolean;
   userTier?: AccessTier;
+  hasFullAccess?: boolean;
+  hasInterviewAccess?: boolean;
+  hasDsaAccess?: boolean;
   sandbox: boolean;
   keyId: string | null;
   initialCurrency?: CurrencyCode | null;
@@ -39,7 +42,10 @@ export default function CheckoutClient({
   userEmail,
   userName,
   hasAccess,
-  userTier = "full",
+  userTier,
+  hasFullAccess = false,
+  hasInterviewAccess = false,
+  hasDsaAccess = false,
   sandbox,
   keyId,
   initialCurrency = "INR",
@@ -49,9 +55,14 @@ export default function CheckoutClient({
   const searchParams = useSearchParams();
   const planQuery = searchParams.get("plan");
   
-  const [selectedPlan, setSelectedPlan] = useState<PricingPlan>(
-    planQuery === "interview" ? "interview" : defaultPlan
-  );
+  const initialPlan: PricingPlan =
+    planQuery === "dsa"
+      ? "dsa"
+      : planQuery === "interview"
+      ? "interview"
+      : defaultPlan;
+
+  const [selectedPlan, setSelectedPlan] = useState<PricingPlan>(initialPlan);
   const [currency, setCurrency] = useState<CurrencyCode | null>(initialCurrency ?? null);
   const geoCurrency = useVisitorCurrency();
   const [manualChoice, setManualChoice] = useState(false);
@@ -73,6 +84,12 @@ export default function CheckoutClient({
   const priceCalculation = calculatePromoPrice(selectedPlan, active, appliedPromo);
   const activePlanMeta = PLANS[selectedPlan];
 
+  // Check if user already owns the currently selected plan
+  const isSelectedPlanOwned =
+    (selectedPlan === "full" && hasFullAccess) ||
+    (selectedPlan === "interview" && hasInterviewAccess) ||
+    (selectedPlan === "dsa" && hasDsaAccess);
+
   function handleApplyPromo(e?: React.FormEvent) {
     if (e) e.preventDefault();
     setPromoError(null);
@@ -84,7 +101,7 @@ export default function CheckoutClient({
     }
     const check = calculatePromoPrice(selectedPlan, active, trimmed);
     if (!check.valid) {
-      setPromoError("Invalid promo code. Please check and try again.");
+      setPromoError(check.message || "Invalid promo code. Please check and try again.");
       return;
     }
     setAppliedPromo(trimmed);
@@ -99,6 +116,7 @@ export default function CheckoutClient({
   }
 
   async function completePurchase() {
+    if (isSelectedPlanOwned) return;
     setError(null);
     setPhase("busy");
     try {
@@ -147,7 +165,7 @@ export default function CheckoutClient({
         amount: orderData.amount,
         currency: orderData.currency,
         name: "DevPrep",
-        description: `DevPrep ${activePlanMeta.name} — ${priceCalculation.valid ? "30% Off" : "Lifetime Access"}`,
+        description: `DevPrep ${activePlanMeta.name} — Lifetime Access`,
         image: `${SITE.url}/icon.svg`,
         prefill: { name: userName, email: userEmail },
         theme: { color: "#ff4757", backdrop_color: "#16191d" },
@@ -211,31 +229,6 @@ export default function CheckoutClient({
     }
   }
 
-  // If user already has full scholar access
-  if (hasAccess && userTier === "full") {
-    return (
-      <div className="industrial-card p-10 text-center max-w-xl mx-auto corner-screws">
-        <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-4">
-          <CheckCircle2 className="w-6 h-6" />
-        </div>
-        <h2 className="text-2xl font-bold text-[var(--text-primary)]">
-          Full Lifetime Access is Active
-        </h2>
-        <p className="mt-2 text-sm text-[var(--text-muted)]">
-          Your account has complete unrestricted access to all 3,600+ questions across all 27+ technologies AND the full Interview Prep codex.
-        </p>
-        <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
-          <Link href="/interview-prep" className="btn-industrial btn-industrial-primary py-3 px-6 text-xs w-full sm:w-auto">
-            <span>Explore Interview Prep Codex</span>
-          </Link>
-          <Link href="/#technologies" className="btn-industrial btn-industrial-secondary py-3 px-6 text-xs w-full sm:w-auto">
-            <span>Browse All 27+ Technologies</span>
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
   if (phase === "done") {
     return (
       <div className="industrial-card p-10 text-center max-w-xl mx-auto corner-screws">
@@ -249,11 +242,17 @@ export default function CheckoutClient({
           Your <strong className="text-[var(--text-primary)]">{activePlanMeta.name}</strong> license has been permanently bound to <strong className="text-[var(--text-primary)]">{userEmail}</strong>.
         </p>
         <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
-          <Link href="/interview-prep" className="btn-industrial btn-industrial-primary py-3.5 px-8 text-xs w-full sm:w-auto">
-            <span>Go to Interview Prep</span>
-          </Link>
+          {selectedPlan === "dsa" ? (
+            <Link href="/dsa" className="btn-industrial btn-industrial-primary py-3.5 px-8 text-xs w-full sm:w-auto">
+              <span>Go to DSA Problem Codex</span>
+            </Link>
+          ) : (
+            <Link href="/interview-prep" className="btn-industrial btn-industrial-primary py-3.5 px-8 text-xs w-full sm:w-auto">
+              <span>Go to Interview Prep</span>
+            </Link>
+          )}
           <Link href="/#technologies" className="btn-industrial btn-industrial-secondary py-3.5 px-8 text-xs w-full sm:w-auto">
-            <span>Explore Technologies</span>
+            <span>Explore All Codices</span>
           </Link>
         </div>
       </div>
@@ -261,77 +260,139 @@ export default function CheckoutClient({
   }
 
   return (
-    <div className="mx-auto max-w-2xl">
-      {/* Plan Selection Switcher */}
+    <div className="mx-auto max-w-3xl">
+      {/* Plan Selection Switcher (3 Plans) */}
       <div className="mb-8">
-        <div className="text-center mb-4">
+        <div className="text-center mb-6">
           <span className="stamped-label-accent">SELECT ACCESS LEVEL</span>
-          <h2 className="text-lg font-bold text-[var(--text-primary)] mt-1">Choose Your Lifetime Preparation Plan</h2>
+          <h2 className="text-xl font-bold text-[var(--text-primary)] mt-1">Choose Your Lifetime Preparation Plan</h2>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {/* Plan 1: Full Scholar Access */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Plan 1: Full Scholar Access (₹399) */}
           <button
             type="button"
-            onClick={() => setSelectedPlan("full")}
-            className={`text-left p-5 rounded-xl border-2 transition-all relative ${
+            onClick={() => {
+              setSelectedPlan("full");
+              if (appliedPromo === "DSA10") handleRemovePromo();
+            }}
+            className={`text-left p-5 rounded-xl border-2 transition-all relative flex flex-col justify-between cursor-pointer ${
               selectedPlan === "full"
                 ? "border-[var(--accent)] bg-[var(--bg-card)] shadow-[var(--shadow-card)] ring-2 ring-[var(--accent)]/20"
                 : "border-[var(--border-card)] bg-[var(--bg-recessed)] hover:border-[var(--border-card-hover)]"
             }`}
           >
-            <div className="flex items-center justify-between gap-2 mb-2">
-              <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--accent)]/30">
-                {PLANS.full.badge}
-              </span>
-              <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
-                selectedPlan === "full" ? "border-[var(--accent)] bg-[var(--accent)]" : "border-slate-400"
-              }`}>
-                {selectedPlan === "full" && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+            <div>
+              <div className="flex items-center justify-between gap-2 mb-2">
+                <span className="text-[9px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--accent)]/30">
+                  {PLANS.full.badge}
+                </span>
+                <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
+                  selectedPlan === "full" ? "border-[var(--accent)] bg-[var(--accent)]" : "border-slate-400"
+                }`}>
+                  {selectedPlan === "full" && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                </div>
               </div>
+              <h3 className="font-bold text-sm text-[var(--text-primary)] flex items-center gap-1.5">
+                <Layers className="w-4 h-4 text-[var(--accent)] shrink-0" />
+                <span>{PLANS.full.name}</span>
+              </h3>
+              <p className="font-mono text-2xl font-black text-[var(--text-primary)] mt-1.5">
+                {PLANS.full[active].display}
+              </p>
+              <p className="text-[11px] text-[var(--text-muted)] mt-1 leading-relaxed">
+                3,600+ Questions Codex + Full Interview Prep Codex + All Future Tech Codices
+              </p>
             </div>
-            <h3 className="font-bold text-base text-[var(--text-primary)] flex items-center gap-1.5">
-              <Layers className="w-4 h-4 text-[var(--accent)] shrink-0" />
-              <span>{PLANS.full.name}</span>
-            </h3>
-            <p className="font-mono text-2xl font-black text-[var(--text-primary)] mt-1.5">
-              {PLANS.full[active].display}
-            </p>
-            <p className="text-xs text-[var(--text-muted)] mt-1 leading-relaxed">
-              3,600+ Questions Codex + Full Interview Prep Codex + All Future Tech
-            </p>
+
+            {hasFullAccess && (
+              <span className="mt-3 inline-block text-[10px] font-mono font-bold text-emerald-600 bg-emerald-500/10 px-2 py-0.5 rounded">
+                ✓ ACTIVE ON ACCOUNT
+              </span>
+            )}
           </button>
 
-          {/* Plan 2: Interview Prep Key */}
+          {/* Plan 2: Interview Prep Key (₹299) */}
           <button
             type="button"
-            onClick={() => setSelectedPlan("interview")}
-            className={`text-left p-5 rounded-xl border-2 transition-all relative ${
+            onClick={() => {
+              setSelectedPlan("interview");
+              if (appliedPromo === "DSA10") handleRemovePromo();
+            }}
+            className={`text-left p-5 rounded-xl border-2 transition-all relative flex flex-col justify-between cursor-pointer ${
               selectedPlan === "interview"
                 ? "border-[var(--accent)] bg-[var(--bg-card)] shadow-[var(--shadow-card)] ring-2 ring-[var(--accent)]/20"
                 : "border-[var(--border-card)] bg-[var(--bg-recessed)] hover:border-[var(--border-card-hover)]"
             }`}
           >
-            <div className="flex items-center justify-between gap-2 mb-2">
-              <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-600 border border-emerald-500/30">
-                {PLANS.interview.badge}
-              </span>
-              <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
-                selectedPlan === "interview" ? "border-[var(--accent)] bg-[var(--accent)]" : "border-slate-400"
-              }`}>
-                {selectedPlan === "interview" && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+            <div>
+              <div className="flex items-center justify-between gap-2 mb-2">
+                <span className="text-[9px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-600 border border-emerald-500/30">
+                  {PLANS.interview.badge}
+                </span>
+                <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
+                  selectedPlan === "interview" ? "border-[var(--accent)] bg-[var(--accent)]" : "border-slate-400"
+                }`}>
+                  {selectedPlan === "interview" && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                </div>
               </div>
+              <h3 className="font-bold text-sm text-[var(--text-primary)] flex items-center gap-1.5">
+                <BookOpen className="w-4 h-4 text-emerald-500 shrink-0" />
+                <span>{PLANS.interview.name}</span>
+              </h3>
+              <p className="font-mono text-2xl font-black text-[var(--text-primary)] mt-1.5">
+                {PLANS.interview[active].display}
+              </p>
+              <p className="text-[11px] text-[var(--text-muted)] mt-1 leading-relaxed">
+                Full Interview Prep Codex + <strong className="text-emerald-600 dark:text-emerald-400">Includes Complete DSA Codex (600+ Questions)</strong>
+              </p>
             </div>
-            <h3 className="font-bold text-base text-[var(--text-primary)] flex items-center gap-1.5">
-              <BookOpen className="w-4 h-4 text-emerald-500 shrink-0" />
-              <span>{PLANS.interview.name}</span>
-            </h3>
-            <p className="font-mono text-2xl font-black text-[var(--text-primary)] mt-1.5">
-              {PLANS.interview[active].display}
-            </p>
-            <p className="text-xs text-[var(--text-muted)] mt-1 leading-relaxed">
-              150+ Curated Interview Questions + Verified Solutions + 160+ Source URLs
-            </p>
+
+            {hasInterviewAccess && (
+              <span className="mt-3 inline-block text-[10px] font-mono font-bold text-emerald-600 bg-emerald-500/10 px-2 py-0.5 rounded">
+                ✓ ACTIVE ON ACCOUNT
+              </span>
+            )}
+          </button>
+
+          {/* Plan 3: DSA Problem Codex (₹199) */}
+          <button
+            type="button"
+            onClick={() => setSelectedPlan("dsa")}
+            className={`text-left p-5 rounded-xl border-2 transition-all relative flex flex-col justify-between cursor-pointer ${
+              selectedPlan === "dsa"
+                ? "border-[var(--accent)] bg-[var(--bg-card)] shadow-[var(--shadow-card)] ring-2 ring-[var(--accent)]/20"
+                : "border-[var(--border-card)] bg-[var(--bg-recessed)] hover:border-[var(--border-card-hover)]"
+            }`}
+          >
+            <div>
+              <div className="flex items-center justify-between gap-2 mb-2">
+                <span className="text-[9px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30">
+                  {PLANS.dsa.badge}
+                </span>
+                <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
+                  selectedPlan === "dsa" ? "border-[var(--accent)] bg-[var(--accent)]" : "border-slate-400"
+                }`}>
+                  {selectedPlan === "dsa" && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                </div>
+              </div>
+              <h3 className="font-bold text-sm text-[var(--text-primary)] flex items-center gap-1.5">
+                <Code2 className="w-4 h-4 text-amber-500 shrink-0" />
+                <span>{PLANS.dsa.name}</span>
+              </h3>
+              <p className="font-mono text-2xl font-black text-[var(--text-primary)] mt-1.5">
+                {PLANS.dsa[active].display}
+              </p>
+              <p className="text-[11px] text-[var(--text-muted)] mt-1 leading-relaxed">
+                600+ Curated Problems across 10 tracks, Google Top 50, DP, Graphs &amp; Segment Trees
+              </p>
+            </div>
+
+            {hasDsaAccess && (
+              <span className="mt-3 inline-block text-[10px] font-mono font-bold text-emerald-600 bg-emerald-500/10 px-2 py-0.5 rounded">
+                ✓ ACTIVE ON ACCOUNT
+              </span>
+            )}
           </button>
         </div>
       </div>
@@ -363,7 +424,7 @@ export default function CheckoutClient({
 
         {priceCalculation.valid ? (
           <p className="mt-2 text-xs text-emerald-600 font-mono font-medium">
-            30% discount applied · You save {priceCalculation.savingsDisplay}
+            {priceCalculation.discountPercent}% discount applied · You save {priceCalculation.savingsDisplay}
           </p>
         ) : (
           <p className="mt-2 text-xs text-[var(--text-muted)] font-mono">
@@ -372,7 +433,7 @@ export default function CheckoutClient({
         )}
       </div>
 
-      {/* Promo Code Input Module */}
+      {/* Promo Code Input Module (No codes exposed) */}
       <div className="mt-6 industrial-recessed p-4 rounded-xl border border-[var(--border-recessed)]">
         <div className="flex items-center justify-between gap-2 mb-2">
           <label htmlFor="promoCodeInput" className="text-xs font-mono font-semibold text-[var(--text-primary)] flex items-center gap-1.5">
@@ -393,13 +454,13 @@ export default function CheckoutClient({
                 {appliedPromo}
               </span>
               <span className="text-xs font-mono text-emerald-700 dark:text-emerald-300">
-                30% discount applied (-{priceCalculation.savingsDisplay})
+                {priceCalculation.discountPercent}% discount applied (-{priceCalculation.savingsDisplay})
               </span>
             </div>
             <button
               type="button"
               onClick={handleRemovePromo}
-              className="text-xs font-mono text-[var(--text-muted)] hover:text-rose-500 flex items-center gap-1 transition-colors px-2 py-1"
+              className="text-xs font-mono text-[var(--text-muted)] hover:text-rose-500 flex items-center gap-1 transition-colors px-2 py-1 cursor-pointer"
               title="Remove promo code"
             >
               <X className="w-3.5 h-3.5" />
@@ -422,7 +483,7 @@ export default function CheckoutClient({
             <button
               type="submit"
               disabled={!promoInput.trim()}
-              className="btn-industrial btn-industrial-secondary px-5 py-2.5 text-xs font-mono font-semibold disabled:opacity-50"
+              className="btn-industrial btn-industrial-secondary px-5 py-2.5 text-xs font-mono font-semibold disabled:opacity-50 cursor-pointer"
             >
               Apply
             </button>
@@ -466,7 +527,7 @@ export default function CheckoutClient({
               <span className="text-emerald-600 font-bold">Included Forever</span>
             </div>
           </>
-        ) : (
+        ) : selectedPlan === "interview" ? (
           <>
             <div className="flex justify-between py-2 border-b border-[rgba(186,190,204,0.4)]">
               <span>INTERVIEW PREP ACCESS</span>
@@ -481,6 +542,21 @@ export default function CheckoutClient({
               <span className="text-emerald-600 font-bold">160+ Verified URLs</span>
             </div>
           </>
+        ) : (
+          <>
+            <div className="flex justify-between py-2 border-b border-[rgba(186,190,204,0.4)]">
+              <span>DSA TRACKS &amp; PROBLEMS</span>
+              <span className="text-emerald-600 font-bold">600+ Problems Across 10 Tracks</span>
+            </div>
+            <div className="flex justify-between py-2 border-b border-[rgba(186,190,204,0.4)]">
+              <span>GOOGLE &amp; DP SPECIALIZED</span>
+              <span className="text-[var(--text-primary)] font-bold">Top 50 Google + DP Masterclass</span>
+            </div>
+            <div className="flex justify-between py-2 border-b border-[rgba(186,190,204,0.4)]">
+              <span>INTERACTIVE RANDOM ENGINE</span>
+              <span className="text-emerald-600 font-bold">Random Picker &amp; Bookmarks</span>
+            </div>
+          </>
         )}
 
         {priceCalculation.valid && (
@@ -492,7 +568,7 @@ export default function CheckoutClient({
               </span>
             </div>
             <div className="flex justify-between py-2 border-b border-[rgba(186,190,204,0.4)] text-emerald-600">
-              <span>PROMO CODE ({priceCalculation.code}) 30% OFF</span>
+              <span>PROMO CODE ({priceCalculation.code}) {priceCalculation.discountPercent}% OFF</span>
               <span className="font-bold">
                 -{priceCalculation.savingsDisplay}
               </span>
@@ -523,21 +599,41 @@ export default function CheckoutClient({
         </div>
       )}
 
-      <button
-        type="button"
-        disabled={phase === "busy"}
-        onClick={completePurchase}
-        className="btn-industrial btn-industrial-primary py-4 px-8 text-sm w-full mt-6 shadow-[var(--shadow-btn-primary)] flex items-center justify-center gap-2.5 disabled:opacity-60"
-      >
-        {phase === "busy" ? (
-          <>
-            <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-            <span>Connecting Gateway…</span>
-          </>
-        ) : (
-          <span>Pay {priceCalculation.display} · Unlock {activePlanMeta.shortName}</span>
-        )}
-      </button>
+      {isSelectedPlanOwned ? (
+        <div className="mt-6 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-center">
+          <p className="text-xs font-mono text-emerald-600 font-bold flex items-center justify-center gap-1.5">
+            <CheckCircle2 className="w-4 h-4" />
+            <span>You already have lifetime access to {activePlanMeta.name}.</span>
+          </p>
+          <div className="mt-3 flex justify-center gap-3">
+            {selectedPlan === "dsa" ? (
+              <Link href="/dsa" className="btn-industrial btn-industrial-primary py-2 px-5 text-xs">
+                <span>Launch DSA Codex</span>
+              </Link>
+            ) : (
+              <Link href="/interview-prep" className="btn-industrial btn-industrial-primary py-2 px-5 text-xs">
+                <span>Launch Interview Prep</span>
+              </Link>
+            )}
+          </div>
+        </div>
+      ) : (
+        <button
+          type="button"
+          disabled={phase === "busy"}
+          onClick={completePurchase}
+          className="btn-industrial btn-industrial-primary py-4 px-8 text-sm w-full mt-6 shadow-[var(--shadow-btn-primary)] flex items-center justify-center gap-2.5 disabled:opacity-60 cursor-pointer"
+        >
+          {phase === "busy" ? (
+            <>
+              <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              <span>Connecting Gateway…</span>
+            </>
+          ) : (
+            <span>Pay {priceCalculation.display} · Unlock {activePlanMeta.shortName}</span>
+          )}
+        </button>
+      )}
 
       <p className="mt-4 text-center text-xs font-mono text-[var(--text-muted)]">
         Processed securely through Razorpay · 256-bit encryption

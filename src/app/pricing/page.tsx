@@ -4,7 +4,7 @@ import { headers } from "next/headers";
 import { CheckCircle2, CreditCard, ShieldCheck, Zap } from "lucide-react";
 import CheckoutClient from "@/components/CheckoutClient";
 import GeoPrice from "@/components/GeoPrice";
-import { getCurrentUser } from "@/lib/auth";
+import { getCurrentUser, hasDsaAccess, hasFullAccess, hasInterviewAccess } from "@/lib/auth";
 import { sandboxAllowed } from "@/lib/razorpay";
 import { countryFromHeaders, currencyForCountry } from "@/lib/geo";
 import { SITE } from "@/lib/site";
@@ -12,10 +12,24 @@ import { SITE } from "@/lib/site";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Lifetime Pricing — Lifetime Access Desk | DevPrep",
+  title: "Lifetime Pricing — Technical Interview Questions Access Passes | DevPrep",
   description:
-    "One-time localized payment for complete, unrestricted lifetime access to 3,600+ technical interview questions across 27+ technologies.",
-  alternates: { canonical: `${SITE.url}/pricing` }
+    "One-time localized payment for complete, unrestricted lifetime access to 3,600+ technical interview questions across 27+ technologies, Interview Prep Key, and DSA Problem Codex.",
+  alternates: { canonical: `${SITE.url}/pricing` },
+  openGraph: {
+    title: "Lifetime Pricing — Technical Interview Questions Access Passes | DevPrep",
+    description:
+      "One-time localized payment for complete, unrestricted lifetime access to 3,600+ technical interview questions across 27+ technologies, Interview Prep Key, and DSA Problem Codex.",
+    url: `${SITE.url}/pricing`,
+    siteName: SITE.name,
+    type: "website"
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Lifetime Pricing — Technical Interview Questions Access Passes | DevPrep",
+    description:
+      "One-time localized payment for complete, unrestricted lifetime access to 3,600+ technical interview questions across 27+ technologies, Interview Prep Key, and DSA Problem Codex."
+  }
 };
 
 export default async function PricingPage() {
@@ -23,6 +37,10 @@ export default async function PricingPage() {
   const sandbox = sandboxAllowed();
   const headerCountry = countryFromHeaders(await headers());
   const initialCurrency = currencyForCountry(headerCountry);
+
+  const isFull = hasFullAccess(user);
+  const isInterview = hasInterviewAccess(user);
+  const isDsa = hasDsaAccess(user);
 
   return (
     <div className="mx-auto max-w-4xl px-4 sm:px-6 py-16 sm:py-20">
@@ -32,7 +50,7 @@ export default async function PricingPage() {
           Lifetime Access Desk
         </h1>
         <p className="mt-3 text-sm sm:text-base text-[var(--text-muted)] leading-relaxed">
-          Pay once, prepare forever. Unlock every question, model answer, and future tech track with a single contribution.
+          Pay once, prepare forever. Choose your preparation codex with a single contribution.
         </p>
       </header>
 
@@ -105,6 +123,9 @@ export default async function PricingPage() {
             userName={user.name}
             hasAccess={Boolean(user.access.granted)}
             userTier={user.access?.tier || (user.access?.granted ? "full" : undefined)}
+            hasFullAccess={isFull}
+            hasInterviewAccess={isInterview}
+            hasDsaAccess={isDsa}
             sandbox={sandbox}
             keyId={process.env.RAZORPAY_KEY_ID || null}
             initialCurrency={initialCurrency}

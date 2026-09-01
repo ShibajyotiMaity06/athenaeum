@@ -10,10 +10,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "content:sync": "node scripts/sync-content.mjs && node scripts/sync-interview.mjs",
-    "predev": "node scripts/sync-content.mjs && node scripts/sync-interview.mjs",
-    "prebuild": "node scripts/sync-content.mjs && node scripts/sync-interview.mjs",
-    "prestart": "node scripts/sync-content.mjs && node scripts/sync-interview.mjs",
+    "content:sync": "node scripts/sync-content.mjs && node scripts/sync-interview.mjs && node scripts/build-dsa-data.mjs && node scripts/sync-vip-access.mjs",
+    "predev": "node scripts/sync-content.mjs && node scripts/sync-interview.mjs && node scripts/build-dsa-data.mjs && node scripts/sync-vip-access.mjs",
+    "prebuild": "node scripts/sync-content.mjs && node scripts/sync-interview.mjs && node scripts/build-dsa-data.mjs && node scripts/sync-vip-access.mjs",
+    "prestart": "node scripts/sync-content.mjs && node scripts/sync-interview.mjs && node scripts/build-dsa-data.mjs && node scripts/sync-vip-access.mjs",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

@@ -4,15 +4,29 @@ import { ArrowRight, BookOpen, CheckCircle2, Layers, Lock, Sparkles, Terminal, C
 import { getInterviewStacks, FREE_QUESTIONS_LIMIT } from "@/lib/interview-data";
 import { getCurrentUser, hasInterviewAccess } from "@/lib/auth";
 import { SITE, PLANS } from "@/lib/site";
-import GeoPrice from "@/components/GeoPrice";
+import JsonLd from "@/components/JsonLd";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Interview Prep Codex — Curated Real-World Technical Questions | DevPrep",
+  title: "Technical Interview Questions and Answers — Real-World Engineering Codex | DevPrep",
   description:
-    "500+ high-frequency, real-world technical interview questions across Node.js, JavaScript, TypeScript, React 19, Next.js, Java, Spring Boot, SQL, DBMS, Computer Networks, Operating Systems, and System Design with verified model solutions and documentation citations.",
-  alternates: { canonical: `${SITE.url}/interview-prep` }
+    "500+ high-frequency, real-world technical interview questions and answers across Node.js, JavaScript, TypeScript, React 19, Next.js, Java, Spring Boot, SQL, DBMS, Computer Networks, Operating Systems, and System Design with official documentation citations.",
+  alternates: { canonical: `${SITE.url}/interview-prep` },
+  openGraph: {
+    title: "Technical Interview Questions and Answers — Real-World Engineering Codex | DevPrep",
+    description:
+      "500+ high-frequency, real-world technical interview questions and answers across Node.js, JavaScript, TypeScript, React 19, Next.js, Java, Spring Boot, SQL, DBMS, Computer Networks, Operating Systems, and System Design.",
+    url: `${SITE.url}/interview-prep`,
+    siteName: SITE.name,
+    type: "website"
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Technical Interview Questions and Answers — Real-World Engineering Codex | DevPrep",
+    description:
+      "500+ high-frequency, real-world technical interview questions and answers across Node.js, JavaScript, TypeScript, React 19, Next.js, Java, Spring Boot, SQL, DBMS, Computer Networks, Operating Systems, and System Design."
+  }
 };
 
 export default async function InterviewPrepHubPage() {
@@ -22,6 +36,39 @@ export default async function InterviewPrepHubPage() {
 
   const totalQuestions = stacks.reduce((acc, s) => acc + s.totalQuestions, 0);
   const totalSources = stacks.reduce((acc, s) => acc + s.sources.length, 0);
+
+  const breadcrumbsJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: SITE.url
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Interview Prep Codex",
+        item: `${SITE.url}/interview-prep`
+      }
+    ]
+  };
+
+  const collectionJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name: "Technical Interview Prep Codex",
+    description:
+      "Curated real-world developer interview questions and verified answers across modern technology stacks.",
+    url: `${SITE.url}/interview-prep`,
+    provider: {
+      "@type": "Organization",
+      name: SITE.name,
+      sameAs: SITE.url
+    }
+  };
 
   function getTechIcon(icon: string) {
     switch (icon) {
@@ -63,6 +110,9 @@ export default async function InterviewPrepHubPage() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 sm:px-6 py-12 sm:py-16">
+      <JsonLd data={breadcrumbsJsonLd} />
+      <JsonLd data={collectionJsonLd} />
+
       {/* ── Hero Section ── */}
       <header className="text-center max-w-3xl mx-auto mb-14">
         <div className="flex items-center justify-center gap-2 mb-3">

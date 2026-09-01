@@ -1,0 +1,115 @@
+
+Consecutive 1's not allowed
+https://www.geeksforgeeks.org/problems/consecutive-1s-not-allowed1912/1
+
+https://www.geeksforgeeks.org/problems/lcs-of-three-strings0028/1
+
+
+Count possible ways to construct buildings  https://www.geeksforgeeks.org/problems/count-possible-ways-to-construct-buildings5007/1
+Count subsequences of type a^i, b^j, c^k  https://www.geeksforgeeks.org/problems/count-subsequences-of-type-ai-bj-ck4425/1
+Number of Ways to Paint N × 3 Grid   https://leetcode.com/problems/number-of-ways-to-paint-n-3-grid/
+
+Best Time to Buy and Sell Stock https://leetcode.com/problems/best-time-to-buy-and-sell-stock/description/
+Best Time to Buy and Sell Stock II    https://leetcode.com/problems/best-time-to-buy-and-sell-stock-ii/
+Best Time to Buy and Sell Stock with Transaction Fee    https://leetcode.com/problems/best-time-to-buy-and-sell-stock-with-transaction-fee/
+Best Time to Buy and Sell Stock with Cooldown    https://leetcode.com/problems/best-time-to-buy-and-sell-stock-with-cooldown/
+Best Time to Buy and Sell Stock III   https://leetcode.com/problems/best-time-to-buy-and-sell-stock-iii/
+Best Time to Buy and Sell Stock IV    https://leetcode.com/problems/best-time-to-buy-and-sell-stock-iv/
+
+Matrix Chain Multiplication     https://leetcode.com/problems/matrix-chain-multiplication/
+Palindrome Partitioning     https://leetcode.com/problems/palindrome-partitioning/
+Scramble String   https://leetcode.com/problems/scramble-string/
+Boolean Parenthesization    https://leetcode.com/problems/boolean-parenthesization/
+
+
+
+
+Now Go to CSES Problem Set (https://cses.fi/problemset/) and Solve all dp problems.
+You can find solutions here - 
+Grid Paths I53097 / 54624   https://cses.fi/problemset/task/1636
+Book Shop47411 / 52228    https://cses.fi/problemset/task/1158  
+Array Description34925 / 38845    https://cses.fi/problemset/task/1094
+Counting Towers21170 / 22445    https://cses.fi/problemset/task/1743
+Edit Distance35111 / 37073    https://cses.fi/problemset/task/1639
+Longest Common Subsequence7377 / 7646   https://cses.fi/problemset/task/1693
+Rectangle Cutting29161 / 31871    https://cses.fi/problemset/task/1742
+Minimal Grid Path3139 / 5990    https://cses.fi/problemset/task/1745
+Money Sums34573 / 35908    https://cses.fi/problemset/task/1638
+Removal Game   https://cses.fi/problemset/task/1647
+https://github.com/shivam-bhadani/Competitive-Programming/tree/master/CSES/Dynamic%20Programming
+
+BitMask DP
+
+Minimum Number of Work Sessions to Finish the Tasks   https://leetcode.com/problems/minimum-number-of-work-sessions-to-finish-the-tasks/
+Partition to K Equal Sum Subsets  https://leetcode.com/problems/partition-to-k-equal-sum-subsets/
+U - Grouping    https://codeforces.com/problemset/problem/1777/C
+COURIER - The Courier  https://codeforces.com/problemset/problem/1719/C
+BABY - Baby  https://codeforces.com/problemset/problem/1543/D
+HELPBOB - Help Bob  https://codeforces.com/problemset/problem/1840/F
+
+Digit DP
+PR003004 - Digit Sum  https://www.spoj.com/problems/PR003004/  
+Count of Integers  https://www.spoj.com/problems/PR0111/  
+Unlucky Numbers  https://codeforces.com/problemset/problem/1729/E
+
+
+Meet-in-the-middle
+
+Closest Subsequence Sum  https://leetcode.com/problems/closest-subsequence-sum/
+Partition Array Into Two Arrays to Minimize Sum Difference  https://leetcode.com/problems/partition-array-into-two-arrays-to-minimize-sum-difference/
+
+
+
+Practice Problems
+
+Leetcode Medium
+
+Ugly Number II  https://leetcode.com/problems/ugly-number-ii/   
+Super Ugly Number  https://leetcode.com/problems/super-ugly-number/    
+Minimum Score Triangulation of Polygon   https://leetcode.com/problems/minimum-score-triangulation-of-polygon/    
+Fair Distribution of Cookies  https://leetcode.com/problems/fair-distribution-of-cookies/   
+Maximum Number of Points with Cost   https://leetcode.com/problems/maximum-number-of-points-with-cost/    
+
+Leetcode Hard
+Wildcard Matching   https://leetcode.com/problems/wildcard-matching/
+Regular Expression Matching  https://leetcode.com/problems/regular-expression-matching/
+Maximum Profit in Job Scheduling  https://leetcode.com/problems/maximum-profit-in-job-scheduling/
+Edit Distance  https://leetcode.com/problems/edit-distance/
+Burst Balloons  https://leetcode.com/problems/burst-balloons/
+Tallest Billboard  https://leetcode.com/problems/tallest-billboard/
+Student Attendance Record II  https://leetcode.com/problems/student-attendance-record-ii/
+Number of Increasing Paths in a Grid  https://leetcode.com/problems/number-of-increasing-paths-in-a-grid/
+Paths in Matrix Whose Sum Is Divisible by K  https://leetcode.com/problems/paths-in-matrix-whose-sum-is-divisible-by-k/
+Super Egg Drop  https://leetcode.com/problems/super-egg-drop/
+Number of Music Playlists  https://leetcode.com/problems/number-of-music-playlists/
+Minimum Cost to Merge Stones  https://leetcode.com/problems/minimum-cost-to-merge-stones/
+Number of Ways to Wear Different Hats to Each Other  https://leetcode.com/problems/number-of-ways-to-wear-different-hats-to-each-other/
+
+
+
+
+
+CP Problems
+
+https://atcoder.jp/contests/abc240/tasks/abc240_c
+https://codeforces.com/problemset/problem/1739/C
+https://codeforces.com/problemset/problem/1765/K
+https://codeforces.com/problemset/problem/1547/E
+https://codeforces.com/problemset/problem/1678/B2
+https://codeforces.com/problemset/problem/1677/A
+https://codeforces.com/problemset/problem/1633/D
+https://codeforces.com/problemset/problem/1398/C
+https://codeforces.com/contest/1741/problem/E
+https://codeforces.com/contest/1740/problem/E
+https://codeforces.com/problemset/problem/1787/C
+https://codeforces.com/contest/1703/problem/G
+https://codeforces.com/contest/1061/problem/C
+https://atcoder.jp/contests/abc248/tasks/abc248_c
+https://atcoder.jp/contests/abc247/tasks/abc247_c
+https://atcoder.jp/contests/abc242/tasks/abc242_c
+https://codeforces.com/problemset/problem/1749/D
+https://codeforces.com/problemset/problem/895/C
+https://codeforces.com/problemset/problem/1778/D
+https://codeforces.com/problemset/problem/1954/D
+https://codeforces.com/problemset/problem/1799/D1
+https://codeforces.com/contest/1716/problem/D

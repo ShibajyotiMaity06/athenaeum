@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { PRICING, type CurrencyCode } from "@/lib/site";
+import { PLANS, PRICING, type CurrencyCode, type PricingPlan } from "@/lib/site";
 
 let cached: Promise<CurrencyCode> | null = null;
 
@@ -29,9 +29,15 @@ function resolve(): Promise<CurrencyCode> {
 
 /**
  * Renders exactly ONE localized price based on the visitor's location —
- * India sees ₹399, everywhere else sees $9. Never both.
+ * India sees INR (₹399 / ₹299), everywhere else sees USD ($9 / $7).
  */
-export default function GeoPrice({ className = "" }: { className?: string }) {
+export default function GeoPrice({
+  className = "",
+  plan = "full"
+}: {
+  className?: string;
+  plan?: PricingPlan;
+}) {
   const [currency, setCurrency] = useState<CurrencyCode | null>(null);
 
   useEffect(() => {
@@ -50,9 +56,13 @@ export default function GeoPrice({ className = "" }: { className?: string }) {
       />
     );
   }
+
+  const selectedPlan = PLANS[plan] || PLANS.full;
+  const priceDisplay = selectedPlan[currency]?.display || selectedPlan.INR.display;
+
   return (
     <span className={className} suppressHydrationWarning>
-      {PRICING[currency].display}
+      {priceDisplay}
     </span>
   );
 }

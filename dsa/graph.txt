@@ -1,0 +1,159 @@
+Easy
+
+
+https://leetcode.com/problems/island-perimeter/description/       
+
+
+https://leetcode.com/problems/verifying-an-alien-dictionary/description/ 
+
+
+Medium 1
+
+
+
+
+
+
+
+
+
+(Premium) https://leetcode.com/problems/walls-and-gates/description/
+
+
+
+https://leetcode.com/problems/pacific-atlantic-water-flow/description/ Do again
+
+
+https://leetcode.com/problems/surrounded-regions/description/
+
+
+
+
+
+https://leetcode.com/problems/shortest-path-in-binary-matrix/description/
+
+
+https://leetcode.com/problems/open-the-lock/description/
+
+
+https://leetcode.com/problems/snakes-and-ladders/description/
+
+
+https://leetcode.com/problems/shortest-bridge/description/
+
+
+
+Medium 2
+(Premium) https://leetcode.com/problems/number-of-connected-components-in-an-undirected-graph/description/
+
+
+(Premium) https://leetcode.com/problems/graph-valid-tree/description/
+
+
+https://leetcode.com/problems/redundant-connection/description/
+
+
+https://leetcode.com/problems/accounts-merge/description/
+
+
+https://leetcode.com/problems/course-schedule/description/
+
+
+https://leetcode.com/problems/course-schedule-ii/description/
+
+
+https://leetcode.com/problems/course-schedule-iv/description/
+
+
+(Premium) https://leetcode.com/problems/alien-dictionary/description/
+
+
+https://leetcode.com/problems/minimum-height-trees/description/
+
+
+https://leetcode.com/problems/evaluate-division/description/
+
+
+https://leetcode.com/problems/path-with-minimum-effort/description/
+
+
+https://leetcode.com/problems/network-delay-time/description/
+
+
+https://leetcode.com/problems/cheapest-flights-within-k-stops/description/
+
+
+https://leetcode.com/problems/min-cost-to-connect-all-points/description/
+
+
+https://leetcode.com/problems/find-the-city-with-the-smallest-number-of-neighbors-at-a-threshold-distance/description/
+
+
+Hard 1
+https://leetcode.com/problems/word-ladder/description/
+
+
+https://leetcode.com/problems/reconstruct-itinerary/description/
+
+
+https://leetcode.com/problems/swim-in-rising-water/description/
+
+
+https://leetcode.com/problems/shortest-path-in-a-grid-with-obstacles-elimination/description/
+
+
+https://leetcode.com/problems/build-a-matrix-with-conditions/description/
+
+
+https://leetcode.com/problems/parallel-courses-iii/description/
+
+
+https://leetcode.com/problems/find-all-people-with-secret/description/
+
+
+Hard 2
+https://leetcode.com/problems/find-critical-and-pseudo-critical-edges-in-minimum-spanning-tree/description/
+
+
+https://leetcode.com/problems/greatest-common-divisor-traversal/description/
+
+
+https://leetcode.com/problems/making-a-large-island/description/
+
+
+https://leetcode.com/problems/checking-existence-of-edge-length-limited-paths/description/
+
+
+https://leetcode.com/problems/remove-max-number-of-edges-to-keep-graph-fully-traversable/description/
+
+
+https://leetcode.com/problems/maximum-number-of-non-overlapping-substrings/description/
+
+
+https://leetcode.com/problems/design-graph-with-shortest-path-calculator/description/
+
+
+Optional (Do only when all above are green)
+https://leetcode.com/problems/critical-connections-in-a-network/description/
+
+
+https://leetcode.com/problems/word-ladder-ii/description/
+
+
+https://leetcode.com/problems/longest-increasing-path-in-a-matrix/description/
+
+
+https://leetcode.com/problems/bus-routes/description/
+
+
+
+1. LeetCode 207: Course Schedule https://leetcode.com/problems/course-schedule/ 
+2. LeetCode 210: Course Schedule II https://leetcode.com/problems/course-schedule-ii/ 
+3. LeetCode 444: Sequence Reconstruction https://leetcode.com/problems/sequence-reconstruction/ 
+4. CSES: Course Schedule https://cses.fi/problemset/task/1103 
+5. LeetCode 269: Alien Dictionary https://leetcode.com/problems/alien-dictionary/ 
+6. Codeforces 510C: Fox And Names https://codeforces.com/problemset/problem/510/C 
+7. LeetCode 310: Minimum Height Trees https://leetcode.com/problems/minimum-height-trees/ 
+8. CSES: Task Assignment https://cses.fi/problemset/task/1641 
+9. Codeforces 1385E: Directing Edges https://codeforces.com/problemset/problem/1385/E 
+10. LeetCode 802: Find Eventual Safe States https://leetcode.com/problems/find-eventual-safe-states/ 

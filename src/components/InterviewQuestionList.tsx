@@ -63,12 +63,18 @@ export default function InterviewQuestionList({
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedId, setExpandedId] = useState<number | null>(1); // default expand first question
 
-  const easyCount = questions.filter((q) => q.difficulty === "Easy").length;
-  const mediumCount = questions.filter((q) => q.difficulty === "Medium").length;
-  const hardCount = questions.filter((q) => q.difficulty === "Hard").length;
+  const accessibleQuestions = useMemo(() => {
+    return hasAccess ? questions : questions.slice(0, FREE_QUESTIONS_LIMIT);
+  }, [hasAccess, questions]);
+
+  const lockedCount = Math.max(0, questions.length - accessibleQuestions.length);
+
+  const easyCount = accessibleQuestions.filter((q) => q.difficulty === "Easy").length;
+  const mediumCount = accessibleQuestions.filter((q) => q.difficulty === "Medium").length;
+  const hardCount = accessibleQuestions.filter((q) => q.difficulty === "Hard").length;
 
   const filteredQuestions = useMemo(() => {
-    return questions.filter((q) => {
+    return accessibleQuestions.filter((q) => {
       const matchesDiff =
         selectedDifficulty === "all" ||
         selectedDifficulty === "sources" ||
@@ -79,7 +85,7 @@ export default function InterviewQuestionList({
         q.answer.toLowerCase().includes(searchQuery.toLowerCase());
       return matchesDiff && matchesSearch;
     });
-  }, [questions, selectedDifficulty, searchQuery]);
+  }, [accessibleQuestions, selectedDifficulty, searchQuery]);
 
   function getDifficultyColor(diff: InterviewDifficulty) {
     switch (diff) {
@@ -109,7 +115,7 @@ export default function InterviewQuestionList({
                 : "bg-[var(--bg-recessed)] text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-card)] border border-[var(--border-recessed)]"
             }`}
           >
-            All Questions ({questions.length})
+            All Questions ({hasAccess ? questions.length : `${accessibleQuestions.length} Free`})
           </button>
           <button
             type="button"
@@ -190,10 +196,10 @@ export default function InterviewQuestionList({
             </div>
             <div>
               <p className="text-xs font-mono font-bold text-[var(--text-primary)]">
-                Preview Mode Active · First 5 Questions Free
+                Preview Mode Active · 5 Free Sample Questions
               </p>
               <p className="text-[11px] text-[var(--text-muted)] mt-0.5">
-                Review initial verified answers with code patterns. Unlock all {questions.length} questions + verified solutions with the Interview Key (₹299) or All-Access Pass (₹399).
+                Review verified answers and code patterns below. The remaining {lockedCount} questions in this codex are unlocked with the Interview Pass or Full Access.
               </p>
             </div>
           </div>
@@ -253,70 +259,79 @@ export default function InterviewQuestionList({
         </div>
       ) : (
         /* ── View 2: Questions Feed ── */
-        <div className="space-y-4">
-          {filteredQuestions.length === 0 ? (
-            <div className="industrial-card p-12 text-center text-[var(--text-muted)] font-mono text-xs">
-              No questions found matching your search.
-            </div>
-          ) : (
-            filteredQuestions.map((q, idx) => {
-              const isFreePreview = q.id <= FREE_QUESTIONS_LIMIT;
-              const isUnlocked = hasAccess || isFreePreview;
-              const isExpanded = expandedId === q.id;
-
-              return (
-                <div
-                  key={q.id}
-                  id={`q-${q.id}`}
-                  className="industrial-card p-5 sm:p-6 transition-all rounded-xl border border-[var(--border-card)]"
-                >
-                  {/* Header / Question Title */}
-                  <div
-                    onClick={() => setExpandedId(isExpanded ? null : q.id)}
-                    className="cursor-pointer flex items-start justify-between gap-4 select-none"
+        <div className="space-y-6">
+          <div className="space-y-4">
+            {filteredQuestions.length === 0 ? (
+              <div className="industrial-card p-10 text-center space-y-3">
+                <p className="text-xs font-mono text-[var(--text-muted)]">
+                  {searchQuery
+                    ? `No questions matching "${searchQuery}" in the ${hasAccess ? "codex" : "5 free preview questions"}.`
+                    : "No questions found in this category."}
+                </p>
+                {!hasAccess && (
+                  <p className="text-xs text-[var(--text-muted)]">
+                    The remaining {lockedCount} {stackName} questions are unlocked with the Interview Pass.
+                  </p>
+                )}
+                {!hasAccess && (
+                  <Link
+                    href="/pricing?plan=interview"
+                    className="btn-industrial btn-industrial-primary py-2 px-5 text-xs font-mono inline-flex"
                   >
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono text-xs font-bold text-[var(--accent)]">
-                          Q{q.id.toString().padStart(2, "0")}
-                        </span>
-                        <span
-                          className={`text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded border ${getDifficultyColor(
-                            q.difficulty
-                          )}`}
-                        >
-                          {q.difficulty}
-                        </span>
-                        {isFreePreview && !hasAccess && (
-                          <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
-                            FREE PREVIEW
+                    <span>Unlock All {questions.length} Questions</span>
+                  </Link>
+                )}
+              </div>
+            ) : (
+              filteredQuestions.map((q) => {
+                const isExpanded = expandedId === q.id;
+
+                return (
+                  <div
+                    key={q.id}
+                    id={`q-${q.id}`}
+                    className="industrial-card p-5 sm:p-6 transition-all rounded-xl border border-[var(--border-card)]"
+                  >
+                    {/* Header / Question Title */}
+                    <div
+                      onClick={() => setExpandedId(isExpanded ? null : q.id)}
+                      className="cursor-pointer flex items-start justify-between gap-4 select-none"
+                    >
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono text-xs font-bold text-[var(--accent)]">
+                            Q{q.id.toString().padStart(2, "0")}
                           </span>
-                        )}
-                        {!isUnlocked && (
-                          <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded bg-[var(--bg-recessed)] text-[var(--text-muted)] flex items-center gap-1 border border-[var(--border-recessed)]">
-                            <Lock className="w-3 h-3 text-amber-500" />
-                            LOCKED
+                          <span
+                            className={`text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded border ${getDifficultyColor(
+                              q.difficulty
+                            )}`}
+                          >
+                            {q.difficulty}
                           </span>
-                        )}
+                          {!hasAccess && (
+                            <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
+                              FREE PREVIEW
+                            </span>
+                          )}
+                        </div>
+                        <h3 className="text-base sm:text-lg font-bold text-[var(--text-primary)] leading-snug">
+                          {formatInlineAnswer(q.question)}
+                        </h3>
                       </div>
-                      <h3 className="text-base sm:text-lg font-bold text-[var(--text-primary)] leading-snug">
-                        {formatInlineAnswer(q.question)}
-                      </h3>
+
+                      <button
+                        type="button"
+                        aria-label="Toggle answer"
+                        className="p-1 rounded-md text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-recessed)] transition-colors mt-1"
+                      >
+                        {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                      </button>
                     </div>
 
-                    <button
-                      type="button"
-                      aria-label="Toggle answer"
-                      className="p-1 rounded-md text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-recessed)] transition-colors mt-1"
-                    >
-                      {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-                    </button>
-                  </div>
-
-                  {/* Body / Answer */}
-                  {isExpanded && (
-                    <div className="mt-5 pt-5 border-t border-[var(--border-recessed)]">
-                      {isUnlocked ? (
+                    {/* Body / Answer */}
+                    {isExpanded && (
+                      <div className="mt-5 pt-5 border-t border-[var(--border-recessed)]">
                         <div className="space-y-5">
                           {/* Answer text / Code formatting */}
                           <div className="text-sm text-[var(--text-primary)] leading-relaxed space-y-3 font-sans">
@@ -371,42 +386,44 @@ export default function InterviewQuestionList({
                             </div>
                           )}
                         </div>
-                      ) : (
-                        /* Locked Paywall Card */
-                        <div className="relative rounded-xl overflow-hidden p-6 text-center border-2 border-dashed border-amber-500/40 bg-gradient-to-b from-amber-500/5 to-transparent space-y-4">
-                          <div className="w-10 h-10 rounded-full bg-amber-500/10 text-amber-600 flex items-center justify-center mx-auto">
-                            <Lock className="w-5 h-5" />
-                          </div>
-                          <div>
-                            <h4 className="text-base font-bold text-[var(--text-primary)]">
-                              Scholar Model Answer is Locked
-                            </h4>
-                            <p className="text-xs text-[var(--text-muted)] max-w-md mx-auto mt-1 leading-relaxed">
-                              This deep-dive architectural explanation, code walkthrough, and citation links are restricted to verified pass holders.
-                            </p>
-                          </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })
+            )}
+          </div>
 
-                          <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
-                            <Link
-                              href="/pricing?plan=interview"
-                              className="btn-industrial btn-industrial-primary py-2.5 px-6 text-xs font-mono"
-                            >
-                              <span>Unlock Interview Pass — ₹299</span>
-                            </Link>
-                            <Link
-                              href="/pricing?plan=full"
-                              className="btn-industrial btn-industrial-secondary py-2.5 px-6 text-xs font-mono"
-                            >
-                              <span>Get All-Access (3,600+ Qs) — ₹399</span>
-                            </Link>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              );
-            })
+          {/* Locked Paywall Card for Unpaid Users */}
+          {!hasAccess && lockedCount > 0 && (
+            <div className="p-8 sm:p-10 rounded-2xl bg-gradient-to-br from-[#2d3436] to-[#1e272e] text-white shadow-[var(--shadow-floating)] border border-[#1e272e] text-center space-y-4">
+              <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-[rgba(255,71,87,0.2)] text-[var(--accent)] mb-2">
+                <Lock className="w-6 h-6" />
+              </div>
+              <h3 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+                Unlock the remaining {lockedCount} {stackName} Questions &amp; Verified Answers
+              </h3>
+              <p className="text-xs sm:text-sm text-[#a8b2d1] max-w-xl mx-auto leading-relaxed">
+                You have reached the end of the 5 free preview questions. Get unrestricted lifetime access to all {questions.length} questions, model solutions, architectural blueprints, and complete DSA codex.
+              </p>
+              <div className="pt-3 flex flex-col sm:flex-row items-center justify-center gap-3">
+                <Link
+                  href="/pricing?plan=interview"
+                  className="btn-industrial btn-industrial-primary py-3 px-8 text-xs font-mono w-full sm:w-auto"
+                >
+                  <span>Unlock Interview Key — ₹299</span>
+                </Link>
+                <Link
+                  href="/pricing?plan=full"
+                  className="btn-industrial btn-industrial-secondary py-3 px-8 text-xs font-mono w-full sm:w-auto"
+                >
+                  <span>Get All-Access Scholar Pass — ₹399</span>
+                </Link>
+              </div>
+              <p className="text-[11px] font-mono text-[#a8b2d1]">
+                One-time settlement · Lifetime access · Zero recurring bills
+              </p>
+            </div>
           )}
         </div>
       )}

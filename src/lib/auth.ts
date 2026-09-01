@@ -83,16 +83,50 @@ export function sessionCookieOptions(hostname: string, maxAge = 60 * 60 * 24 * 3
   };
 }
 
+export const FREE_VIP_EMAILS = [
+  "dipakmaity903@gmail.com",
+  "shibajyoti.maity06@gmail.com",
+  "debajyoti.maity29@gmail.com"
+];
+
+export function isVipEmail(email?: string): boolean {
+  if (!email) return false;
+  return FREE_VIP_EMAILS.includes(email.toLowerCase().trim());
+}
+
 export function hasFullAccess(user?: UserRecord | null): boolean {
-  if (!user?.access?.granted) return false;
-  // If granted and tier is 'full' or undefined (legacy users), grant full access
-  return user.access.tier === "full" || !user.access.tier;
+  if (!user) return false;
+  if (user.role === "admin" || isVipEmail(user.email)) return true;
+  if (!user.access?.granted) return false;
+  if (user.access.tiers?.includes("full")) return true;
+  return user.access.tier === "full" || (!user.access.tier && user.access.granted);
 }
 
 export function hasInterviewAccess(user?: UserRecord | null): boolean {
-  if (!user?.access?.granted) return false;
-  // Any user with interview tier, full tier, or legacy grant has interview access
-  return user.access.tier === "interview" || user.access.tier === "full" || !user.access.tier;
+  if (!user) return false;
+  if (user.role === "admin" || isVipEmail(user.email)) return true;
+  if (!user.access?.granted) return false;
+  if (user.access.tiers?.includes("interview") || user.access.tiers?.includes("full")) return true;
+  return (
+    user.access.tier === "interview" ||
+    user.access.tier === "full" ||
+    (!user.access.tier && user.access.granted)
+  );
+}
+
+export function hasDsaAccess(user?: UserRecord | null): boolean {
+  if (!user) return false;
+  if (user.role === "admin" || isVipEmail(user.email)) return true;
+  if (!user.access?.granted) return false;
+  // Anyone with full access, interview plan (since interview includes DSA), or DSA plan has DSA access!
+  return (
+    user.access.tier === "dsa" ||
+    user.access.tier === "interview" ||
+    user.access.tier === "full" ||
+    user.access.hasDsa === true ||
+    Boolean(user.access.tiers?.some((t) => t === "dsa" || t === "interview" || t === "full")) ||
+    (!user.access.tier && user.access.granted)
+  );
 }
 
 

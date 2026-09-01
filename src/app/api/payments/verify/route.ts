@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
     if (rzpOrder) {
       amount = rzpOrder.amount ?? amount;
       currency = rzpOrder.currency ?? currency;
-      if (rzpOrder.notes?.plan === "interview" || rzpOrder.notes?.plan === "full") {
+      if (rzpOrder.notes?.plan === "dsa" || rzpOrder.notes?.plan === "interview" || rzpOrder.notes?.plan === "full") {
         tier = rzpOrder.notes.plan;
       }
     }

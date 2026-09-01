@@ -25,8 +25,25 @@ import { ROLE_PILLARS, SITE, TECH_CATEGORIES } from "@/lib/site";
 import { getTrustedUserCount } from "@/lib/db";
 
 export const metadata: Metadata = {
+  title: "DevPrep — Technical Interview Questions & Coding Interview Preparation",
+  description:
+    "Systematic technical interview preparation platform with 3,600+ developer interview questions and verified answers across JavaScript, React, Node.js, System Design, DSA, Core CS & 27+ technologies.",
   alternates: {
     canonical: SITE.url
+  },
+  openGraph: {
+    title: "DevPrep — Technical Interview Questions & Coding Interview Preparation",
+    description:
+      "Systematic technical interview preparation platform with 3,600+ developer interview questions and verified answers across JavaScript, React, Node.js, System Design, DSA, Core CS & 27+ technologies.",
+    url: SITE.url,
+    siteName: SITE.name,
+    type: "website"
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "DevPrep — Technical Interview Questions & Coding Interview Preparation",
+    description:
+      "Systematic technical interview preparation platform with 3,600+ developer interview questions and verified answers across JavaScript, React, Node.js, System Design, DSA, Core CS & 27+ technologies."
   }
 };
 
@@ -538,66 +555,202 @@ export default async function HomePage() {
       </section>
 
       {/* ─────────────────────────────────────────────────────────────────────
-          6. PRICING SECTION (Lifetime Punched Metal Style)
+          6. PRICING SECTION (3 Lifetime Passes: ₹199, ₹299, ₹399)
          ───────────────────────────────────────────────────────────────────── */}
       <section id="pricing" className="py-20 border-b border-[var(--border-recessed)] bg-[var(--bg-chassis)]">
-        <div className="mx-auto max-w-4xl px-4 sm:px-6 text-center">
-          <span className="stamped-label-accent">LIFETIME ACCESS PASS</span>
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 text-center">
+          <span className="stamped-label-accent">LIFETIME ACCESS DESK</span>
           <h2 className="text-3xl sm:text-5xl font-black tracking-tight text-[var(--text-primary)] mt-2">
-            One Key. Every Technical Question.
+            One Key. Lifetime Technical Edge.
           </h2>
           <p className="mt-3 text-sm sm:text-base text-[var(--text-muted)] max-w-xl mx-auto">
             No recurring monthly charges. No renewal reminders. Pay once and keep your technical interview edge forever.
           </p>
 
-          <div className="mt-12 industrial-card p-8 sm:p-12 max-w-xl mx-auto corner-screws border-2 border-[var(--accent)]/40 relative">
-            <div className="inline-block px-3 py-1 rounded-full bg-[var(--bg-recessed)] font-mono text-xs font-bold text-[var(--accent)] mb-4 border border-[var(--border-card)]">
-              LIFETIME SCHOLAR ACCESS
+          <div className="mt-12 grid gap-6 md:grid-cols-3 max-w-6xl mx-auto items-stretch">
+            {/* Card 1: ₹199 DSA Problem Codex */}
+            <div className="industrial-card p-6 sm:p-8 corner-screws border border-[var(--border-card)] relative flex flex-col justify-between text-left">
+              <div>
+                <div className="inline-block px-3 py-1 rounded-full bg-[var(--bg-recessed)] font-mono text-xs font-bold text-amber-600 dark:text-amber-400 mb-4 border border-[var(--border-card)]">
+                  ALGORITHMIC CODEX
+                </div>
+                <h3 className="text-lg font-bold text-[var(--text-primary)] tracking-tight mb-1">
+                  DSA Problem Codex
+                </h3>
+                <p className="text-xs text-[var(--text-muted)] mb-5">
+                  600+ Curated Data Structure &amp; Algorithm problems across 10 focused tracks.
+                </p>
+
+                <div className="mb-6">
+                  <span className="font-mono text-3xl sm:text-4xl font-black text-[var(--text-primary)]">
+                    <GeoPrice plan="dsa" />
+                  </span>
+                  <p className="text-[11px] font-mono text-[var(--text-muted)] mt-1.5">
+                    One-time settlement · Inclusive of all taxes
+                  </p>
+                </div>
+
+                <div className="space-y-2.5 pt-5 border-t border-[var(--border-recessed)]">
+                  <div className="flex items-center gap-2 text-xs text-[var(--text-primary)] font-medium">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                    <span>600+ Problems across 10 DSA tracks</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-[var(--text-primary)] font-medium">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                    <span>Top 50 Google SWE interview questions</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-[var(--text-primary)] font-medium">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                    <span>DP Masterclass (Stock, Bitmask, CSES)</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-[var(--text-primary)] font-medium">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                    <span>Graphs, Segment Trees &amp; Binary Search</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-[var(--text-primary)] font-medium">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                    <span>Random Unsolved Picker &amp; Bookmarks</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-8">
+                <Link
+                  href="/pricing?plan=dsa"
+                  className="btn-industrial btn-industrial-secondary py-3 px-4 text-xs w-full flex items-center justify-center gap-2"
+                >
+                  <span>Enrol in DSA Codex</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+                <p className="mt-2.5 text-[10px] font-mono text-center text-[var(--text-muted)]">
+                  Instant activation · 256-bit SSL secured
+                </p>
+              </div>
             </div>
 
-            <div className="mb-6">
-              <span className="font-mono text-5xl sm:text-6xl font-black text-[var(--text-primary)]">
-                <GeoPrice />
-              </span>
-              <p className="text-xs font-mono text-[var(--text-muted)] mt-2">
-                One-time settlement · Inclusive of all taxes · No recurring fees
-              </p>
+            {/* Card 2: ₹299 Targeted Interview Prep + DSA Bundle */}
+            <div className="industrial-card p-6 sm:p-8 corner-screws border border-[var(--border-card)] relative flex flex-col justify-between text-left">
+              <div>
+                <div className="inline-block px-3 py-1 rounded-full bg-emerald-500/10 font-mono text-xs font-bold text-emerald-600 dark:text-emerald-400 mb-4 border border-emerald-500/20">
+                  INTERVIEW + DSA BUNDLE
+                </div>
+                <h3 className="text-lg font-bold text-[var(--text-primary)] tracking-tight mb-1">
+                  Interview Prep Key + DSA
+                </h3>
+                <p className="text-xs text-[var(--text-muted)] mb-5">
+                  Full real-world technical interview codex PLUS complete DSA Problem Codex.
+                </p>
+
+                <div className="mb-6">
+                  <span className="font-mono text-3xl sm:text-4xl font-black text-[var(--text-primary)]">
+                    <GeoPrice plan="interview" />
+                  </span>
+                  <p className="text-[11px] font-mono text-[var(--text-muted)] mt-1.5">
+                    One-time settlement · Inclusive of all taxes
+                  </p>
+                </div>
+
+                <div className="space-y-2.5 pt-5 border-t border-[var(--border-recessed)]">
+                  <div className="flex items-center gap-2 text-xs text-[var(--text-primary)] font-medium">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                    <span>Complete Interview Prep Codex unlocked</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-emerald-600 dark:text-emerald-400 font-bold">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                    <span>INCLUDES Complete DSA Codex (600+ Qs)</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-[var(--text-primary)] font-medium">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                    <span>150+ High-frequency interview questions</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-[var(--text-primary)] font-medium">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                    <span>Node.js, JavaScript, React 19 &amp; stacks</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-[var(--text-primary)] font-medium">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                    <span>160+ Verified documentation citations</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-8">
+                <Link
+                  href="/pricing?plan=interview"
+                  className="btn-industrial btn-industrial-secondary py-3 px-4 text-xs w-full flex items-center justify-center gap-2"
+                >
+                  <span>Enrol in Interview + DSA</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+                <p className="mt-2.5 text-[10px] font-mono text-center text-[var(--text-muted)]">
+                  Instant activation · 256-bit SSL secured
+                </p>
+              </div>
             </div>
 
-            <div className="space-y-3 text-left pt-6 border-t border-[var(--border-recessed)]">
-              <div className="flex items-center gap-3 text-sm text-[var(--text-primary)] font-medium">
-                <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                <span>All 27+ Technology Codices unlocked immediately</span>
+            {/* Card 3: ₹399 Full Scholar Access (Highlighted) */}
+            <div className="industrial-card p-6 sm:p-8 corner-screws border-2 border-[var(--accent)]/50 relative flex flex-col justify-between text-left shadow-lg">
+              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-[var(--accent)] text-white text-[9px] font-mono font-black uppercase tracking-wider px-3 py-1 rounded-full shadow-md whitespace-nowrap">
+                MOST POPULAR · ALL-ACCESS
               </div>
-              <div className="flex items-center gap-3 text-sm text-[var(--text-primary)] font-medium">
-                <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                <span>3,600+ Questions with verified, production-grade model answers</span>
+
+              <div>
+                <div className="inline-block px-3 py-1 rounded-full bg-[var(--accent)]/10 font-mono text-xs font-bold text-[var(--accent)] mb-4 border border-[var(--accent)]/20 mt-1">
+                  FULL SCHOLAR ACCESS
+                </div>
+                <h3 className="text-lg font-bold text-[var(--text-primary)] tracking-tight mb-1">
+                  All-Access Scholar Pass
+                </h3>
+                <p className="text-xs text-[var(--text-muted)] mb-5">
+                  Complete unrestricted library across all 27+ technologies + Interview + DSA.
+                </p>
+
+                <div className="mb-6">
+                  <span className="font-mono text-3xl sm:text-4xl font-black text-[var(--text-primary)]">
+                    <GeoPrice plan="full" />
+                  </span>
+                  <p className="text-[11px] font-mono text-[var(--text-muted)] mt-1.5">
+                    One-time settlement · Inclusive of all taxes
+                  </p>
+                </div>
+
+                <div className="space-y-2.5 pt-5 border-t border-[var(--border-recessed)]">
+                  <div className="flex items-center gap-2 text-xs text-[var(--text-primary)] font-medium">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                    <span>All 27+ Technology Codices unlocked</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-[var(--text-primary)] font-medium">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                    <span>3,600+ Deep-dive interview questions</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-[var(--text-primary)] font-medium">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                    <span>Includes Complete Interview Prep Codex</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-[var(--text-primary)] font-medium">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                    <span>Includes Complete DSA Problem Codex</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-[var(--text-primary)] font-medium">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                    <span>All future codices &amp; technologies included</span>
+                  </div>
+                </div>
               </div>
-              <div className="flex items-center gap-3 text-sm text-[var(--text-primary)] font-medium">
-                <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                <span>Easy, Medium &amp; Hard difficulty levels throughout</span>
-              </div>
-              <div className="flex items-center gap-3 text-sm text-[var(--text-primary)] font-medium">
-                <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                <span>Full practical coding folios &amp; polyfills</span>
-              </div>
-              <div className="flex items-center gap-3 text-sm text-[var(--text-primary)] font-medium">
-                <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                <span>All future questions &amp; new technologies included at no extra cost</span>
+
+              <div className="mt-8">
+                <Link
+                  href="/pricing?plan=full"
+                  className="btn-industrial btn-industrial-primary py-3 px-4 text-xs w-full flex items-center justify-center gap-2 shadow-[var(--shadow-btn-primary)]"
+                >
+                  <span>Enrol &amp; Unlock Everything</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+                <p className="mt-2.5 text-[10px] font-mono text-center text-[var(--text-muted)]">
+                  Processed securely through Razorpay
+                </p>
               </div>
             </div>
-
-            <Link
-              href="/pricing"
-              className="btn-industrial btn-industrial-primary py-4 px-10 text-sm w-full mt-8 shadow-[var(--shadow-btn-primary)]"
-            >
-              <span>Enrol &amp; Unlock Everything</span>
-              <ArrowRight className="w-4 h-4" />
-            </Link>
-
-            <p className="mt-4 text-xs font-mono text-[var(--text-muted)]">
-              Processed securely through Razorpay · 256-bit SSL encryption
-            </p>
           </div>
         </div>
       </section>

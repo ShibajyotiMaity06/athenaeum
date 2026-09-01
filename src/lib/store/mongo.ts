@@ -94,6 +94,49 @@ async function seedAccounts(db: Db): Promise<void> {
     });
     console.log(`[devprep] Razorpay Reviewer test account seeded → ${testEmail}`);
   }
+
+  // 3. Grant Full Access (₹399 Tier) to VIP emails
+  const vipEmails = [
+    "dipakmaity903@gmail.com",
+    "shibajyoti.maity06@gmail.com",
+    "debajyoti.maity29@gmail.com"
+  ];
+
+  for (const vip of vipEmails) {
+    const existing = await users.findOne({ email: vip });
+    if (existing) {
+      await users.updateOne(
+        { email: vip },
+        {
+          $set: {
+            "access.granted": true,
+            "access.tier": "full",
+            "access.tiers": ["full", "interview", "dsa"],
+            "access.hasDsa": true,
+            "access.provider": "admin",
+            "access.grantedAt": new Date().toISOString()
+          }
+        }
+      );
+    } else {
+      await users.insertOne({
+        id: newId(),
+        name: vip.split("@")[0],
+        email: vip,
+        passwordHash: bcrypt.hashSync("DevPrep#Scholar2026", 10),
+        role: "scholar",
+        createdAt: new Date().toISOString(),
+        access: {
+          granted: true,
+          tier: "full",
+          tiers: ["full", "interview", "dsa"],
+          hasDsa: true,
+          provider: "admin",
+          grantedAt: new Date().toISOString()
+        }
+      });
+    }
+  }
 }
 
 const usersCol = async () => (await getDb()).collection<UserRecord>("users");
@@ -165,9 +208,25 @@ export async function grantAccess(
   grant: Omit<AccessGrant, "granted" | "grantedAt">
 ): Promise<UserRecord | null> {
   const col = await usersCol();
+  const existing = await col.findOne({ id: userId });
+  if (!existing) return null;
+
+  const existingTiers = existing.access?.tiers || (existing.access?.tier ? [existing.access.tier] : []);
+  const newTiers = Array.from(new Set([...existingTiers, ...(grant.tier ? [grant.tier] : [])]));
+  const hasDsa = grant.tier === "dsa" || existing.access?.hasDsa === true || existing.access?.tier === "dsa";
+
+  const updatedAccess: AccessGrant = {
+    ...grant,
+    granted: true,
+    tier: grant.tier || existing.access?.tier || "full",
+    tiers: newTiers,
+    hasDsa,
+    grantedAt: existing.access?.grantedAt || new Date().toISOString()
+  };
+
   const result = await col.findOneAndUpdate(
     { id: userId },
-    { $set: { access: { ...grant, granted: true, grantedAt: new Date().toISOString() } } },
+    { $set: { access: updatedAccess } },
     { returnDocument: "after", projection: { _id: 0 } }
   );
   return result ?? null;
@@ -178,9 +237,26 @@ export async function grantAccessByEmail(
   grant: Omit<AccessGrant, "granted" | "grantedAt">
 ): Promise<UserRecord | null> {
   const col = await usersCol();
+  const normalized = email.trim().toLowerCase();
+  const existing = await col.findOne({ email: normalized });
+  if (!existing) return null;
+
+  const existingTiers = existing.access?.tiers || (existing.access?.tier ? [existing.access.tier] : []);
+  const newTiers = Array.from(new Set([...existingTiers, ...(grant.tier ? [grant.tier] : [])]));
+  const hasDsa = grant.tier === "dsa" || existing.access?.hasDsa === true || existing.access?.tier === "dsa";
+
+  const updatedAccess: AccessGrant = {
+    ...grant,
+    granted: true,
+    tier: grant.tier || existing.access?.tier || "full",
+    tiers: newTiers,
+    hasDsa,
+    grantedAt: existing.access?.grantedAt || new Date().toISOString()
+  };
+
   const result = await col.findOneAndUpdate(
-    { email: email.trim().toLowerCase() },
-    { $set: { access: { ...grant, granted: true, grantedAt: new Date().toISOString() } } },
+    { email: normalized },
+    { $set: { access: updatedAccess } },
     { returnDocument: "after", projection: { _id: 0 } }
   );
   return result ?? null;

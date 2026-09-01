@@ -12,20 +12,20 @@ function getCanonicalSiteUrl(): string {
 
 export const SITE = {
   name: "DevPrep",
-  tagline: "Systematic Technical Interview Preparation",
+  tagline: "Systematic Technical Interview Preparation & Coding Questions",
   headline: "Stop preparing randomly. Prepare systematically.",
   url: getCanonicalSiteUrl(),
   description:
-    "3,600+ curated technical interview questions across React, JavaScript, Node.js, TypeScript, SQL, DBMS, OS, Docker, System Design & 20+ technologies. Organized Easy to Hard. ₹399 lifetime access.",
+    "3,600+ curated technical interview questions and answers across JavaScript, React, Node.js, Next.js, TypeScript, SQL, DBMS, Operating Systems, Computer Networks, System Design (HLD/LLD), DevOps & DSA tracks.",
   shortDescription:
-    "Systematic technical interview prep platform with 3,600+ questions across 27+ technologies.",
+    "Comprehensive technical interview preparation platform with 3,600+ developer interview questions and verified model answers across 27+ technologies.",
   totalQuestions: "3,600+",
   totalTechnologies: "27+",
   levelsCount: 3
 } as const;
 
-export type AccessTier = "full" | "interview";
-export type PricingPlan = "full" | "interview";
+export type AccessTier = "full" | "interview" | "dsa";
+export type PricingPlan = "full" | "interview" | "dsa";
 
 export const PLANS = {
   full: {
@@ -33,31 +33,47 @@ export const PLANS = {
     name: "Full Scholar Access",
     badge: "MOST POPULAR · ALL-ACCESS",
     shortName: "All-Access Pass",
-    description: "Complete unrestricted lifetime access to all 3,600+ questions across 27+ technologies + Complete Interview Prep section + All future additions.",
+    description: "Complete unrestricted lifetime access to all 3,600+ questions across 27+ technologies + Complete Interview Prep Codex + Complete DSA Problem Codex + All future additions.",
     INR: { amount: 39900, display: "₹399", note: "India — one-time, lifetime access, inclusive of all taxes" },
     USD: { amount: 900, display: "$9", note: "International — one-time, lifetime access" },
     features: [
       "All 3,600+ deep-dive questions across 27+ technologies",
-      "Full unrestricted access to new Interview Prep section",
+      "Includes Complete Interview Prep Codex",
+      "Includes Complete DSA Problem Codex (600+ Questions)",
       "Easy, Medium & Hard comprehensive verified answers",
-      "All official documentation citations & source references",
       "Lifetime updates & all future codices included"
     ]
   },
   interview: {
     id: "interview" as const,
-    name: "Interview Prep Key",
-    badge: "TARGETED INTERVIEW PREP",
-    shortName: "Interview Pack",
-    description: "Full lifetime access to curated real-world interview questions across Node.js, JavaScript, React & modern tech with verified answers and sources.",
+    name: "Interview Prep Key + DSA",
+    badge: "INTERVIEW + DSA BUNDLE",
+    shortName: "Interview + DSA",
+    description: "Full lifetime access to curated real-world interview questions across modern stacks PLUS Complete DSA Problem Codex (600+ Questions across 10 tracks)!",
     INR: { amount: 29900, display: "₹299", note: "India — one-time, lifetime access, inclusive of all taxes" },
     USD: { amount: 700, display: "$7", note: "International — one-time, lifetime access" },
     features: [
-      "Full access to complete Interview Prep codex",
-      "150+ high-frequency real-world technical interview questions",
+      "Full access to Complete Interview Prep Codex",
+      "Includes Complete DSA Problem Codex (600+ Questions)",
+      "150+ High-frequency real-world technical interview questions",
       "Node.js, JavaScript, React 19 & modern engineering stacks",
-      "160+ curated official documentation source URLs",
-      "Detailed architectural answers & practical code patterns"
+      "160+ Curated official documentation source URLs"
+    ]
+  },
+  dsa: {
+    id: "dsa" as const,
+    name: "DSA Problem Codex",
+    badge: "ALGORITHMIC CODEX",
+    shortName: "DSA Codex",
+    description: "Standalone lifetime access to 600+ curated Data Structures & Algorithms problems across 10 tracks, Google Top 50, Dynamic Programming, Graphs, Segment Trees, Binary Search & random problem engine.",
+    INR: { amount: 19900, display: "₹199", note: "India — one-time, lifetime access, inclusive of all taxes" },
+    USD: { amount: 500, display: "$5", note: "International — one-time, lifetime access" },
+    features: [
+      "Full access to all 600+ curated DSA interview problems",
+      "Top 50 Google SWE interview questions with acceptance rates",
+      "DP Masterclass (Stock, Bitmask, Digit DP, CSES & CP)",
+      "Graph & Trees, Segment Trees, Binary Search & Two Pointers",
+      "Random Unsolved Problem Picker & Bookmark Engine"
     ]
   }
 } as const;
@@ -67,7 +83,8 @@ export const PRICING = PLANS.full;
 
 export type CurrencyCode = "INR" | "USD";
 
-export const PROMO_CODES: Record<string, { discountPercent: number; label: string }> = {
+export const PROMO_CODES: Record<string, { discountPercent: number; label: string; planOnly?: PricingPlan }> = {
+  DSA10: { discountPercent: 50, label: "50% DSA Codex Discount", planOnly: "dsa" },
   EFGH: { discountPercent: 30, label: "30% Scholar Discount" },
   ATHENAEUM10: { discountPercent: 10, label: "10% Athenaeum Pass Discount" },
   SCHOLAR10: { discountPercent: 10, label: "10% Scholar Community Discount" },
@@ -106,7 +123,7 @@ export function calculatePromoPrice(
     currency = planOrCurrency;
     promoRaw = typeof currencyOrPromo === "string" ? currencyOrPromo : promoCodeInput;
   } else {
-    plan = planOrCurrency === "interview" ? "interview" : "full";
+    plan = planOrCurrency === "dsa" ? "dsa" : planOrCurrency === "interview" ? "interview" : "full";
     if (currencyOrPromo === "INR" || currencyOrPromo === "USD") {
       currency = currencyOrPromo;
     }
@@ -134,6 +151,59 @@ export function calculatePromoPrice(
       display: base.display,
       originalDisplay: base.display,
       savingsDisplay: currency === "INR" ? "₹0" : "$0"
+    };
+  }
+
+  // DSA10 promo code specific handling (50% discount making it exactly ₹99 / $2.50)
+  if (rawCode === "DSA10") {
+    if (plan !== "dsa") {
+      return {
+        valid: false,
+        plan,
+        discountPercent: 0,
+        originalAmount: base.amount,
+        discountAmount: 0,
+        finalAmount: base.amount,
+        display: base.display,
+        originalDisplay: base.display,
+        savingsDisplay: currency === "INR" ? "₹0" : "$0",
+        message: "Promo code DSA10 is valid exclusively for the DSA Problem Codex (₹199) plan."
+      };
+    }
+
+    const finalAmount = currency === "INR" ? 9900 : 250;
+    const discountAmount = base.amount - finalAmount;
+    const display = currency === "INR" ? "₹99" : "$2.50";
+    const savingsDisplay = currency === "INR" ? "₹100" : "$2.50";
+
+    return {
+      valid: true,
+      code: "DSA10",
+      plan: "dsa",
+      discountPercent: 50,
+      originalAmount: base.amount,
+      discountAmount,
+      finalAmount,
+      display,
+      originalDisplay: base.display,
+      savingsDisplay,
+      message: "DSA10 applied: 50% discount unlocked (₹99 only)."
+    };
+  }
+
+  // If user is trying other promo codes on DSA, restrict
+  if (plan === "dsa") {
+    return {
+      valid: false,
+      plan,
+      discountPercent: 0,
+      originalAmount: base.amount,
+      discountAmount: 0,
+      finalAmount: base.amount,
+      display: base.display,
+      originalDisplay: base.display,
+      savingsDisplay: currency === "INR" ? "₹0" : "$0",
+      message: "This coupon code is not applicable to the DSA Codex plan."
     };
   }
 
@@ -167,7 +237,7 @@ export function calculatePromoPrice(
     display: formatPrice(finalAmount, currency),
     originalDisplay: base.display,
     savingsDisplay: formatPrice(discountAmount, currency),
-    message: `Promo code ${rawCode} applied! ${promo.discountPercent}% discount.`
+    message: `${promo.discountPercent}% discount applied!`
   };
 }
 

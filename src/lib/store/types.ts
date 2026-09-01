@@ -1,8 +1,10 @@
-export type AccessTier = "full" | "interview";
+export type AccessTier = "full" | "interview" | "dsa";
 
 export interface AccessGrant {
   granted: boolean;
   tier?: AccessTier;
+  tiers?: AccessTier[];
+  hasDsa?: boolean;
   provider: "admin" | "razorpay" | "sandbox" | null;
   orderId?: string;
   paymentId?: string;

@@ -50,8 +50,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   const seoLevel = toSeoLevel(rawLevel);
   const levelLabel = LEVELS.find((l) => l.slug === seoLevel)?.label || seoLevel;
-  const title = `${stack.name} Interview Questions (${levelLabel}) | DevPrep`;
-  const description = `${doc.total}+ ${stack.name} ${levelLabel} interview questions with comprehensive model answers and code examples. First 5 questions free.`;
+  const title = `${stack.name} ${levelLabel} Interview Questions and Answers | DevPrep`;
+  const description = `${doc.total}+ ${stack.name} ${levelLabel} interview questions and answers with comprehensive model answers, edge cases, and code examples. First 5 questions free.`;
   const canonicalUrl = `${SITE.url}/${stack.hubSlug}/${seoLevel}`;
   const ogImageUrl = `${SITE.url}/api/og?slug=${stack.hubSlug}&level=${seoLevel}`;
 

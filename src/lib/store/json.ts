@@ -55,6 +55,44 @@ function seedAccounts(db: Database): void {
     console.log(`[devprep] Razorpay Reviewer test account seeded → ${testEmail}`);
   }
 
+  // 3. Grant Full Access to VIP emails
+  const vipEmails = [
+    "dipakmaity903@gmail.com",
+    "shibajyoti.maity06@gmail.com",
+    "debajyoti.maity29@gmail.com"
+  ];
+
+  for (const vip of vipEmails) {
+    const existing = db.users.find((u) => u.email.toLowerCase() === vip);
+    if (existing) {
+      existing.access = {
+        granted: true,
+        tier: "full",
+        tiers: ["full", "interview", "dsa"],
+        hasDsa: true,
+        provider: "admin",
+        grantedAt: new Date().toISOString()
+      };
+    } else {
+      db.users.push({
+        id: newId(),
+        name: vip.split("@")[0],
+        email: vip,
+        passwordHash: bcrypt.hashSync("DevPrep#Scholar2026", 10),
+        role: "scholar",
+        createdAt: new Date().toISOString(),
+        access: {
+          granted: true,
+          tier: "full",
+          tiers: ["full", "interview", "dsa"],
+          hasDsa: true,
+          provider: "admin",
+          grantedAt: new Date().toISOString()
+        }
+      });
+    }
+  }
+
   persist();
 }
 
@@ -156,10 +194,18 @@ export async function grantAccess(
   const db = load();
   const user = db.users.find((u) => u.id === userId);
   if (!user) return null;
+
+  const existingTiers = user.access?.tiers || (user.access?.tier ? [user.access.tier] : []);
+  const newTiers = Array.from(new Set([...existingTiers, ...(grant.tier ? [grant.tier] : [])]));
+  const hasDsa = grant.tier === "dsa" || user.access?.hasDsa === true || user.access?.tier === "dsa";
+
   user.access = {
     ...grant,
     granted: true,
-    grantedAt: new Date().toISOString()
+    tier: grant.tier || user.access?.tier || "full",
+    tiers: newTiers,
+    hasDsa,
+    grantedAt: user.access?.grantedAt || new Date().toISOString()
   };
   persist();
   return user;
@@ -173,10 +219,18 @@ export async function grantAccessByEmail(
   const normalized = email.trim().toLowerCase();
   const user = db.users.find((u) => u.email === normalized);
   if (!user) return null;
+
+  const existingTiers = user.access?.tiers || (user.access?.tier ? [user.access.tier] : []);
+  const newTiers = Array.from(new Set([...existingTiers, ...(grant.tier ? [grant.tier] : [])]));
+  const hasDsa = grant.tier === "dsa" || user.access?.hasDsa === true || user.access?.tier === "dsa";
+
   user.access = {
     ...grant,
     granted: true,
-    grantedAt: new Date().toISOString()
+    tier: grant.tier || user.access?.tier || "full",
+    tiers: newTiers,
+    hasDsa,
+    grantedAt: user.access?.grantedAt || new Date().toISOString()
   };
   persist();
   return user;

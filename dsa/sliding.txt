@@ -1,0 +1,10 @@
+1. LeetCode 3: Longest Substring Without Repeating Characters https://leetcode.com/problems/longest-substring-without-repeating-characters/ 
+2. LeetCode 209: Minimum Size Subarray Sum https://leetcode.com/problems/minimum-size-subarray-sum/ 
+3. LeetCode 76: Minimum Window Substring https://leetcode.com/problems/minimum-window-substring/ 
+4. Codeforces 617E: XOR and Favorite Number https://codeforces.com/problemset/problem/617/E
+5. LeetCode 904: Fruit Into Baskets https://leetcode.com/problems/fruit-into-baskets/ 
+6. LeetCode 992: Subarrays with K Different Integers https://leetcode.com/problems/subarrays-with-k-different-integers/ 
+7. LeetCode 1004: Max Consecutive Ones III https://leetcode.com/problems/max-consecutive-ones-iii/ 
+8. CSES: Sliding Window Cost https://cses.fi/problemset/task/1161 
+9. LeetCode 239: Sliding Window Maximum https://leetcode.com/problems/sliding-window-maximum/ 
+10. Codeforces 1285C: Fadi and LCM https://codeforces.com/problemset/problem/1285/C

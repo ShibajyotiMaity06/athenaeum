@@ -1,0 +1,27 @@
+7.1 Binary Search on Array
+Description: Finds elements in a sorted array in O(log n).
+1. LeetCode 704: Binary Search https://leetcode.com/problems/binary-search/ 
+2. LeetCode 33: Search in Rotated Sorted Array https://leetcode.com/problems/search-in-rotated-sorted-array/ 
+3. LeetCode 81: Search in Rotated Sorted Array II https://leetcode.com/problems/search-in-rotated-sorted-array-ii/ 
+4. LeetCode 153: Find Minimum in Rotated Sorted Array https://leetcode.com/problems/find-minimum-in-rotated-sorted-array/ 
+5. CSES: Missing Number https://cses.fi/problemset/task/1070 
+6. LeetCode 162: Find Peak Element https://leetcode.com/problems/find-peak-element/ 
+7. Codeforces 474B: Worms https://codeforces.com/problemset/problem/474/B 
+
+16
+
+8. LeetCode 278: First Bad Version https://leetcode.com/problems/first-bad-version/ 
+9. CSES: Apartment https://cses.fi/problemset/task/1071/ 
+10. LeetCode 374: Guess Number Higher or Lower https://leetcode.com/problems/guess-number-higher-or-lower/ 
+7.2 Binary Search on Answer
+Description: Finds optimal values by searching over possible answers.
+1. LeetCode 410: Split Array Largest Sum https://leetcode.com/problems/split-array-largest-sum/ 
+2. LeetCode 875: Koko Eating Bananas https://leetcode.com/problems/koko-eating-bananas/ 
+3. LeetCode 1011: Capacity To Ship Packages Within D Days https://leetcode.com/problems/capacity-to-ship-packages-within-d-days/ 
+4. Codeforces 1354D: Multiset https://codeforces.com/problemset/problem/1354/D 
+5. CSES: Factory Machines https://cses.fi/problemset/task/1630 
+6. LeetCode 1231: Divide Chocolate https://leetcode.com/problems/divide-chocolate/ 
+7. Codeforces 525E: Anya and Cubes https://codeforces.com/problemset/problem/525/E 
+8. LeetCode 1482: Minimum Number of Days to Make m Bouquets https://leetcode.com/problems/minimum-number-of-days-to-make-m-bouquets/ 
+9. CSES: Traffic Lights https://cses.fi/problemset/task/1162 
+10. Codeforces 706C: Hard problem https://codeforces.com/problemset/problem/706/C 

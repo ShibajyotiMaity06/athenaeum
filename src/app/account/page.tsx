@@ -5,7 +5,7 @@ import { BadgeCheck, BookOpen, CheckCircle2, ReceiptText, Shield, User } from "l
 import LogoutButton from "@/components/LogoutButton";
 import SyncPaymentButton from "@/components/SyncPaymentButton";
 import GeoPrice from "@/components/GeoPrice";
-import { getCurrentUser } from "@/lib/auth";
+import { getCurrentUser, hasDsaAccess, hasFullAccess, hasInterviewAccess } from "@/lib/auth";
 import { getOrdersByUser } from "@/lib/db";
 import { PRICING, type CurrencyCode } from "@/lib/site";
 
@@ -27,9 +27,10 @@ export default async function AccountPage() {
 
   const orders = await getOrdersByUser(user.id);
   const isAdmin = user.role === "admin";
-  const isFull = Boolean(isAdmin || (user.access.granted && (user.access.tier === "full" || !user.access.tier)));
-  const isInterview = Boolean(user.access.granted && user.access.tier === "interview");
-  const hasAccess = isFull || isInterview;
+  const isFull = hasFullAccess(user);
+  const isInterview = hasInterviewAccess(user);
+  const isDsa = hasDsaAccess(user);
+  const hasAccess = isFull || isInterview || isDsa;
 
   return (
     <div className="mx-auto max-w-4xl px-4 sm:px-6 py-16">
@@ -41,21 +42,26 @@ export default async function AccountPage() {
         <h1 className="text-3xl sm:text-4xl font-black text-[var(--text-primary)]">
           {user.name}
         </h1>
-        <p className="mt-1 text-xs sm:text-sm font-mono text-[var(--text-muted)]">
-          {user.email}
+        <p className="mt-1 text-xs sm:text-sm font-mono text-[var(--text-muted)] flex flex-wrap items-center gap-2">
+          <span>{user.email}</span>
           {isAdmin && (
-            <span className="ml-3 px-2 py-0.5 rounded bg-[var(--accent)] text-white text-[10px] font-bold uppercase">
+            <span className="px-2 py-0.5 rounded bg-[var(--accent)] text-white text-[10px] font-bold uppercase">
               ADMIN
             </span>
           )}
           {isFull && !isAdmin && (
-            <span className="ml-3 px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-600 border border-emerald-500/30 text-[10px] font-bold uppercase">
+            <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-600 border border-emerald-500/30 text-[10px] font-bold uppercase">
               FULL SCHOLAR PASS
             </span>
           )}
-          {isInterview && (
-            <span className="ml-3 px-2 py-0.5 rounded bg-amber-500/10 text-amber-600 border border-amber-500/30 text-[10px] font-bold uppercase">
+          {isInterview && !isFull && (
+            <span className="px-2 py-0.5 rounded bg-amber-500/10 text-amber-600 border border-amber-500/30 text-[10px] font-bold uppercase">
               INTERVIEW PREP KEY
+            </span>
+          )}
+          {isDsa && (
+            <span className="px-2 py-0.5 rounded bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/30 text-[10px] font-bold uppercase">
+              DSA CODEX ACTIVE
             </span>
           )}
         </p>
@@ -74,28 +80,38 @@ export default async function AccountPage() {
                 </div>
                 <div>
                   <h2 className="text-xl font-bold text-[var(--text-primary)]">
-                    {isFull ? "Full Lifetime Scholar Access" : "Interview Prep Key Active"}
+                    {isFull
+                      ? "Full Lifetime Scholar Access"
+                      : isInterview
+                      ? "Interview Prep Key Active"
+                      : "DSA Problem Codex Active"}
                   </h2>
                   <p className="text-xs text-[var(--text-muted)] mt-1 leading-relaxed">
                     {isFull
-                      ? "All 3,600+ questions across 27+ technologies, full Interview Prep codex, and all future updates are unlocked."
-                      : "Full access to the Interview Prep codex across Node.js, JavaScript, React & more. Verified solutions & documentation sources are unlocked."}
+                      ? "All 3,600+ questions across 27+ technologies and full Interview Prep codex are unlocked."
+                      : isInterview
+                      ? "Full access to the Interview Prep codex across Node.js, JavaScript, React & modern stacks."
+                      : "Full access to all 600+ curated DSA interview questions across 10 tracks."}
                   </p>
                 </div>
               </div>
 
               <div className="pt-4 border-t border-[rgba(186,190,204,0.4)] flex flex-wrap gap-3">
-                <Link href="/interview-prep" className="btn-industrial btn-industrial-primary py-2.5 px-5 text-xs">
-                  <span>Interview Prep Codex</span>
-                </Link>
-                <Link href="/#technologies" className="btn-industrial btn-industrial-secondary py-2.5 px-5 text-xs">
-                  <span>Browse 3,600+ Questions</span>
-                </Link>
-                {isInterview && (
-                  <Link href="/pricing?plan=full" className="btn-industrial btn-industrial-ghost py-2.5 px-4 text-xs text-[var(--accent)] font-bold">
-                    <span>Upgrade to All-Access (₹399)</span>
+                {isDsa ? (
+                  <Link href="/dsa" className="btn-industrial btn-industrial-primary py-2.5 px-5 text-xs">
+                    <span>DSA Problem Codex</span>
+                  </Link>
+                ) : (
+                  <Link href="/pricing?plan=dsa" className="btn-industrial btn-industrial-primary py-2.5 px-4 text-xs">
+                    <span>Unlock DSA Codex (₹199)</span>
                   </Link>
                 )}
+                <Link href="/interview-prep" className="btn-industrial btn-industrial-secondary py-2.5 px-5 text-xs">
+                  <span>Interview Prep Codex</span>
+                </Link>
+                <Link href="/#technologies" className="btn-industrial btn-industrial-ghost py-2.5 px-4 text-xs">
+                  <span>Browse 3,600+ Questions</span>
+                </Link>
                 <LogoutButton />
               </div>
             </div>
@@ -110,7 +126,7 @@ export default async function AccountPage() {
                     Free Preview Active
                   </h2>
                   <p className="text-xs text-[var(--text-muted)] mt-1 leading-relaxed">
-                    You can read 5 questions per codex for free. Get the <strong>Interview Key (₹299)</strong> or <strong>Full Scholar Pass (₹399)</strong> for unrestricted lifetime access.
+                    You can read preview questions for free. Get the <strong>DSA Codex (₹199)</strong>, <strong>Interview Key (₹299)</strong> or <strong>Full Scholar Pass (₹399)</strong> for unrestricted access.
                   </p>
                 </div>
               </div>

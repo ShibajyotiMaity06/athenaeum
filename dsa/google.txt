@@ -1,0 +1,200 @@
+
+1293. Shortest Path in a Grid with Obstacles Elimination
+46.7%
+Hard
+
+528. Random Pick with Weight
+49.2%
+Med.
+
+1937. Maximum Number of Points with Cost
+41.6%
+Med.
+
+777. Swap Adjacent in LR String
+38.4%
+Med.
+
+778. Swim in Rising Water
+68.2%
+Hard
+
+539. Minimum Time Difference
+62.7%
+Med.
+
+1055. Shortest Way to Form String
+61.8%
+Med.
+
+2101. Detonate the Maximum Bombs
+50.4%
+Med.
+
+1554. Strings Differ by One Character
+39.6%
+Med.
+
+418. Sentence Screen Fitting
+36.4%
+Med.
+
+419. Battleships in a Board
+77.8%
+Med.
+
+552. Student Attendance Record II
+56.9%
+Hard
+
+792. Number of Matching Subsequences
+50.6%
+Med.
+
+900. RLE Iterator
+59.6%
+Med.
+
+2096. Step-By-Step Directions From a Binary Tree Node to Another
+56.5%
+Med.
+
+1105. Filling Bookcase Shelves
+68.7%
+Med.
+
+2115. Find All Possible Recipes from Given Supplies
+57.1%
+Med.
+
+1606. Find Servers That Handled Most Number of Requests
+45.7%
+Hard
+
+2402. Meeting Rooms III
+51.4%
+Hard
+
+2242. Maximum Score of a Node Sequence
+40.5%
+Hard
+
+562. Longest Line of Consecutive One in Matrix
+50.6%
+Med.
+
+1101. The Earliest Moment When Everyone Become Friends
+66.1%
+Med.
+
+2416. Sum of Prefix Scores of Strings
+60.9%
+Hard
+
+68. Text Justification
+52.0%
+Hard
+
+818. Race Car
+45.1%
+Hard
+
+1610. Maximum Number of Visible Points
+38.4%
+Hard
+
+329. Longest Increasing Path in a Matrix
+57.0%
+Hard
+
+2421. Number of Good Paths
+56.6%
+Hard
+
+715. Range Module
+45.5%
+Hard
+
+1996. The Number of Weak Characters in the Game
+44.7%
+Med.
+
+1387. Sort Integers by The Power Value
+71.8%
+Med.
+
+2135. Count Words Obtained After Adding a Letter
+44.2%
+Med.
+
+729. My Calendar I
+58.4%
+Med.
+
+2162. Minimum Cost to Set Cooking Time
+45.1%
+Med.
+
+2013. Detect Squares
+52.9%
+Med.
+
+2128. Remove All Ones With Row and Column Flips
+76.2%
+Med.
+
+833. Find And Replace in String
+50.7%
+Med.
+
+489. Robot Room Cleaner
+78.0%
+Hard
+
+1146. Snapshot Array
+36.8%
+Med.
+
+2018. Check if Word Can Be Placed In Crossword
+50.8%
+Med.
+
+839. Similar String Groups
+56.6%
+Hard
+
+359. Logger Rate Limiter
+76.9%
+Easy
+
+2178. Maximum Split of Positive Even Integers
+59.9%
+Med.
+
+843. Guess the Word
+36.6%
+Hard
+
+1048. Longest String Chain
+63.5%
+Med.
+
+366. Find Leaves of Binary Tree
+81.4%
+Med.
+
+2034. Stock Price Fluctuation
+49.3%
+Med.
+
+2172. Maximum AND Sum of Array
+51.1%
+Hard
+
+2158. Amount of New Area Painted Each Day
+55.6%
+Hard
+
+253. Meeting Rooms II
+52.8%
+Med.

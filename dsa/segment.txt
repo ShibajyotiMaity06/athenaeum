@@ -1,0 +1,23 @@
+13.2 Segment Tree
+Description: Supports range queries and updates on arrays.
+1. LeetCode 307: Range Sum Query - Mutable https://leetcode.com/problems/range-sum-query-mutable/ 
+2. LeetCode 732: My Calendar III https://leetcode.com/problems/my-calendar-iii/ 
+3. CSES: Range Queries and Sums https://cses.fi/problemset/task/1674 
+4. LeetCode 218: The Skyline Problem https://leetcode.com/problems/the-skyline-problem/ 
+5. Codeforces 380C: Sereja and Brackets https://codeforces.com/problemset/problem/380/C 
+6. CSES: Range Update Queries https://cses.fi/problemset/task/1675 
+7. LeetCode 315: Count of Smaller Numbers After Self https://leetcode.com/problems/count-of-smaller-numbers-after-self/ 
+8. Codeforces 339D: Xenia and Bit Operations https://codeforces.com/problemset/problem/339/D 
+9. LeetCode 327: Count of Range Sum https://leetcode.com/problems/count-of-range-sum/ 
+10. CSES: Dynamic Range Sum Queries https://cses.fi/problemset/task/1676
+
+1. Codeforces 484E: Sign on Fence https://codeforces.com/problemset/problem/484/E
+2. Codeforces 813E: Army Creation https://codeforces.com/problemset/problem/813/E
+3. LeetCode 315: Count of Smaller Numbers After Self https://leetcode.com/problems/count-of-smaller-numbers-after-self/ 
+4. Codeforces 960F: Pathwalks https://codeforces.com/problemset/problem/960/F
+5. CSES: Dynamic Range Sum Queries https://cses.fi/problemset/task/1676
+6. Codeforces 1478F: Nezzar and Nice Beatmap https://codeforces.com/problemset/problem/1478/F
+7. LeetCode 327: Count of Range Sum https://leetcode.com/problems/count-of-range-sum/ 
+8. Codeforces 380C: Sereja and Brackets https://codeforces.com/problemset/problem/380/C 
+9. CSES: Range Queries and Sums https://cses.fi/problemset/task/1674 
+10. Codeforces 1093G: Multidimensional Queries https://codeforces.com/problemset/problem/1093/G

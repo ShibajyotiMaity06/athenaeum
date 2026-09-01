@@ -15,6 +15,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 1.0
     },
     {
+      url: `${baseUrl}/dsa`,
+      lastModified: lastMod,
+      changeFrequency: "weekly",
+      priority: 0.95
+    },
+    {
       url: `${baseUrl}/interview-prep`,
       lastModified: lastMod,
       changeFrequency: "weekly",
